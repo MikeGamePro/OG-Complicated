@@ -382,10 +382,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-format-time-left ((time-left time-frame))
   (let* ((ticks (max 0 (the int time-left)))
          (total-seconds (the int (/ ticks (seconds 1))))
+         (minutes (the int (/ total-seconds 60)))
          (seconds-part (the int (mod total-seconds 60)))
          (deciseconds (the int (/ (* (mod ticks (seconds 1)) 10)
-                                   (seconds 1)))))
-    (string-format "~D.~1,'0D"
+                                  (seconds 1)))))
+    (string-format "~D:~2,'0D.~1,'0D"
+                   minutes
                    seconds-part
                    deciseconds)))
 
@@ -680,13 +682,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (* weight (mod-rule-recent-roll-factor id))
       0)))
 
-(defun mod-rule-pick-weighted-id ((blocked-id symbol))
+(defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
         (total 0))
     (while (< idx 11)
       (let ((candidate (mod-rule-id-from-index idx)))
         (when (and candidate
-                   (or (not blocked-id) (!= candidate blocked-id))
                    (not (mod-rule-active? candidate))
                    (not (mod-rule-pending? candidate)))
           (let ((priority (mod-rule-roll-priority candidate))
@@ -712,7 +713,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (while (and (< idx 11) (not chosen))
           (let ((candidate (mod-rule-id-from-index idx)))
             (when (and candidate
-                       (or (not blocked-id) (!= candidate blocked-id))
                        (not (mod-rule-active? candidate))
                        (not (mod-rule-pending? candidate)))
               (let ((priority (mod-rule-roll-priority candidate))
@@ -731,15 +731,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       #f)))
 
 (defun mod-rule-reroll-slot ((slot int) (apply-buffer symbol))
-  (let ((previous (-> *mod-rule-active-slots* slot)))
-    (mod-rule-clear-slot slot)
-    (let ((chosen (mod-rule-pick-weighted-id previous)))
-      (when (and (not chosen) previous)
-        (set! chosen (mod-rule-pick-weighted-id #f)))
+  (mod-rule-clear-slot slot)
+  (let ((chosen (mod-rule-pick-weighted-id)))
     (when chosen
       (mod-rule-schedule-slot slot chosen apply-buffer)
-      (mod-rule-record-roll! chosen))))
-  (none))
+      (mod-rule-record-roll! chosen))
+  (none)))
 
 (defun mod-rule-counter-add-progress ((id symbol) (amount int))
   (when (> amount 0)
@@ -838,28 +835,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-handle-slot-expiry ((slot int))
   (when (and (>= slot 0) (< slot 3))
     (let ((id (-> *mod-rule-active-slots* slot))
-          (handled-by-punishment #f)
-          (collapsed-by-two-mode #f))
+          (handled-by-punishment #f))
       (when id
-        ;; In temporary two-active mode, expiry should only collapse back to one-active.
-        ;; Never apply punishments or reroll during this collapse path.
+        (let ((goal (-> *mod-rule-slot-goals* slot))
+              (progress (-> *mod-rule-slot-progress* slot))
+              (punishment (-> *mod-rule-slot-punishments* slot)))
+          (when (and (> goal 0) (< progress goal) punishment)
+            (if (eq? punishment 'punishment-extra-rule)
+              (begin
+                (mod-rule-apply-extra-rule-punishment slot)
+                (set! handled-by-punishment #t))
+              (mod-rule-apply-punishment punishment)))))
+      (if handled-by-punishment
+        (none)
         (if (> *mod-rule-max-active-count* 1)
           (begin
             (mod-rule-clear-slot slot)
-            (set! *mod-rule-max-active-count* 1)
-            (set! collapsed-by-two-mode #t))
-          (let ((goal (-> *mod-rule-slot-goals* slot))
-                (progress (-> *mod-rule-slot-progress* slot))
-                (punishment (-> *mod-rule-slot-punishments* slot)))
-            (when (and (> goal 0) (< progress goal) punishment)
-              (if (eq? punishment 'punishment-extra-rule)
-                (begin
-                  (mod-rule-apply-extra-rule-punishment slot)
-                  (set! handled-by-punishment #t))
-                (mod-rule-apply-punishment punishment))))))
-      (when (and (not collapsed-by-two-mode)
-                 (not handled-by-punishment))
-        (mod-rule-reroll-slot slot #t))))
+            (set! *mod-rule-max-active-count* 1))
+          (mod-rule-reroll-slot slot #t)))))
   (none))
 
 (defun mod-rule-punishment-for-id ((id symbol))
