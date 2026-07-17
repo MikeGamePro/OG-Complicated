@@ -2032,15 +2032,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun global-countdown-draw ()
   (cond
-    (*global-countdown-lost?*
-     (with-dma-buffer-add-bucket ((buf (-> (current-frame) debug-buf))
-                                 (bucket-id debug-no-zbuf))
-       (draw-string-xy "LOSE!"
-                       buf
-                       20
-                       20
-                       (font-color red)
-                       (font-flags shadow kerning))))
+    ;; (*global-countdown-lost?*
+    ;;  (with-dma-buffer-add-bucket ((buf (-> (current-frame) global-buf))
+    ;;                              (bucket-id debug-no-zbuf))
+    ;;    (draw-string-xy "LOSE!"
+    ;;                    buf
+    ;;                    20
+    ;;                    20
+    ;;                    (font-color red)
+    ;;                    (font-flags shadow kerning))))
     (*global-countdown-active?*
      (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf))
                                  (bucket-id debug-no-zbuf))
@@ -2110,12 +2110,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (and *global-countdown-active?* (not *global-countdown-lost?*))
       (cond
         ((or (global-countdown-paused?)
-             (and (or (and (mod-rule-active? 'complication-yellow-pilled)
-                  (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
-                  (and (mod-rule-active? 'complication-red-light)
-                  (= (-> *target* fact eco-type) (pickup-type eco-red))))
-                  (>= (-> *target* fact eco-level) 1.0)))
-         (set! *global-countdown-last-update-time* (current-time)))
+     (and *target*
+          (or (and (mod-rule-active? 'complication-yellow-pilled)
+                   (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
+              (and (mod-rule-active? 'complication-red-light)
+                   (= (-> *target* fact eco-type) (pickup-type eco-red))))
+          (>= (-> *target* fact eco-level) 1.0)))
+ (set! *global-countdown-last-update-time* (current-time)))
         (else
          (let ((elapsed (- (current-time) *global-countdown-last-update-time*)))
            
@@ -2129,21 +2130,25 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            ;; Unconditionally update so the timer doesn't freeze  
            (set! *global-countdown-last-update-time* (current-time))
            
-           (when (<= *global-countdown-remaining-time* 0)
-             (set! *global-countdown-remaining-time* 0)
-             (set! *global-countdown-lost?* #t)
-             (set! *global-countdown-active?* #f)
-             ;; deactivate any currently-active rule effects right away
-             (kill-by-name 'mod-rule-manager *active-pool*)
-             (mod-rules-reset)
-             (logclear! (-> *target* mask) (process-mask sleep))
-             (set! *mean-look-clear-time* 0)
-              (when (progress-allowed?)
-                (auto-save-command 'auto-save 0 0 *default-pool*))
-             (process-spawn-function process
+(when (<= *global-countdown-remaining-time* 0)
+  (format 0 "COUNTDOWN: lost triggered~%")
+  (set! *global-countdown-remaining-time* 0)
+  (set! *global-countdown-lost?* #t)
+  (set! *global-countdown-active?* #f)
+  (format 0 "COUNTDOWN: killing mod-rule-manager~%")
+  (kill-by-name 'mod-rule-manager *active-pool*)
+  (format 0 "COUNTDOWN: mod-rules-reset~%")
+  (mod-rules-reset)
+  (when *target*
+    (logclear! (-> *target* mask) (process-mask sleep)))
+  (set! *mean-look-clear-time* 0)
+  (format 0 "COUNTDOWN: spawning reset process~%")
+  (process-spawn-function process
     (lambda ()
       (suspend)
-      (start-speedrun (the-as speedrun-category #f)))))))))
+      (format 0 "COUNTDOWN: calling start-speedrun, category=~S~%" (-> *speedrun-info* category))
+      (start-speedrun (the-as speedrun-category #f))
+      (format 0 "COUNTDOWN: start-speedrun returned~%"))))))))
     (global-countdown-draw)
     (suspend))
   (none))
@@ -2153,7 +2158,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
-  (set! *global-countdown-remaining-time* (seconds 60)) ;; global timer start
+  (set! *global-countdown-remaining-time* (seconds 300)) ;; global timer start - 60
   (set! *global-countdown-last-update-time* (current-time))
   (set! *mod-rule-last-update-time* (current-time))
   (set! *mod-rule-last-reverted-cell-task* 0)
