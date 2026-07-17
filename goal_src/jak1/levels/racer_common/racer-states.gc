@@ -274,6 +274,7 @@
       (racer-buzz (+ 0.45 (* 1.7 (fabs (-> self racer slide-shift-x))))))
   :code
     (behavior ()
+      (mod-rule-trigger-dont-move)
       (cond
         ((ja-group? eichar-racer-get-on-ja) (ja-no-eval :num! (seek!)) (while (not (ja-done? 0)) (suspend) (ja-eval)))
         ((let ((v1-16 (ja-group)))
@@ -346,6 +347,7 @@
     (behavior ((arg0 float) (arg1 float) (arg2 symbol))
     (mod-rule-trigger-brittle-bones)
     (mod-rule-trigger-grounded)
+    (mod-rule-trigger-dont-move)
       (set! (-> self racer shock-offsetv) 0.0)
       (sound-play "zoomer-jump")
       (set-time! (-> self state-time))
@@ -772,6 +774,7 @@
   :code
     (behavior ((arg0 handle))
     (set! *racer-start-time* (current-time))
+    (mod-rule-trigger-dont-move)
     ;; (format #t "get on~%")
       (set! (-> self control transv quad) (the-as uint128 0))
       (set! (-> self alt-cam-pos quad) (-> self control camera-pos quad))

@@ -102,6 +102,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *walk-mods*))
   :exit

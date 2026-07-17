@@ -365,11 +365,14 @@
          v0-3)))
   :enter
     (behavior ()
-      (if (and (logtest? (-> self fact options) (fact-options instant-collect can-collect))
-               (logtest? (-> self flags) (collectable-flags can-collect))
-               (!= (-> self next-state name) 'pickup)
-               (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
-        (go-virtual pickup #f (process->handle *target*))))
+(if (and (logtest? (-> self fact options) (fact-options instant-collect can-collect))
+         (logtest? (-> self flags) (collectable-flags can-collect))
+         (!= (-> self next-state name) 'pickup)
+         (not (and (= (-> self type) fuel-cell)
+                   (target-on-flut?)
+                   (mod-rule-active? 'complication-wings-tied)))
+         (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
+    (go-virtual pickup #f (process->handle *target*))))
   :trans
     (behavior ()
       (cond

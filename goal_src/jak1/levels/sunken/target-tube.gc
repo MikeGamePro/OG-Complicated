@@ -465,6 +465,7 @@
         event)
   :enter
     (behavior ((arg0 float) (arg1 float))
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (init-var-jump arg0 arg1 (the-as vector #t) (the-as vector #f) (-> self control transv))
       (logclear! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
