@@ -1585,9 +1585,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-money)
      (set! (-> *game-info* money) (max 0.0 (- (-> *game-info* money) 50.0))))
     ((eq? punishment 'punishment-warp)
-     (set! (-> *game-info* current-continue) (get-continue-by-name *game-info* "training-warp"))
-     (auto-save-command 'auto-save 0 0 *default-pool*)
-     (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f)))
+    (set! (-> *game-info* current-continue) (get-continue-by-name *game-info* "training-warp"))
+    (when (progress-allowed?)
+      (auto-save-command 'auto-save 0 0 *default-pool*))
+    (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f)))
     ((eq? punishment 'punishment-countdown)
      (when *global-countdown-active?*
        (set! *global-countdown-remaining-time* (+ *global-countdown-remaining-time* (- (seconds 30))))))
@@ -1613,9 +1614,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (sound-play "caught-eel")
     (set! *mod-rule-last-outcome* 'failed)
     (if (eq? punishment 'punishment-extra-rule)
-      (begin
-        (mod-rule-apply-extra-rule-punishment slot)
-        (mod-rule-finish-slot slot #t))
+      (mod-rule-apply-extra-rule-punishment slot)
       (begin
         (mod-rule-apply-punishment punishment)
         (mod-rule-finish-slot slot #t))))
@@ -2139,7 +2138,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (mod-rules-reset)
              (logclear! (-> *target* mask) (process-mask sleep))
              (set! *mean-look-clear-time* 0)
-             (auto-save-command 'auto-save 0 0 *default-pool*))))))
+              (when (progress-allowed?)
+                (auto-save-command 'auto-save 0 0 *default-pool*))
+             (process-spawn-function process
+    (lambda ()
+      (suspend)
+      (start-speedrun (the-as speedrun-category #f)))))))))
     (global-countdown-draw)
     (suspend))
   (none))
