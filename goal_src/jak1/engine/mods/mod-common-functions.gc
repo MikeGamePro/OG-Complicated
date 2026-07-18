@@ -108,6 +108,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-id-count* 34) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
+(define *mod-game-beaten?* #f)
 (define *mod-rule-all-cell-tasks*
   (new 'static
        'boxed-array
@@ -265,6 +266,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task citadel-sage-yellow)
        (game-task citadel-sage-green)))
 
+(defun mod-game-beaten-resume-from-save ((value int))
+  (set! *mod-game-beaten?* (not (= value 0)))
+  (none))
+
+(defun mod-game-beaten-save-value ()
+  (if *mod-game-beaten?* 1 0))
+
 (defun mod-rule-name ((id symbol))
   (cond
     ((eq? id 'rule-grounded) "GROUNDED")
@@ -293,13 +301,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-drought) "LIKE A STONE")
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
     ((eq? id 'rule-survivor) "SURVIVOR")
-    ((eq? id 'rule-red-kill) "RED ECO KILL")
+    ((eq? id 'rule-red-kill) "VENDETTA")
     ((eq? id 'rule-blue-crate) "HANDS ON")
     ((eq? id 'complication-yellow-pilled) "YELLOW-PILLED")
     ((eq? id 'complication-red-light) "RED LIGHT")
     ((eq? id 'rule-one-frame) "ONE FRAME")
     ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
-    ((eq? id 'rule-freeze) "FREEZE!")
+    ((eq? id 'rule-freeze) "FREEZE")
     ((eq? id 'complication-rgyb) "RGYB")
     (else "UNKNOWN")))
 
@@ -337,7 +345,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-red-light) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A FLY CRATE.")
-    ((eq? id 'rule-freeze) "DO NOT MOVE.")
+    ((eq? id 'rule-freeze) "DO NOT MOVE!")
     ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
@@ -1284,7 +1292,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (else 0)))
 
       ((eq? id 'complication-red-light)
-       (if (red-eco-level? level-name) 6 0))
+       (if (red-eco-level? level-name) 0 0))
 
       ;; Crates
       ((eq? id 'rule-crate-break)
@@ -1870,6 +1878,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun global-countdown-paused? ()
   (or (movie?)
+      (task-complete? *game-info* (game-task finalboss-movies))
       (and *setting-control* (-> *setting-control* current movie))
       (and *target*
            (logtest? (-> *target* state-flags) (state-flags grabbed)))))
@@ -2198,29 +2207,34 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       0))
 
 (defun global-countdown-resume-from-save ((saved-time int))
-  (cond
-    ((> saved-time 0)
-     ;; Saved file HAS a countdown.
-     (set! *global-countdown-remaining-time* saved-time)
-     (set! *global-countdown-last-update-time* (current-time))
-     (cond
-       ((not *global-countdown-active?*)
-        ;; SCENARIO A: system was dormant (fresh boot / post-crash reload).
-        (set! *global-countdown-active?* #t)
-        (set! *global-countdown-lost?* #f)
-        (set! *mod-rule-last-update-time* (current-time))
-        (kill-by-name 'global-countdown *active-pool*)
-        (mod-rules-start)
-        (process-spawn-function process global-countdown-proc :name 'global-countdown))
-       (else
-        ;; SCENARIO B: system was already active (normal in-game save/load).
-        (mod-rules-resume)
-        (kill-by-name 'global-countdown *active-pool*)
-        (process-spawn-function process global-countdown-proc :name 'global-countdown))))
-    (else
-     ;; SCENARIO C: no countdown saved in this file at all.
-     (when (or *global-countdown-active?* *global-countdown-lost?*)
-       (global-countdown-reset))))
+  (if *mod-game-beaten?*
+      ;; This save file already beat the game
+      (when (or *global-countdown-active?* *global-countdown-lost?*)
+        (global-countdown-reset))
+      ;; This save file has NOT beaten the game
+      (cond
+        ((> saved-time 0)
+         ;; Saved file HAS a countdown.
+         (set! *global-countdown-remaining-time* saved-time)
+         (set! *global-countdown-last-update-time* (current-time))
+         (cond
+           ((not *global-countdown-active?*)
+            ;; SCENARIO A: system was dormant (fresh boot / post-crash reload).
+            (set! *global-countdown-active?* #t)
+            (set! *global-countdown-lost?* #f)
+            (set! *mod-rule-last-update-time* (current-time))
+            (kill-by-name 'global-countdown *active-pool*)
+            (mod-rules-start)
+            (process-spawn-function process global-countdown-proc :name 'global-countdown))
+           (else
+            ;; SCENARIO B: system was already active (normal in-game save/load).
+            (mod-rules-resume)
+            (kill-by-name 'global-countdown *active-pool*)
+            (process-spawn-function process global-countdown-proc :name 'global-countdown))))
+        (else
+         ;; SCENARIO C: no countdown saved in this file at all.
+         (when (or *global-countdown-active?* *global-countdown-lost?*)
+           (global-countdown-reset)))))
   (none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;

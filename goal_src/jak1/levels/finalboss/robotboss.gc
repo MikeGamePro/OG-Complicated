@@ -8,6 +8,10 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-game-beaten-resume-from-save (function int none))
+(define-extern *mod-game-beaten?* (symbol))
+(define-extern global-countdown-reset (function none))
+
 (defmethod ease-loc-t ((this robotboss))
   (parameter-ease-sin-clamp (-> this loc-t)))
 
@@ -299,6 +303,9 @@
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
         (('white-eco-picked-up)
+        (set! *mod-game-beaten?* #t)
+        ;; mod: game is beaten, stop the countdown/rules for this file right now.
+        (global-countdown-reset)
          (close-specific-task! (game-task finalboss-movies) (task-status unknown))
          (entity-birth-no-kill (-> self alts 5))
          (let ((a1-2 (new 'stack-no-clear 'event-message-block)))

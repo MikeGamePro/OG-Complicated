@@ -17,11 +17,14 @@
 ;; Having two state machines, one in C++ and one in GOAL is kind of a questionable and confusing design.
 
 (define-extern mark-speedrun-started (function none))
+(define-extern mod-game-beaten-resume-from-save (function int none))
+(define-extern *mod-game-beaten?* (symbol))
 
 ;; mod: hooks for persisting the global countdown timer in the save file.
 ;; implemented in mod-common-functions.gc
 (define-extern global-countdown-save-value (function int))
 (define-extern global-countdown-resume-from-save (function int none))
+(define-extern mod-game-beaten-save-value (function int))
 
 ;; version identifier
 (defconstant SAVE_VERSION 1)
@@ -98,7 +101,8 @@
   (play-hints 507)
   (video-mode 508)
   (aspect-ratio 509)
-  (mod-global-timer 510))
+  (mod-global-timer 510)
+  (mod-game-beaten 511))
 
 ;; DECOMP BEGINS
 
@@ -584,20 +588,32 @@
                                                                                                                     ((= a1-125 'aspect4x3) 1)
                                                                                                                     ((= a1-125 'aspect16x9) 2)
                                                                                                                     (else 0)))))
-                                                                                                        ;; mod: persist the global countdown timer as one more tag
                                                                                                         (let ((v1-113 (&+ v1-112 16)))
+                                                                                                          ;; Game beaten tag
                                                                                                           (let ((a0-89 (the-as game-save-tag (&+ v1-113 0))))
-                                                                                                            (set! (-> a0-89 elt-type) (game-save-elt mod-global-timer))
+                                                                                                            (set! (-> a0-89 elt-type) (game-save-elt mod-game-beaten))
                                                                                                             (set! (-> a0-89 elt-count) 0)
                                                                                                             (set! (-> a0-89 user-uint64)
+                                                                                                                  (the-as uint (mod-game-beaten-save-value))))
+
+                                                                                                          ;; Countdown tag
+                                                                                                          (let ((a0-90 (the-as game-save-tag (&+ v1-113 16))))
+                                                                                                            (set! (-> a0-90 elt-type) (game-save-elt mod-global-timer))
+                                                                                                            (set! (-> a0-90 elt-count) 0)
+                                                                                                            (set! (-> a0-90 user-uint64)
                                                                                                                   (the-as uint (global-countdown-save-value))))
-                                                                                                          (set! (-> arg0 length) (&- (&+ v1-113 16) (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-  (if (< (-> arg0 allocated-length) (-> arg0 length))
-    (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
+
+                                                                                                          (set! (-> arg0 length)
+                                                                                                                (&- (&+ v1-113 32)
+                                                                                                                    (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+                                                                                                          (if (< (-> arg0 allocated-length) (-> arg0 length))
+                                                                                                            (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
   (none))
 
 (defmethod load-game! ((this game-info) (save game-save))
   "Copy save data from a game-save to a game-info"
+  ;; mod: default to "not beaten" BEFORE reading any tags.
+  (set! *mod-game-beaten?* #f)
   (let ((save-data (the-as game-save-tag (-> save tag))))
     ;; loop over all tags
     (while (< (the-as int save-data) (the-as int (+ (+ (-> save length) 76) (the-as int save))))
@@ -611,6 +627,10 @@
            (set! (-> *setting-control* default language) (the-as language-enum (-> save-data user-uint64))))
           ;; ((= a0-1 (game-save-elt vibration)) (set! (-> *setting-control* default vibration) (= (-> save-data user-uint64) 1)))
           ;; ((= a0-1 (game-save-elt play-hints)) (set! (-> *setting-control* default play-hints) (= (-> save-data user-uint64) 1)))
+          ((= a0-1 (game-save-elt mod-game-beaten))
+           (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-global-timer))
+           (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
@@ -723,8 +743,8 @@
            (dotimes (a0-133 v1-92)
              (set! (-> this fuel-cell-time a0-133)
                    (the-as time-frame (-> (the-as (pointer uint64) (&+ (&+ (the-as pointer data) 16) (* a0-133 8)))))))))
-        (((game-save-elt mod-global-timer))
-         (global-countdown-resume-from-save (the-as int (-> data user-uint64)))))
+        ;; mod: mod-global-timer / mod-game-beaten are handled in the loop above
+        )
       (set! data
             (the-as game-save-tag
                     (&+ (the-as pointer data) (logand -16 (+ (* (the-as int (-> data elt-size)) (-> data elt-count)) 31)))))))
