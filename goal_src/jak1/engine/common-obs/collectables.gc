@@ -45,6 +45,14 @@
 
 (define *eco-pill-count* 0)
 
+(defun rgyb-swap-eco-type ((arg0 pickup-type))
+  (if (mod-rule-active? 'complication-rgyb)
+      (cond
+        ((= arg0 (pickup-type eco-yellow)) (pickup-type eco-blue))
+        ((= arg0 (pickup-type eco-blue)) (pickup-type eco-yellow))
+        (else arg0))
+      arg0))
+
 (deftype collectable (process-drawable)
   ((root            collide-shape-moving :override)
    (pickup-type     pickup-type)
@@ -141,7 +149,8 @@
   (if (logtest? (fact-options respawn) (-> this fact options)) (set! (-> this respawn-delay) (-> this fact fade-time)))
   this)
 
-(defmethod initialize-effect ((this eco-collectable) (arg0 pickup-type))
+(defmethod initialize-effect ((this eco-collectable) (arg0 pickup-type)) ;; rgyb interest point
+  (set! arg0 (rgyb-swap-eco-type arg0))
   (set! (-> this fact pickup-type) arg0)
   (case (-> this fact pickup-type)
     (((pickup-type eco-blue) (pickup-type eco-red) (pickup-type eco-green) (pickup-type eco-yellow))

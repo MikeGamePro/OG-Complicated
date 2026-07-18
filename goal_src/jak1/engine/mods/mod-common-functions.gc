@@ -105,7 +105,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 33) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 34) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-rule-all-cell-tasks*
@@ -299,7 +299,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-red-light) "RED LIGHT")
     ((eq? id 'rule-one-frame) "ONE FRAME")
     ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
-    ((eq? id 'rule-dont-move) "FREEZE!")
+    ((eq? id 'rule-freeze) "FREEZE!")
+    ((eq? id 'complication-rgyb) "RGYB")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -336,7 +337,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-red-light) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A FLY CRATE.")
-    ((eq? id 'rule-dont-move) "DO NOT MOVE.")
+    ((eq? id 'rule-freeze) "DO NOT MOVE.")
+    ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -372,7 +374,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-red-light) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
     ((eq? id 'rule-distancing) (seconds 75)) ;; 75
-    ((eq? id 'rule-dont-move) (seconds 5)) ;; 5
+    ((eq? id 'rule-freeze) (seconds 5)) ;; 5
+    ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -419,7 +422,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-blue-crate)
          (eq? id 'rule-one-frame)
          (eq? id 'rule-distancing)
-         (eq? id 'rule-dont-move)
+         (eq? id 'rule-freeze)
          )
      'rule)
     ((or
@@ -439,6 +442,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-drought)
          (eq? id 'complication-yellow-pilled)
          (eq? id 'complication-red-light)
+          (eq? id 'complication-rgyb)
          )
          
      'complication)
@@ -1041,7 +1045,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 29) 'rule-one-frame)
     ((= idx 30) 'rule-distancing)
     ((= idx 31) 'complication-red-light)
-    ((= idx 32) 'rule-dont-move)
+    ((= idx 32) 'rule-freeze)
+    ((= idx 33) 'complication-rgyb)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1299,7 +1304,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
               (else 4)))
 
-      ((eq? id 'rule-dont-move)
+      ((eq? id 'rule-freeze)
             (cond
               (is-minigame 0)
               ((or (eq? level-name 'finalboss) is-klaww) 1)
@@ -1312,18 +1317,27 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-one-frame)
        (if (or (not (launcher-level? level-name)) is-minigame) 0 5))
 
+      ((eq? id 'complication-rgyb)
+       (cond 
+         ((or (target-billy-game?) (eq? level-name 'finalboss) is-klaww) 0)
+         ((or (eq? level-name 'training)) 2)
+         (else 10)))
+
       ((eq? id 'rule-survivor)
             (cond
               ((or (mod-rule-active? 'rule-die) (eq? level-name 'training) (eq? level-name 'village1)) 0)
               ((or (eq? level-name 'village1) (eq? level-name 'village2)) 3)
               (else 8)))
 
+      ;; ((eq? id 'complication-ohko)
+      ;; 0)
+
       ((eq? id 'complication-drought)
        (cond
          ((or (eq? level-name 'jungleb) (eq? level-name 'firecanyon) (eq? level-name 'lavatube)
               (eq? level-name 'citadel) (eq? level-name 'ogre) (eq? level-name 'finalboss)
               (eq? level-name 'village3) (eq? level-name 'snow) (eq? level-name 'robocave)) 0)
-         ((or (eq? level-name 'maincave) (eq? level-name 'swamp) (eq? level-name 'rolling)) 3)
+         ((or (eq? level-name 'maincave) (eq? level-name 'rolling)) 3)
          (else 8)))
 
       ((eq? id 'complication-eco-allergy)
@@ -1584,11 +1598,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (cond
     ((eq? punishment 'punishment-money)
      (set! (-> *game-info* money) (max 0.0 (- (-> *game-info* money) 50.0))))
-    ((eq? punishment 'punishment-warp)
-    (set! (-> *game-info* current-continue) (get-continue-by-name *game-info* "training-warp"))
-    (when (progress-allowed?)
-      (auto-save-command 'auto-save 0 0 *default-pool*))
-    (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f)))
+((eq? punishment 'punishment-warp)
+     (process-spawn-function process
+       (lambda ()
+         (let ((start-time (current-time)))
+           (until (>= (- (current-time) start-time) (seconds 1))
+             (suspend)))
+         (set! (-> *game-info* current-continue) (get-continue-by-name *game-info* "training-warp"))
+         (when (progress-allowed?)
+           (auto-save-command 'auto-save 0 0 *default-pool*))
+         (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f)))))
     ((eq? punishment 'punishment-countdown)
      (when *global-countdown-active?*
        (set! *global-countdown-remaining-time* (+ *global-countdown-remaining-time* (- (seconds 30))))))
@@ -1668,11 +1687,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (mod-rule-handle-slot-failure slot punishment))))))
   (none))
 
-(defun mod-rule-trigger-dont-move ()
-  (when (mod-rule-active? 'rule-dont-move)
-    (let ((punishment (mod-rule-punishment-for-id 'rule-dont-move)))
+(defun mod-rule-trigger-freeze ()
+  (when (mod-rule-active? 'rule-freeze)
+    (let ((punishment (mod-rule-punishment-for-id 'rule-freeze)))
       (when punishment
-        (let ((slot (mod-rule-find-active-slot 'rule-dont-move)))
+        (let ((slot (mod-rule-find-active-slot 'rule-freeze)))
           (when (>= slot 0)
             (mod-rule-handle-slot-failure slot punishment))))))
   (none))

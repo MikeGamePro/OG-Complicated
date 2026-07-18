@@ -1,12 +1,13 @@
 **why the hell do enemies randomly despawn**
 
 improve game over state
+stop timer and rules if game beaten, and don't resume on loading a file that's beaten
 finish drought (disable water draw)
 alert sound on last 10 seconds, find a replacement for new rule
 look at orb refresh on hidden treasure again
+credits
 
-rename hands on
-maybe rename: keep it low, one frame
+maybe rename: keep it low, one frame, hands on
 maybe add checks for green eco lurkers
 maybe add settings for timer placement
 consider replacement for jak rabbit

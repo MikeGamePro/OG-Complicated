@@ -664,18 +664,22 @@
         (suspend)
         (ja :num! (seek!)))
       (set-forward-vel arg2)
+      ;; (mod-rule-trigger-brittle-bones)
+      ;; (mod-rule-trigger-grounded)
+      ;; (mod-rule-trigger-freeze)
       (go target-pole-flip-up-jump (the-as float arg0) (the-as float arg1)))
   :post target-no-move-post)
 
 (defstate target-pole-flip-up-jump (target)
   :event target-standard-event-handler
   :enter
-    (behavior ()
-      (mod-rule-trigger-dont-move)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-grounded)
+    ;; (behavior ()
+    ;;   (mod-rule-trigger-freeze)
+    ;;   (mod-rule-trigger-brittle-bones)
+    ;;   (mod-rule-trigger-grounded)
       (-> target-jump-forward
-          enter))
+          enter)
+          ;; )
   :exit target-exit
   :trans
     (behavior ()
@@ -717,6 +721,9 @@
         (suspend)
         (ja :num! (seek! (ja-aframe (the-as float 16.0) 0))))
       (set-forward-vel arg2)
+      ;; (mod-rule-trigger-freeze)
+      ;; (mod-rule-trigger-brittle-bones)
+      ;; (mod-rule-trigger-grounded)
       (go target-pole-flip-forward-jump arg0 arg1))
   :post target-no-move-post)
 
@@ -724,9 +731,6 @@
   :event target-standard-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-dont-move)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-grounded)
       ((-> target-jump enter) arg0 arg1 (the-as surface #f))
       (set! (-> self control mod-surface) *forward-pole-jump-mods*))
   :exit target-exit
@@ -828,7 +832,7 @@
     (behavior ((arg0 float) (arg1 float))
       ;; (mod-rule-trigger-brittle-bones)
       ;; (mod-rule-trigger-grounded)
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (ja-channel-set! 1)
       (set-quaternion! (-> self control) (-> self control dir-targ))
       (logclear! (-> self control root-prim prim-core action) (collide-action edgegrab-active edgegrab-cam))
@@ -857,7 +861,7 @@
         exit)
   :code
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (ja-channel-set! 1)
       (set-quaternion! (-> self control) (-> self control dir-targ))
       (send-event *camera* 'damp-up)
@@ -887,7 +891,7 @@
         event)
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *run-attack-mods*)
       (set! (-> *run-attack-mods* turnv) 655360.0)
@@ -982,7 +986,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       ;; (mod-rule-trigger-brittle-bones)
       ;; (mod-rule-trigger-grounded)
       (set! (-> self control mod-surface) *yellow-jump-mods*)
@@ -1120,7 +1124,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (-> target-wade-stance
           enter))
   :exit
@@ -1323,7 +1327,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       ((-> target-swim-stance enter))
       (die-on-next-update! (-> self water bob))
       (set! (-> self control unknown-uint20) (the-as uint (current-time))))
@@ -1392,7 +1396,7 @@
       (target-standard-event-handler proc argc message block))
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (set-time! (-> self state-time))
       (logclear! (-> self water flag) (water-flag swim-ground))
       (set! (-> self control mod-surface) *dive-mods*)
@@ -1560,10 +1564,11 @@
     (-> target-jump
         event)
   :enter
-    (behavior ()
-      (mod-rule-trigger-dont-move)
+    ;; (behavior ()
+    ;;   (mod-rule-trigger-freeze)
       (-> target-jump
-          enter))
+          enter)
+          ;; )
   :exit target-exit
   :trans
     (behavior ()
@@ -1581,17 +1586,16 @@
 (defstate target-swim-jump (target)
   :event target-standard-event-handler
   :enter
-(behavior ()
-    (mod-rule-trigger-dont-move)  
+;; (behavior ()
+;;     (mod-rule-trigger-freeze)  
     (-> target-swim-stance
-        enter))
+        enter)
+        ;; )
   :exit
     (behavior ()
       ((-> target-swim-stance exit))
       (die-on-next-update! (-> self water bob))
       (set! (-> self water align-offset) 0.0)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-grounded)
       (logior! (-> self water flag) (water-flag jump-out)))
   :code
     (behavior ((arg0 float) (arg1 float))
@@ -1656,7 +1660,7 @@
 (defstate target-launch (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (if (and (= message 'query) (= (-> block param 0) 'mode))
         'target-launch
         (target-standard-event-handler proc argc message block)))
@@ -1722,7 +1726,7 @@
 (defstate target-periscope (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-dont-move)
+      (mod-rule-trigger-freeze)
       (case message
         (('change-mode) #f)
         (('end-mode) (when (-> self control unknown-spoolanim00) (set! (-> self control unknown-uint20) (the-as uint #f)) #t))
