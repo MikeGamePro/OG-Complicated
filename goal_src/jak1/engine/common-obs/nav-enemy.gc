@@ -10,7 +10,7 @@
 
 ;; DECOMP BEGINS
 
-(define-extern mod-rule-trigger-mean-look (function none))
+(define-extern mod-rule-trigger-glare (function none))
 (define-extern notify-enemy-death (function process-drawable none))
 
 (defun nav-enemy-rnd-float ()
@@ -543,7 +543,7 @@ nav-enemy-default-event-handler
                                (vector-vector-distance (-> self collide-info trans) (-> *target* control trans))))
                       (let ((gp-0 'racer)) (= gp-0 (send-event *target* 'query 'mode)))))
           (go-virtual nav-enemy-flee))
-        (when (nav-enemy-notice-player?) (mod-rule-trigger-mean-look) (go-virtual nav-enemy-notice))))
+        (when (nav-enemy-notice-player?) (mod-rule-trigger-glare) (go-virtual nav-enemy-notice))))
   :code
     (behavior ()
       (let ((f30-0 (nav-enemy-rnd-float-range 0.9 1.1)))

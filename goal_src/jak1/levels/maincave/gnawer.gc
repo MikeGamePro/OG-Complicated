@@ -677,7 +677,7 @@
       (logior! (-> self mask) (process-mask actor-pause)))
   :code
     (behavior ()
-    (mod-rule-trigger-mean-look)
+    (mod-rule-trigger-glare)
       (logclear! (-> self mask) (process-mask actor-pause))
       (ja-channel-push! 1 (seconds 0.075))
       (ja-no-eval :group! gnawer-notice-ja :num! (seek!) :frame-num 0.0)

@@ -656,7 +656,7 @@
   :trans quicksandlurker-check-hide-transition
   :code
     (behavior ()
-    (mod-rule-trigger-mean-look)
+    (mod-rule-trigger-glare)
       (process-spawn part-tracker
                      :init
                      part-tracker-init

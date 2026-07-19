@@ -224,7 +224,7 @@ junglesnake-default-event-handler
         (let* ((a0-1 (target-pos 0))
                (f0-1 (- (-> a0-1 y) (-> self root trans y))))
           (when (and (>= 40960.0 f0-1) (>= 143360.0 (vector-vector-xz-distance a0-1 (-> self root trans))))
-            (mod-rule-trigger-mean-look)
+            (mod-rule-trigger-glare)
             (go junglesnake-wake)))))
   :code
     (behavior ()

@@ -247,7 +247,7 @@ lurkerworm-default-post-behavior
         (when (and (time-elapsed? (-> self state-time) (seconds 1))
                  *target*
                  (>= 81920.0 (vector-vector-distance (-> self root trans) (-> *target* control trans))))
-          (mod-rule-trigger-mean-look)
+          (mod-rule-trigger-glare)
           (go lurkerworm-spot))
         (suspend)))
   :post lurkerworm-default-post-behavior)

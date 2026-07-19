@@ -343,7 +343,7 @@
           (set-time! (-> self picked-point-time))
           (set! (-> self pick-new-point-delay) (rand-vu-int-range (seconds 3) (seconds 10)))))
       (when (and (time-elapsed? (-> self state-time) (-> self reaction-delay)) (puffer-method-25 self (-> self notice-dist)))
-        (mod-rule-trigger-mean-look)
+        (mod-rule-trigger-glare)
         (go puffer-attack))
       (when (or (< (vector-vector-xz-distance (-> self root trans) (-> self dest-pos)) 8192.0)
                 (time-elapsed? (-> self picked-point-time) (-> self pick-new-point-delay)))

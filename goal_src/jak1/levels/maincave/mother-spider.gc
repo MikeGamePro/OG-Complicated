@@ -655,7 +655,7 @@
   :event mother-spider-default-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-mean-look)
+    (mod-rule-trigger-glare)
       (set! (-> self hit?) #f)
       (set-time! (-> self state-time))
       (set-time! (-> self last-player-in-air-time)))

@@ -259,7 +259,7 @@ baby-spider-default-event-handler
   :event baby-spider-default-event-handler
   :code
     (behavior ()
-    (mod-rule-trigger-mean-look)
+    (mod-rule-trigger-glare)
       (cond
         ((not *target*) (go-virtual nav-enemy-idle))
         ((target-in-range? self (-> self nav-info notice-distance)) (go-virtual nav-enemy-chase))

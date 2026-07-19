@@ -402,7 +402,7 @@
   :trans
     (behavior ()
       (cond
-        ((> (-> self num-snacks) 0) (when (process-grab? *target*) (close-current! (-> self tasks)) (go-virtual play-anim)))
+        ((> (-> self num-snacks) 0) (when (process-grab? *target*) (mod-rule-counter-add-progress 'rule-for-billy 1) (close-current! (-> self tasks)) (go-virtual play-anim)))
         ((< (-> self num-snacks) 0) (go-virtual idle))
         (else
          (process-grab? *target*)

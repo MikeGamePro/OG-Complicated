@@ -105,7 +105,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 34) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 36) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
@@ -291,7 +291,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-keep-it-low) "KEEP IT LOW")
     ((eq? id 'complication-sizeable) "SIZEABLE CONTRIBUTION")
     ((eq? id 'complication-ohko) "OHKO")
-    ((eq? id 'complication-mean-look) "MEAN LOOK")
+    ((eq? id 'complication-glare) "GLARE")
     ((eq? id 'complication-heating-balloons) "HEATING BALLOONS")
     ((eq? id 'complication-disassociate) "DISASSOCIATE")
     ((eq? id 'complication-bus-driver) "BUS DRIVER")
@@ -304,11 +304,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-red-kill) "VENDETTA")
     ((eq? id 'rule-blue-crate) "HANDS ON")
     ((eq? id 'complication-yellow-pilled) "YELLOW-PILLED")
-    ((eq? id 'complication-red-light) "RED LIGHT")
+    ((eq? id 'complication-red-stop) "RED STOP")
     ((eq? id 'rule-one-frame) "ONE FRAME")
     ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
-    ((eq? id 'rule-freeze) "FREEZE")
+    ((eq? id 'rule-dont-move) "RED LIGHT")
     ((eq? id 'complication-rgyb) "RGYB")
+    ((eq? id 'complication-butter-fingers) "BUTTER FINGERS")
+    ((eq? id 'rule-for-billy) "FOR BILLY")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -331,7 +333,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-heating-balloons) "COOLING BALLOONS MELT YOU.")
     ((eq? id 'complication-drought) "JAK FORGOT HOW TO SWIM.")
     ((eq? id 'complication-ohko) "JAK HAS ONE HEALTH.")
-    ((eq? id 'complication-mean-look) "JAK FREEZES WHEN LURKERS SEE HIM.")
+    ((eq? id 'complication-glare) "JAK FREEZES WHEN LURKERS SEE HIM.")
     ((eq? id 'complication-disassociate) "KILLING A LURKER DISMOUNTS FLUT FLUT.")
     ((eq? id 'complication-bus-driver) "ZOOMER EXPLODES IF TOO SLOW.")
     ((eq? id 'complication-fuel-shortage) "ALL POWER CELLS ARE GONE.")
@@ -342,11 +344,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-blue-crate) "DO NOT BREAK ANY CRATES WITH BLUE ECO.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
     ((eq? id 'complication-yellow-pilled) "YELLOW ECO PAUSES TIMER.")
-    ((eq? id 'complication-red-light) "RED ECO PAUSES TIMER.")
+    ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A FLY CRATE.")
-    ((eq? id 'rule-freeze) "DO NOT MOVE!")
+    ((eq? id 'rule-dont-move) "DO NOT MOVE.")
     ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
+    ((eq? id 'complication-butter-fingers) "JAK CANNOT GRAB LEDGES.")
+    ((eq? id 'rule-for-billy) "PROTECT FARTHY'S SNACKS.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -367,7 +371,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-sizeable) (seconds 60)) ;; 60
     ((eq? id 'complication-ohko) (seconds 60)) ;; 60
     ((eq? id 'complication-heating-balloons) (seconds 30)) ;; 30
-    ((eq? id 'complication-mean-look) (seconds 60)) ;; 60
+    ((eq? id 'complication-glare) (seconds 60)) ;; 60
     ((eq? id 'complication-disassociate) (seconds 45)) ;; 45
     ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
     ((eq? id 'complication-wings-tied) (seconds 60)) ;; 60
@@ -379,11 +383,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-red-kill) (seconds 45)) ;; 45
     ((eq? id 'rule-blue-crate) (seconds 60)) ;; 60
     ((eq? id 'complication-yellow-pilled) (seconds 60)) ;; 60
-    ((eq? id 'complication-red-light) (seconds 60)) ;; 60
+    ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
     ((eq? id 'rule-distancing) (seconds 75)) ;; 75
-    ((eq? id 'rule-freeze) (seconds 5)) ;; 5
+    ((eq? id 'rule-dont-move) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
+    ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
+    ((eq? id 'rule-for-billy) (seconds 135)) ;; 135
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -397,6 +403,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) 2)
     ((eq? id 'rule-red-kill) 1)
     ((eq? id 'rule-one-frame) 1)
+    ((eq? id 'rule-for-billy) 1)
     (else 0)))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -410,6 +417,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) 'event-once)
     ((eq? id 'rule-one-frame) 'event-once)
     ((eq? id 'rule-red-kill) 'event-once)
+    ((eq? id 'rule-for-billy) 'event-once)
     (else 'none)))
 
 (defun mod-rule-type ((id symbol))
@@ -430,7 +438,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-blue-crate)
          (eq? id 'rule-one-frame)
          (eq? id 'rule-distancing)
-         (eq? id 'rule-freeze)
+         (eq? id 'rule-dont-move)
+         (eq? id 'rule-for-billy)
          )
      'rule)
     ((or
@@ -440,7 +449,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-sizeable)
          (eq? id 'complication-ohko)
          (eq? id 'complication-heating-balloons)
-         (eq? id 'complication-mean-look)
+         (eq? id 'complication-glare)
          (eq? id 'complication-disassociate)
          (eq? id 'complication-bus-driver)
          (eq? id 'complication-wings-tied)
@@ -449,8 +458,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-hidden-treasure)
          (eq? id 'complication-drought)
          (eq? id 'complication-yellow-pilled)
-         (eq? id 'complication-red-light)
-          (eq? id 'complication-rgyb)
+         (eq? id 'complication-red-stop)
+         (eq? id 'complication-rgyb)
+         (eq? id 'complication-butter-fingers)
          )
          
      'complication)
@@ -907,7 +917,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
     ((eq? id 'rule-distancing)
     (set! *closest-buzzer-dist* 1000000000.0))
-    
+
     ((eq? id 'complication-jak-rabbit)
      (set! (-> *TARGET-bank* jump-height-min) (meters 2.02))
      (set! (-> *TARGET-bank* jump-height-max) (meters 7))
@@ -984,7 +994,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (mod-rule-random-available-punishment))
       (set! (-> *mod-rule-slot-punishments* slot) #f))
     (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (mod-rule-duration id)))
-    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1)))
+    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 0.8)))
     (mod-rule-on-activate id))
   (none))
 
@@ -1034,7 +1044,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 10) 'complication-eco-allergy)
     ((= idx 11) 'complication-sizeable)
     ((= idx 12) 'complication-ohko)
-    ((= idx 13) 'complication-mean-look)
+    ((= idx 13) 'complication-glare)
     ((= idx 14) 'complication-heating-balloons)
     ((= idx 15) 'rule-flop-this)
     ((= idx 16) 'complication-disassociate)
@@ -1052,9 +1062,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 28) 'complication-yellow-pilled)
     ((= idx 29) 'rule-one-frame)
     ((= idx 30) 'rule-distancing)
-    ((= idx 31) 'complication-red-light)
-    ((= idx 32) 'rule-freeze)
+    ((= idx 31) 'complication-red-stop)
+    ((= idx 32) 'rule-dont-move)
     ((= idx 33) 'complication-rgyb)
+    ((= idx 34) 'complication-butter-fingers)
+    ((= idx 35) 'rule-for-billy)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1263,10 +1275,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            0 10))
 
       ;; Enemies
-      ((or (eq? id 'complication-mean-look) (eq? id 'rule-lurker-pressure))
+      ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
        (cond
          ((sparse-lurker-level? level-name) 0)
-         ((eq? id 'complication-mean-look) 10)
+         ((eq? id 'complication-glare) 10)
          ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
          (else 7)))
 
@@ -1287,11 +1299,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-yellow-pilled)
        (cond
-         (is-klaww 20)
+         ((or (eq? level-name 'finalboss) is-klaww) 20)
          ((yellow-eco-level? level-name) 6)
          (else 0)))
 
-      ((eq? id 'complication-red-light)
+      ((eq? id 'complication-red-stop)
        (if (red-eco-level? level-name) 0 0))
 
       ;; Crates
@@ -1312,11 +1324,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
               (else 4)))
 
-      ((eq? id 'rule-freeze)
+      ((eq? id 'rule-dont-move)
             (cond
               (is-minigame 0)
               ((or (eq? level-name 'finalboss) is-klaww) 1)
               (else 2)))
+
+      ((eq? id 'complication-butter-fingers)
+            (cond
+              ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
+              ((eq? level-name 'training) 3)
+              (else 10)))
 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
@@ -1324,6 +1342,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ;; Special
       ((eq? id 'rule-one-frame)
        (if (or (not (launcher-level? level-name)) is-minigame) 0 5))
+
+      ((eq? id 'rule-for-billy)
+       (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (eq? level-name 'swamp)) 7 0))
 
       ((eq? id 'complication-rgyb)
        (cond 
@@ -1659,7 +1680,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (when (and (> goal 0) (< progress goal) punishment)
             (mod-rule-handle-slot-failure slot punishment))
           
-          (sound-play "cursor-up-down")
+          (if (not (movie?)) (sound-play "cursor-up-down"))
           
           ;; State resets were moved to mod-rule-deactivate-slot
           (when (and (= id (-> *mod-rule-active-slots* slot))
@@ -1696,10 +1717,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-trigger-freeze ()
-  (when (mod-rule-active? 'rule-freeze)
-    (let ((punishment (mod-rule-punishment-for-id 'rule-freeze)))
+  (when (mod-rule-active? 'rule-dont-move)
+    (let ((punishment (mod-rule-punishment-for-id 'rule-dont-move)))
       (when punishment
-        (let ((slot (mod-rule-find-active-slot 'rule-freeze)))
+        (let ((slot (mod-rule-find-active-slot 'rule-dont-move)))
           (when (>= slot 0)
             (mod-rule-handle-slot-failure slot punishment))))))
   (none))
@@ -1795,8 +1816,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;;     )
 ;;   (none))
 
-(defun mod-rule-trigger-mean-look ()
-  (when (mod-rule-active? 'complication-mean-look)
+(defun mod-rule-trigger-glare ()
+  (when (mod-rule-active? 'complication-glare)
     (logior! (-> *target* mask) (process-mask sleep))
     (set! *mean-look-clear-time* (+ (current-time) (* 3 300))))
   (none))
@@ -1998,8 +2019,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (eq? id 'rule-distancing)
       (draw-string-xy-scaled "DISTANCE: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
       (-! row 2)
-      (if (> *closest-buzzer-dist* 20000000)
-        (draw-string-xy-scaled "NONE" buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
+      (if (> *closest-buzzer-dist* (meters 40))
+        (draw-string-xy-scaled "-" buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
         (let* ((dist-meters (/ *closest-buzzer-dist* 4096.0))
                (tenths (the int (* dist-meters 10))))
           (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)))
@@ -2141,7 +2162,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (and *target*
           (or (and (mod-rule-active? 'complication-yellow-pilled)
                    (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
-              (and (mod-rule-active? 'complication-red-light)
+              (and (mod-rule-active? 'complication-red-stop)
                    (= (-> *target* fact eco-type) (pickup-type eco-red))))
           (>= (-> *target* fact eco-level) 1.0)))
  (set! *global-countdown-last-update-time* (current-time)))
