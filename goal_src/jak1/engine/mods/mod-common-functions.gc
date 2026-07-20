@@ -350,7 +350,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-dont-move) "DO NOT MOVE.")
     ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
     ((eq? id 'complication-butter-fingers) "JAK CANNOT GRAB LEDGES.")
-    ((eq? id 'rule-for-billy) "PROTECT FARTHY'S SNACKS.")
+    ((eq? id 'rule-for-billy) "PROTECT FARTHY\c12S SNACKS.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
