@@ -5,6 +5,7 @@
 (define-extern target-powerup-effect (function symbol none :behavior target))
 (define-extern mod-rule-record-player-hit (function process symbol none))
 (define-extern mod-rule-active? (function symbol symbol))
+(define-extern mod-rule-timed-punishment-active? (function symbol symbol))
 
 ;; DECOMP BEGINS
 
@@ -447,7 +448,7 @@
             (process->handle (the-as process (-> arg3 param 2)))))))
     (('play-anim) (go target-play-anim (the-as string (-> arg3 param 0)) (the-as handle arg1)))
     (('clone-anim) (go target-clone-anim (process->handle (the-as process (-> arg3 param 0)))))
-    (('edge-grab) (if (not (mod-rule-active? 'complication-butter-fingers)) (go target-edge-grab)))
+    (('edge-grab) (if (and (not (mod-rule-timed-punishment-active? 'punishment-edge)) (not (mod-rule-active? 'complication-butter-fingers))) (go target-edge-grab)))
     (('pole-grab)
      (if (not (logtest? (-> self control root-prim prim-core action) (collide-action swingpole-active)))
        (go target-pole-cycle (process->handle (the-as process (-> arg3 param 0))))))

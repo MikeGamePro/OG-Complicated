@@ -1120,7 +1120,7 @@
   0
   (none))
 
-(defmethod move-to-ground ((obj collide-shape-moving) (arg0 float) (arg1 float) (arg2 symbol) (arg3 collide-kind))
+(defmethod move-to-ground ((obj collide-shape-moving) (arg0 float) (arg1 float) (arg2 symbol) (arg3 collide-kind)) ;; something keeps happening here with enemies...
   "Move to the ground now."
   (if *debug-segment*
     (add-frame (-> *display* frames (-> *display* on-screen) frame profile-bar 0)

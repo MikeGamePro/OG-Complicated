@@ -346,7 +346,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-yellow-pilled) "YELLOW ECO PAUSES TIMER.")
     ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
-    ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A FLY CRATE.")
+    ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A SCOUT FLY.")
     ((eq? id 'rule-dont-move) "DO NOT MOVE.")
     ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
     ((eq? id 'complication-butter-fingers) "JAK CANNOT GRAB LEDGES.")
@@ -360,9 +360,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) (seconds 20)) ;; 20
     ((eq? id 'rule-lurker-pressure) (seconds 60)) ;; 60
     ((eq? id 'rule-hitlist) (seconds 45)) ;; 45
-    ((eq? id 'rule-money-pressure) (seconds 30)) ;; 30
+    ((eq? id 'rule-money-pressure) (seconds 40)) ;; 40
     ((eq? id 'rule-fuel-pressure) (seconds 30)) ;; 30
-    ((eq? id 'rule-buzzer-pressure) (seconds 45)) ;; 45
+    ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
     ((eq? id 'rule-flop-this) (seconds 90)) ;; 90
     ((eq? id 'complication-brittle-bones) (seconds 75)) ;; 75
     ((eq? id 'complication-rotten-eggs) (seconds 60)) ;; 60
@@ -389,7 +389,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-dont-move) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
-    ((eq? id 'rule-for-billy) (seconds 135)) ;; 135
+    ((eq? id 'rule-for-billy) (seconds 150)) ;; 150
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -539,6 +539,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) (seconds 10))
     ((eq? punishment 'punishment-fall-damage) (seconds 120))
     ((eq? punishment 'punishment-trip) (seconds 120))
+    ((eq? punishment 'punishment-edge) (seconds 180))
     (else 0)))
 
 (defun mod-rule-find-timed-punishment-slot ((punishment symbol))
@@ -604,7 +605,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                        (>= (current-time) (-> *mod-rule-timed-punishment-next-ticks* slot)))
               (set! (-> *mod-rule-timed-punishment-next-ticks* slot)
                     (+ (-> *mod-rule-timed-punishment-next-ticks* slot) (seconds 1)))
-              (when (= (knuth-rand-int-range 0 9) 0)
+              (when (= (knuth-rand-int-range 0 12) 0)
                 (send-event *target* 'loading))))))))
   (none))
 
@@ -822,6 +823,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (can-countdown (mod-rule-punishment-rollable? 'punishment-countdown))
         (can-fall-damage (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
         (can-trip (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip)))
+        (can-edge (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-edge)))
         (can-money (mod-rule-punishment-rollable? 'punishment-money))
         (can-warp (mod-rule-punishment-rollable? 'punishment-warp))
         (can-revert (mod-rule-punishment-rollable? 'punishment-revert-cell))
@@ -842,6 +844,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     
     ;; (when can-blind
     ;;   (+! count 1))
+
+    (when can-edge
+      (+! count 1))
 
     (when (and has-money can-money)
       (+! count 1))
@@ -906,6 +911,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ;;   (when (= roll count)
     ;;     (return 'punishment-blind))
     ;;   (+! count 1))
+
+    (when can-edge
+      (when (= roll count)
+        (return 'punishment-edge))
+      (+! count 1))
       
     #f))
 
@@ -1182,7 +1192,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'ogre)
       (eq? level 'lavatube)
       (eq? level 'citadel)
-      (eq? level 'finalboss)))
+      (eq? level 'finalboss)
+      (eq? level 'sunkenb)))
 
 (defun sparse-crate-level? ((level symbol))
   (or (eq? level 'village3)
@@ -1229,6 +1240,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'swamp)
       (eq? level 'robocave)
       (eq? level 'citadel)))
+
+(defun water-level? ((level symbol))
+  (or (eq? level 'beach)
+      (eq? level 'jungle)
+      (eq? level 'misty)
+      (eq? level 'darkcave)
+      (eq? level 'village1)
+      (eq? level 'village2)
+      (eq? level 'sunkenb)
+      (eq? level 'sunken)))
 
 (defun mod-rule-roll-priority ((id symbol))
   (let ((level-name (the symbol (current-level-name)))
@@ -1333,8 +1354,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-butter-fingers)
             (cond
               ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
-              ((eq? level-name 'training) 3)
-              (else 10)))
+              ((eq? level-name 'training) 0) ;; 3
+              (else 0))) ;; 10
 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
@@ -1363,11 +1384,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-drought)
        (cond
-         ((or (eq? level-name 'jungleb) (eq? level-name 'firecanyon) (eq? level-name 'lavatube)
-              (eq? level-name 'citadel) (eq? level-name 'ogre) (eq? level-name 'finalboss)
-              (eq? level-name 'village3) (eq? level-name 'snow) (eq? level-name 'robocave)) 0)
-         ((or (eq? level-name 'maincave) (eq? level-name 'rolling)) 3)
-         (else 8)))
+         ((water-level? level-name) 8)
+         ((or (eq? level-name 'maincave) (eq? level-name 'rolling) (eq? level-name 'training)) 3)
+         (else 0)))
 
       ((eq? id 'complication-eco-allergy)
        (cond
@@ -1605,12 +1624,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) "BLIND FOR 10 SECONDS")
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
+    ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 3 MINUTES")
     (else "NONE")))
 
 (defun mod-rule-timed-punishment-name ((punishment symbol))
   (cond
     ((eq? punishment 'punishment-fall-damage) "FALL DAMAGE")
     ((eq? punishment 'punishment-trip) "TRIP")
+    ((eq? punishment 'punishment-edge) "LEDGE GRABS")
     (else (mod-rule-punishment-name punishment))))
 
 (defun mod-rule-apply-extra-rule-punishment ((failed-slot int))
@@ -1648,6 +1669,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (set! (-> *TARGET-bank* fall-far) (meters 7.0)) (set! (-> *TARGET-bank* fall-far-inc) (meters 10.0))
       (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-trip)
+     (none)
+     (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-edge)
      (none)
      (mod-rule-start-timed-punishment punishment))
     (else

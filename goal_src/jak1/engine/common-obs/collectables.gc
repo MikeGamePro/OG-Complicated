@@ -1297,6 +1297,14 @@
       (loop
         (transform-post)
         (animate self)
+        (when *target*
+          (let ((current-frame (-> *display* base-frame-counter)))
+            (when (!= *closest-buzzer-frame* current-frame)
+              (set! *closest-buzzer-frame* current-frame)
+              (set! *closest-buzzer-dist* 1000000000.0))
+            (let ((current-dist (vector-vector-distance (-> self root trans) (-> *target* control trans))))
+              (when (< current-dist *closest-buzzer-dist*)
+                (set! *closest-buzzer-dist* current-dist)))))
         (suspend))))
 
 (defstate pickup (buzzer)
