@@ -4,6 +4,12 @@
 (require "engine/ui/text.gc")
 
 ;; DECOMP BEGINS
+(define-extern *rules-broken* int)
+(define-extern *rules-rolled* int)
+(define-extern *rules-followed* int)
+(define-extern *complications-rolled* int)
+(define-extern *final-remaining-time* int)
+(define-extern *final-time* int)
 
 (defun set-credits-font-color ((arg0 float))
   255.0
@@ -58,8 +64,47 @@
   0
   (none))
 
-(defun draw-end-credits ((arg0 int))
-  (local-vars (v1-13 int))
+(define *tmp-cred-str* (new 'global 'string 256 (the string #f)))
+(define *custom-credits-line-count* 22)
+(defun get-custom-credits-line ((line-num int))
+  (clear *tmp-cred-str*)
+  (case line-num  
+    ((0) (format *tmp-cred-str* "~33LFINAL TIME"))
+    ((1) 
+    (let* ((safe-time (max 0 *final-time*))
+       (ticks-per-sec 300) 
+       (total-secs (/ safe-time ticks-per-sec))
+       (hours (/ total-secs 3600))
+       (mins (mod (/ total-secs 60) 60))
+       (secs (mod total-secs 60))
+       (ms (/ (* (mod safe-time ticks-per-sec) 1000) ticks-per-sec)))
+        (format *tmp-cred-str* "~2,'0D:~2,'0D:~2,'0D.~3,'0D" hours mins secs ms)))
+    ((3) (format *tmp-cred-str* "~33LA COMPLICATED MOD"))
+    ((4) (format *tmp-cred-str* "~33LBY"))
+    ((5) (format *tmp-cred-str* "MIKEGAMEPRO"))
+    ((7) (format *tmp-cred-str* "~33LRULES BROKEN"))
+    ((8) (format *tmp-cred-str* "~D" *rules-broken*))
+    ((10) (format *tmp-cred-str* "~33LRULES FOLLOWED"))
+    ((11) (format *tmp-cred-str* "~D" *rules-followed*))
+    ((13) (format *tmp-cred-str* "~33LCOMPLICATIONS ENDURED"))
+    ((14) (format *tmp-cred-str* "~D" *complications-rolled*))
+    ((16) (format *tmp-cred-str* "~33LTIME REMAINING"))
+    ((17) 
+     (let* ((safe-time (max 0 *final-remaining-time*))
+            (ticks-per-sec 300) 
+            (total-secs (/ safe-time ticks-per-sec))
+            (mins (/ total-secs 60))
+            (secs (mod total-secs 60))
+            (ms (/ (* (mod safe-time ticks-per-sec) 1000) ticks-per-sec)))
+       (format *tmp-cred-str* "~2,'0D:~2,'0D.~3,'0D" mins secs ms)))
+    ((19) (format *tmp-cred-str* "JAK AND DAXTER:"))
+    ((20) (format *tmp-cred-str* "THE PRECURSOR LEGACY"))
+    (else (return (the-as string #f))))
+  *tmp-cred-str*
+  )
+
+(defun draw-end-credits ((credits-pos int))
+  (local-vars (line-height2 int))
   (#when PC_PORT
     ;; og:preserve-this change text language during credits
     ;; disable the automatic text loading for now
@@ -68,32 +113,48 @@
       ;; swap language and load new text files
       (set! (-> *pc-settings* text-language) (the pc-language (-> *setting-control* current language)))
       (load-level-text-files 0)))
-  (let ((s4-0 (+ (- arg0) (the int (* 1.5 (the float (-> *video-parms* screen-sy))))))
-        (gp-0 2815)
-        (s3-0 0)
-        (s2-0 #t)
+  (let ((cur-line-y (+ (- credits-pos) (the int (* 1.5 (the float (-> *video-parms* screen-sy))))))
+        (cur-line-id -1) ;; originally 2815
+        (line-height 0)
+        (first-line? #t)
         (s5-0 (new 'stack 'font-context *font-default-matrix* 31 0 0.0 (font-color default) (font-flags shadow kerning))))
     (let ((v1-2 s5-0)) (set! (-> v1-2 width) (the float 450)))
     (let ((v1-3 s5-0)) (set! (-> v1-3 height) (the float 10)))
     (let ((v1-4 s5-0)) (set! (-> v1-4 scale) 1.0))
     (set! (-> s5-0 flags) (font-flags shadow kerning middle large))
-    (while (or s2-0 (and (< s4-0 (- s3-0)) (< (the-as uint gp-0) (the-as uint 3262))))
-      (+! s4-0 s3-0)
-      (+! gp-0 1)
-      (let ((a0-8 (lookup-text! *common-text* (the-as text-id gp-0) #t)))
-        (if a0-8 (set! s3-0 (the int (+ 5.0 (print-game-text a0-8 s5-0 #t 128 20)))) (set! s3-0 25)))
-      (set! s2-0 #f))
+    ;; figure out first line we wanna print on-screen
+    ;; ...this actually tries to print all the stuff offscreen in the same spot just to figure out line heights LOL
+    (while (or first-line?
+               (and (< cur-line-y (- line-height)) ;; only print line-height worth off-screen
+                    (< (the-as uint cur-line-id) (the-as uint 3262)))) ;; stop at end of credits
+      (+! cur-line-y line-height)
+      (+! cur-line-id 1)
+      (if (= cur-line-id *custom-credits-line-count*) (set! cur-line-id 2816)) ;; skip ahead to real credits start index
+      (let ((cur-line (cond
+          ;; custom credits lines
+          ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
+          ;; vanilla credits
+          (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
+        (if cur-line (set! line-height (the int (+ 5.0 (print-game-text cur-line s5-0 #t 128 20)))) (set! line-height 25)))
+      (set! first-line? #f))
+    ;; actually print the on-screen stuff
     (cond
-      ((>= (the-as uint gp-0) (the-as uint 3262))
+      ((>= (the-as uint cur-line-id) (the-as uint 3262))
        (#when PC_PORT
          ;; credits are over - re-enable automatic text loading
          (enable-level-text-file-loading))
        #t)
       (else
-       (set! (-> s5-0 origin y) (the float s4-0))
+       (set! (-> s5-0 origin y) (the float cur-line-y))
        (while (< (-> s5-0 origin y) (the float (-> *video-parms* screen-sy)))
-         (let ((a0-11 (lookup-text! *common-text* (the-as text-id gp-0) #t)))
-           (if a0-11 (set! v1-13 (the int (+ 5.0 (print-game-text a0-11 s5-0 #f 128 20)))) (set! v1-13 25)))
-         (+! (-> s5-0 origin y) (the float v1-13))
-         (+! gp-0 1))
+        (let ((cur-line2 (cond
+            ;; custom credits lines
+            ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
+            ;; vanilla credits
+            (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
+           (if cur-line2 (set! line-height2 (the int (+ 5.0 (print-game-text cur-line2 s5-0 #f 128 20)))) (set! line-height2 25)))
+         (+! (-> s5-0 origin y) (the float line-height2))
+         (+! cur-line-id 1)
+         (if (= cur-line-id *custom-credits-line-count*) (set! cur-line-id 2816)) ;; skip ahead to real credits start index
+         )
        #f))))

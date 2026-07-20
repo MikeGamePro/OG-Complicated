@@ -80,10 +80,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   ;; with the two macros defined above, this is equivalent to
   ;; (set! (-> *game-info* fuel) (+ (-> *game-info* fuel) 1))
   (none))
+
 (define *global-countdown-active?* #f)
 (define *global-countdown-lost?* #f)
 (define *global-countdown-remaining-time* 0)
 (define *global-countdown-last-update-time* 0)
+(define *global-countup-active?* #f)
+(define *global-countup-timer* 0)
+(define *global-countup-last-update-time* 0)
+(define *global-countup-lost?* #f)
 (define *mod-rule-active-slots* (new 'global 'boxed-array symbol 3))
 (define *mod-rule-pending-slots* (new 'global 'boxed-array symbol 3))
 (define *mod-rule-slot-end-times* (new 'global 'boxed-array time-frame 3))
@@ -105,7 +110,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 38) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 39) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
@@ -266,6 +271,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task citadel-sage-yellow)
        (game-task citadel-sage-green)))
 
+(define *rules-rolled* 0)
+(define *rules-broken* 0)
+(define *rules-followed* 0)
+(define *complications-rolled* 0)
+(define *final-remaining-time* 0)
+(define *final-time* 0)
+(define *show-countup?* #f)
+
 (defun mod-game-beaten-resume-from-save ((value int))
   (set! *mod-game-beaten?* (not (= value 0)))
   (none))
@@ -302,9 +315,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-drought) "LIKE A STONE")
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
     ((eq? id 'rule-survivor) "SURVIVOR")
-    ((eq? id 'rule-red-kill) "VENDETTA")
+    ((eq? id 'rule-vendetta) "VENDETTA")
     ((eq? id 'rule-blue-crate) "HANDS ON")
-    ((eq? id 'complication-yellow-pilled) "YELLOW-PILLED")
+    ((eq? id 'complication-eco-reserve) "ECO RESERVE")
     ((eq? id 'complication-red-stop) "RED STOP")
     ((eq? id 'rule-one-frame) "ONE FRAME")
     ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
@@ -313,6 +326,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-butter-fingers) "BUTTER FINGERS")
     ((eq? id 'rule-for-billy) "FOR BILLY")
     ((eq? id 'rule-cold-feet) "COLD FEET")
+    ((eq? id 'complication-overclock) "OVERCLOCK")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -343,10 +357,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-hidden-treasure) "ORBS ARE INVISIBLE.")
     ((eq? id 'complication-wings-tied) "YOU CANNOT COLLECT CELLS ON FLUT FLUT.")
     ((eq? id 'complication-jak-rabbit) "JUMP HEIGHTS ARE DOUBLED.")
-    ((eq? id 'rule-red-kill) "KILL A LURKER WITH RED ECO.")
+    ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
     ((eq? id 'rule-blue-crate) "DO NOT BREAK ANY CRATES WITH BLUE ECO.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
-    ((eq? id 'complication-yellow-pilled) "YELLOW ECO PAUSES TIMER.")
+    ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES TIMER.")
     ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A SCOUT FLY.")
@@ -355,6 +369,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-butter-fingers) "JAK CANNOT GRAB LEDGES.")
     ((eq? id 'rule-for-billy) "PROTECT FARTHY\c12S SNACKS.")
     ((eq? id 'rule-cold-feet) "KEEP OFF THE ICE.")
+    ((eq? id 'complication-overclock) "CITADEL DISCS ARE FASTER.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -385,9 +400,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-hidden-treasure) (seconds 60)) ;; 60
     ((eq? id 'complication-drought) (seconds 45)) ;; 45
     ((eq? id 'complication-jak-rabbit) (seconds 60)) ;; 60
-    ((eq? id 'rule-red-kill) (seconds 45)) ;; 45
+    ((eq? id 'rule-vendetta) (seconds 60)) ;; 60
     ((eq? id 'rule-blue-crate) (seconds 60)) ;; 60
-    ((eq? id 'complication-yellow-pilled) (seconds 60)) ;; 60
+    ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
     ((eq? id 'rule-distancing) (seconds 75)) ;; 75
@@ -396,6 +411,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
     ((eq? id 'rule-for-billy) (seconds 150)) ;; 150
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
+    ((eq? id 'complication-overclock) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -408,7 +424,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-money-pressure) 20)
     ((eq? id 'rule-fuel-pressure) 1)
     ((eq? id 'rule-buzzer-pressure) 2)
-    ((eq? id 'rule-red-kill) 1)
+    ((eq? id 'rule-vendetta) 1)
     ((eq? id 'rule-one-frame) 1)
     ((eq? id 'rule-for-billy) 1)
     (else 0)))
@@ -424,7 +440,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) 'counter)
     ((eq? id 'rule-die) 'event-once)
     ((eq? id 'rule-one-frame) 'event-once)
-    ((eq? id 'rule-red-kill) 'event-once)
+    ((eq? id 'rule-vendetta) 'event-once)
     ((eq? id 'rule-for-billy) 'event-once)
     (else 'none)))
 
@@ -443,7 +459,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-grounded)
          (eq? id 'rule-survivor)
          (eq? id 'rule-management)
-         (eq? id 'rule-red-kill)
+         (eq? id 'rule-vendetta)
          (eq? id 'rule-blue-crate)
          (eq? id 'rule-one-frame)
          (eq? id 'rule-distancing)
@@ -467,10 +483,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-jak-rabbit)
          (eq? id 'complication-hidden-treasure)
          (eq? id 'complication-drought)
-         (eq? id 'complication-yellow-pilled)
+         (eq? id 'complication-eco-reserve)
          (eq? id 'complication-red-stop)
          (eq? id 'complication-rgyb)
          (eq? id 'complication-butter-fingers)
+         (eq? id 'complication-overclock)
          )
          
      'complication)
@@ -1020,9 +1037,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
     (set! (-> *mod-rule-slot-progress* slot) 0)
     (if (eq? (mod-rule-type id) 'rule)
-      (set! (-> *mod-rule-slot-punishments* slot)
+      (begin 
+            (set! (-> *mod-rule-slot-punishments* slot)
             (mod-rule-random-available-punishment))
-      (set! (-> *mod-rule-slot-punishments* slot) #f))
+            (+! *rules-rolled* 1))
+      (begin
+        (set! (-> *mod-rule-slot-punishments* slot) #f)
+        (+! *complications-rolled* 1)))
     (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (mod-rule-duration id)))
     (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 0.8)))
     (mod-rule-on-activate id))
@@ -1087,9 +1108,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 23) 'rule-management)
     ((= idx 24) 'complication-jak-rabbit)
     ((= idx 25) 'complication-hidden-treasure)
-    ((= idx 26) 'rule-red-kill)
+    ((= idx 26) 'rule-vendetta)
     ((= idx 27) 'rule-blue-crate)
-    ((= idx 28) 'complication-yellow-pilled)
+    ((= idx 28) 'complication-eco-reserve)
     ((= idx 29) 'rule-one-frame)
     ((= idx 30) 'rule-distancing)
     ((= idx 31) 'complication-red-stop)
@@ -1099,6 +1120,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 35) 'rule-for-billy)
     ((= idx 36) 'rule-sniper)
     ((= idx 37) 'rule-cold-feet)
+    ((= idx 38) 'complication-overclock)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1342,12 +1364,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (mod-rule-active? 'rule-sniper))
            0 10))
 
-      ((eq? id 'rule-red-kill)
+      ((eq? id 'rule-vendetta)
        (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name))
                is-minigame)
            0 3))
 
-      ((eq? id 'complication-yellow-pilled)
+      ((eq? id 'complication-eco-reserve)
        (cond
          ((or (eq? level-name 'finalboss) is-klaww) 20)
          ((yellow-eco-level? level-name) 6)
@@ -1389,10 +1411,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
 
+      ;; Special
       ((eq? id 'rule-cold-feet)
        (if (eq? level-name 'snow) 10 0))
 
-      ;; Special
+      ((eq? id 'complication-overclock)
+       (if (eq? level-name 'citadel) 30 0))
+
       ((eq? id 'rule-one-frame)
        (if (or (not (launcher-level? level-name)) is-minigame) 0 5))
 
@@ -1537,6 +1562,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 (when (>= new-progress goal)
                 (sound-play "buzzer-pickup") ;; or slider2001
                 (set! *mod-rule-last-outcome* 'success)
+                (+! *rules-followed* 1)
                   (mod-rule-finish-slot slot #t)))
               (set! (-> *mod-rule-slot-progress* slot)
                     (+ (-> *mod-rule-slot-progress* slot) amount)))))
@@ -1729,6 +1755,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-handle-slot-failure ((slot int) (punishment symbol))
   (when (not (mod-rule-slot-in-grace-period? slot))
     (sound-play "caught-eel")
+    (+! *rules-broken* 1)
     (set! *mod-rule-last-outcome* 'failed)
     (if (eq? punishment 'punishment-extra-rule)
       (mod-rule-apply-extra-rule-punishment slot)
@@ -1888,8 +1915,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> (the-as fact-info-target (-> *target* fact)) health) 1.0))
   (none))
 
-;; (defun mod-rule-trigger-yellow-pilled ()
-;;   (when (mod-rule-active? 'complication-yellow-pilled) *target*
+;; (defun mod-rule-trigger-eco-reserve ()
+;;   (when (mod-rule-active? 'complication-eco-reserve) *target*
 
 ;;     )
 ;;   (none))
@@ -1922,8 +1949,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-trigger-red-eco ((red-eco-kill? symbol))
-  (when (and (mod-rule-active? 'rule-red-kill) red-eco-kill?)
-    (mod-rule-counter-add-progress 'rule-red-kill 1))
+  (when (and (mod-rule-active? 'rule-vendetta) red-eco-kill?)
+    (mod-rule-counter-add-progress 'rule-vendetta 1))
   (none))
 
 (defun mod-rule-trigger-sniper ((yellow-eco-kill? symbol))
@@ -2021,6 +2048,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (set! (-> *mod-rule-timed-punishment-next-ticks* slot)
                  (+ (-> *mod-rule-timed-punishment-next-ticks* slot) elapsed))))))
         (else
+        ;; (+! *global-countup-timer* elapsed)
         (when (and (> *mean-look-clear-time* 0)
            (>= (current-time) *mean-look-clear-time*))
   (set! *mean-look-clear-time* 0)
@@ -2116,6 +2144,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (tenths (the int (* dist-meters 10))))
           (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row 8))
+    (when (eq? id 'complication-bus-driver)
+          (draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
+          (-! row 2)
+            (let* ((dist-meters (/ (-> *target* control ctrl-xz-vel) 4096.0))
+                  (tenths (the int (* dist-meters 10))))
+              (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
+              (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4))
+          (+! row 8))
     row))
 
 (defun mod-rule-draw-timed-punishments ((buf dma-buffer))
@@ -2181,6 +2217,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (minutes (the int (/ total-seconds 60)))
               (seconds-part (the int (mod total-seconds 60)))
               (centis (the int (mod total-centis 100))))
+         ;; Draw main countdown timer
          (draw-string-xy-scaled
            (string-format "~1,'0D:~2,'0D.~2,'0D"
                           minutes
@@ -2192,6 +2229,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (font-color red)
            (font-flags shadow kerning large)
            0.8)
+         ;; Draw countup timer
+        (when *show-countup?* (let* ((up-total-centis (max 0 (the int (/ (* *global-countup-timer* 100)
+                                                            (seconds 1)))))
+                        (up-total-seconds (the int (/ up-total-centis 100)))
+                        (up-minutes (the int (/ up-total-seconds 60)))
+                        (up-seconds-part (the int (mod up-total-seconds 60)))
+                        (up-centis (the int (mod up-total-centis 100))))
+                  (draw-string-xy-scaled
+                    (string-format "~1,'0D:~2,'0D.~2,'0D"
+                                    up-minutes
+                                    up-seconds-part
+                                    up-centis)
+                    global-buf
+                    430
+                    40
+                    (font-color white)
+                    (font-flags shadow kerning large)
+                    0.5)))
          (mod-rule-draw-timed-punishments global-buf)
          (let ((reverted-y 72) 
                (primary (mod-rule-nth-active-slot 0)))
@@ -2220,8 +2275,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                       (> *mod-rule-last-reverted-cell-until* (current-time)))
              (draw-string-xy-scaled
               (string-format
-  "Reverted: ~A"
-  (game-task->string (the game-task *mod-rule-last-reverted-cell-task*)))
+"Reverted: ~A"
+(game-task->string (the game-task *mod-rule-last-reverted-cell-task*)))
                global-buf
                10
                reverted-y
@@ -2243,45 +2298,41 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (and *global-countdown-active?* (not *global-countdown-lost?*))
       (cond
         ((or (global-countdown-paused?)
-     (and *target*
-          (or (and (mod-rule-active? 'complication-yellow-pilled)
-                   (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
-              (and (mod-rule-active? 'complication-red-stop)
-                   (= (-> *target* fact eco-type) (pickup-type eco-red))))
-          (>= (-> *target* fact eco-level) 1.0)))
- (set! *global-countdown-last-update-time* (current-time)))
+             (and *target*
+                  (or (and (mod-rule-active? 'complication-eco-reserve)
+                           (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
+                      (and (mod-rule-active? 'complication-red-stop)
+                           (= (-> *target* fact eco-type) (pickup-type eco-red))))
+                  (>= (-> *target* fact eco-level) 1.0)))
+         (set! *global-countdown-last-update-time* (current-time)))
         (else
          (let ((elapsed (- (current-time) *global-countdown-last-update-time*)))
-           
-           ;; Detect save/load time-warp (backwards or massive skip)
+           ;; Detect save/load time-warp
            (when (or (< elapsed 0) (> elapsed (seconds 10)))
              (set! elapsed 0))
-             
            (when (> elapsed 0)
-             (set! *global-countdown-remaining-time* (max 0 (- *global-countdown-remaining-time* elapsed))))
-             
-           ;; Unconditionally update so the timer doesn't freeze  
+             (set! *global-countdown-remaining-time* (max 0 (- *global-countdown-remaining-time* elapsed)))
+             (set! *global-countup-timer* (+ *global-countup-timer* elapsed))) 
            (set! *global-countdown-last-update-time* (current-time))
-           
-(when (<= *global-countdown-remaining-time* 0)
-  (format #t "COUNTDOWN: lost triggered~%")
-  (set! *global-countdown-remaining-time* 0)
-  (set! *global-countdown-lost?* #t)
-  (set! *global-countdown-active?* #f)
-  (format #t "COUNTDOWN: killing mod-rule-manager~%")
-  (kill-by-name 'mod-rule-manager *active-pool*)
-  (format #t "COUNTDOWN: mod-rules-reset~%")
-  (mod-rules-reset)
-  (when *target*
-    (logclear! (-> *target* mask) (process-mask sleep)))
-  (set! *mean-look-clear-time* 0)
-  (format #t "COUNTDOWN: spawning reset process~%")
-  (process-spawn-function process
-    (lambda ()
-      (suspend)
-      (format #t "COUNTDOWN: calling start-speedrun, category=~S~%" (-> *speedrun-info* category))
-      (start-speedrun (the-as speedrun-category #f)) ;; will crash if no current save file, but that should never happen in a run.
-      (format #t "COUNTDOWN: start-speedrun returned~%"))))))))
+           (when (<= *global-countdown-remaining-time* 0)
+             (format #t "COUNTDOWN: lost triggered~%")
+             (set! *global-countdown-remaining-time* 0)
+             (set! *global-countdown-lost?* #t)
+             (set! *global-countdown-active?* #f)
+             (format #t "COUNTDOWN: killing mod-rule-manager~%")
+             (kill-by-name 'mod-rule-manager *active-pool*)
+             (format #t "COUNTDOWN: mod-rules-reset~%")
+             (mod-rules-reset)
+             (when *target*
+               (logclear! (-> *target* mask) (process-mask sleep)))
+             (set! *mean-look-clear-time* 0)
+             (format #t "COUNTDOWN: spawning reset process~%")
+             (process-spawn-function process
+               (lambda ()
+                 (suspend)
+                 (format #t "COUNTDOWN: calling start-speedrun, category=~S~%" (-> *speedrun-info* category))
+                 (start-speedrun (the-as speedrun-category #f))
+                 (format #t "COUNTDOWN: start-speedrun returned~%"))))))))
     (global-countdown-draw)
     (suspend))
   (none))
@@ -2291,13 +2342,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
-  (set! *global-countdown-remaining-time* (seconds 300)) ;; global timer start - 60
+  (set! *global-countdown-remaining-time* (seconds 300)) ;; global countdown start - 60
+  (set! *global-countup-timer* 0)
   (set! *global-countdown-last-update-time* (current-time))
   (set! *mod-rule-last-update-time* (current-time))
   (set! *mod-rule-last-reverted-cell-task* 0)
   (set! *mod-rule-last-reverted-cell-until* 0)
   (set! *mod-rule-last-outcome* 'none)
   (none))
+
 
 (defun global-countdown-start ()
   (global-countdown-reset)
@@ -2340,6 +2393,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          ;; SCENARIO C: no countdown saved in this file at all.
          (when (or *global-countdown-active?* *global-countdown-lost?*)
            (global-countdown-reset)))))
+  (none))
+
+(defun global-countup-save-value ()
+  (if *global-countdown-active?* 
+      (the int *global-countup-timer*)
+      0))
+
+(defun global-countup-resume-from-save ((saved-time int))
+  (if (not *mod-game-beaten?*)
+      (when (> saved-time 0)
+        (set! *global-countup-timer* saved-time)))
   (none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;

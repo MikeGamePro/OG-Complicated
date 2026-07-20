@@ -24,6 +24,8 @@
 ;; implemented in mod-common-functions.gc
 (define-extern global-countdown-save-value (function int))
 (define-extern global-countdown-resume-from-save (function int none))
+(define-extern global-countup-save-value (function int))
+(define-extern global-countup-resume-from-save (function int none))
 (define-extern mod-game-beaten-save-value (function int))
 
 ;; version identifier
@@ -102,7 +104,8 @@
   (video-mode 508)
   (aspect-ratio 509)
   (mod-global-timer 510)
-  (mod-game-beaten 511))
+  (mod-game-beaten 511)
+  (mod-global-countup 512))
 
 ;; DECOMP BEGINS
 
@@ -603,8 +606,14 @@
                                                                                                             (set! (-> a0-90 user-uint64)
                                                                                                                   (the-as uint (global-countdown-save-value))))
 
+                                                                                                          (let ((a0-91 (the-as game-save-tag (&+ v1-113 32))))
+                                                                                                            (set! (-> a0-91 elt-type) (game-save-elt mod-global-countup))
+                                                                                                            (set! (-> a0-91 elt-count) 0)
+                                                                                                            (set! (-> a0-91 user-uint64)
+                                                                                                                  (the-as uint (global-countup-save-value))))
+
                                                                                                           (set! (-> arg0 length)
-                                                                                                                (&- (&+ v1-113 32)
+                                                                                                                (&- (&+ v1-113 48)
                                                                                                                     (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
                                                                                                           (if (< (-> arg0 allocated-length) (-> arg0 length))
                                                                                                             (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
@@ -631,6 +640,8 @@
            (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-global-timer))
            (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-global-countup))
+          (global-countup-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag

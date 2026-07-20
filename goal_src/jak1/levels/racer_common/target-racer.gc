@@ -512,7 +512,7 @@
       (set! (-> self racer boost-curve) 0.0)))
       ;; (format #t "Speed: ~F~%" (-> self control ctrl-xz-vel))
       (when (and (or (not (cpad-hold? (-> self control cpad number) x))
-                     (< (-> self control ctrl-xz-vel) 81500.0))
+                     (< (-> self control ctrl-xz-vel) (meters 20)))
                  (>= (- (current-time) *racer-start-time*) (seconds 3)))
         (mod-rule-trigger-bus-driver))
   (when (or (not (cpad-hold? (-> self control cpad number) x))

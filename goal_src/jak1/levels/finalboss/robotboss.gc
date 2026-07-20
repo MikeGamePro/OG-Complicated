@@ -11,6 +11,8 @@
 (define-extern mod-game-beaten-resume-from-save (function int none))
 (define-extern *mod-game-beaten?* (symbol))
 (define-extern global-countdown-reset (function none))
+(define-extern *global-countdown-remaining-time* int)
+(define-extern *global-countup-timer* int)
 
 (defmethod ease-loc-t ((this robotboss))
   (parameter-ease-sin-clamp (-> this loc-t)))
@@ -304,6 +306,8 @@
       (case message
         (('white-eco-picked-up)
         (set! *mod-game-beaten?* #t)
+        (set! *final-remaining-time* *global-countdown-remaining-time*)
+        (set! *final-time* *global-countup-timer*)
         ;; mod: game is beaten, stop the countdown/rules for this file right now.
         (global-countdown-reset)
          (close-specific-task! (game-task finalboss-movies) (task-status unknown))

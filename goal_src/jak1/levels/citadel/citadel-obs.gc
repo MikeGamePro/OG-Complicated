@@ -281,14 +281,18 @@
   :trans rider-trans
   :code
     (behavior ()
-      (loop
-        (update! (-> self sound))
-        (quaternion-axis-angle! (-> self root quat)
-                                0.0
-                                1.0
-                                0.0
-                                (* 65536.0 (get-current-phase (-> self sync)) (-> self rot-scale)))
-        (suspend)))
+(loop
+  (update! (-> self sound))
+  ;; (when (> (-> self root riders num-riders) 0)
+  ;;   (format #t "riding pizza")
+  ;;   )
+  (quaternion-axis-angle! (-> self root quat)
+                          0.0
+                          1.0
+                          0.0
+                          (* (if (mod-rule-active? 'complication-overclock) 4.0 1.0) (* 65536.0 (get-current-phase (-> self sync)) (-> self rot-scale))))
+  (suspend)
+  ))
   :post rider-post)
 
 (defmethod init! ((this citb-disc))

@@ -2,9 +2,6 @@
 
 finish drought (disable water draw)
 alert sound on last 10 seconds, find a replacement for new rule
-credits
-count flies for distancing
-try rgyb vents again
 
 improve game over state
 maybe rename: keep it low, one frame, hands on, yellow-pilled
