@@ -284,6 +284,7 @@
 (defstate mother-spider-egg-die (mother-spider-egg)
   :code
     (behavior ()
+      (notify-enemy-death self)
       (logclear! (-> self mask) (process-mask actor-pause))
       (let ((v1-3 (-> self draw shadow-ctrl))) (logior! (-> v1-3 settings flags) (shadow-flags disable-draw)))
       0

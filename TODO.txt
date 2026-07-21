@@ -1,11 +1,11 @@
 **why the hell do enemies randomly despawn**
 
 finish drought (disable water draw)
-alert sound on last 10 seconds, find a replacement for new rule
+get to 40 live rules/comps
+new zoomer rule
+settings
 
-improve game over state
 maybe rename: keep it low, one frame, hands on
-maybe add checks for green eco lurkers
 maybe add settings for timer placement
 consider replacement for jak rabbit
 maybe improve all other sounds

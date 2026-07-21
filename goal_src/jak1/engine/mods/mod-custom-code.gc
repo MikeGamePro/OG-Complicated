@@ -27,6 +27,10 @@
   ;;(increase-power-cell-by-one) This is a call to increase-power-cell-by-one defined in mod-common-functions.gc
   (if *show-input-display* (input-display-on) (input-display-off))
 
+  (if (= (-> *target* control ground-pat material) (pat-material ice))
+      (mod-rule-trigger-cold-feet)
+      (none))
+
   ;; (if (mod-rule-active? 'complication-drought)
   ;;     (set! *ocean-off* #t)) ;; restore if merc and generic water is figured out
 
@@ -150,6 +154,7 @@
       (let ((distance (vector-vector-distance (-> enemy root trans) (target-pos 0))))
         (set! *last-kill-dist* distance)
         (mod-rule-trigger-sniper (>= distance (meters 75)))))
+    (format #t "enemy type: ~a~%" enemy-type)
     (mod-rule-trigger-disassociate)
     (mod-rule-trigger-lurker-pressure)
     (mod-rule-trigger-hitlist enemy-type)

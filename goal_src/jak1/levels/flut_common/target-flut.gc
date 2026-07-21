@@ -436,7 +436,7 @@
       ((-> target-flut-start exit)))
   :trans
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (if (not (move-legs?)) (go target-flut-stance))
       ;; og:preserve-this - High FPS Fix
       (if (and (recently-pressed? x) (can-jump? #f))
@@ -463,7 +463,7 @@
                  (* 81920.0 (seconds-per-frame))))))
   :code
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (let ((f28-0 0.0)
             (f30-0 0.0))
         (let ((gp-0 22))
@@ -532,7 +532,7 @@
     (behavior ((arg0 float) (arg1 float))
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-grounded)
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (sound-play "jump" :pitch -0.5)
       (init-var-jump arg0 arg1 (the-as vector #t) (the-as vector #t) (-> self control transv))
@@ -612,7 +612,7 @@
         event)
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-grounded)
       (set-time! (-> self state-time))
@@ -756,7 +756,7 @@
 (defstate target-flut-running-attack (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (case message
         (('touched)
          (cond
@@ -912,7 +912,7 @@
 (defstate target-flut-air-attack (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (if (and (= message 'touched)
                ((method-of-type touching-shapes-entry prims-touching?)
                 (the-as touching-shapes-entry (-> block param 0))
@@ -1218,7 +1218,7 @@
         exit)
   :code
     (behavior ((arg0 handle))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set! (-> self control transv quad) (the-as uint128 0))
       (set! (-> self alt-cam-pos quad) (-> self control camera-pos quad))
       (logior! (-> self state-flags) (state-flags use-alt-cam-pos))

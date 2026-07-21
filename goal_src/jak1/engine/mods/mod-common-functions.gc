@@ -85,6 +85,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *global-countdown-lost?* #f)
 (define *global-countdown-remaining-time* 0)
 (define *global-countdown-last-update-time* 0)
+(define *global-countdown-last-warn-second* -1)
 (define *global-countup-active?* #f)
 (define *global-countup-timer* 0)
 (define *global-countup-last-update-time* 0)
@@ -93,6 +94,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-pending-slots* (new 'global 'boxed-array symbol 3))
 (define *mod-rule-slot-end-times* (new 'global 'boxed-array time-frame 3))
 (define *mod-rule-slot-roll-ready-times* (new 'global 'boxed-array time-frame 3))
+(define *mod-rule-roll-last-warn-second* (new 'global 'boxed-array int32 3))
 (define *mod-rule-slot-punishments* (new 'global 'boxed-array symbol 3))
 (define *mod-rule-slot-goals* (new 'global 'boxed-array int32 3))
 (define *mod-rule-slot-progress* (new 'global 'boxed-array int32 3))
@@ -277,7 +279,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *complications-rolled* 0)
 (define *final-remaining-time* 0)
 (define *final-time* 0)
-(define *show-countup?* #t)
+(define *show-countup?* #f)
 
 (defun mod-game-beaten-resume-from-save ((value int))
   (set! *mod-game-beaten?* (not (= value 0)))
@@ -377,12 +379,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-grounded) (seconds 20)) ;; 20
     ((eq? id 'rule-management) (seconds 90)) ;; 90
     ((eq? id 'rule-die) (seconds 20)) ;; 20
-    ((eq? id 'rule-lurker-pressure) (seconds 60)) ;; 60
+    ((eq? id 'rule-lurker-pressure) (seconds 50)) ;; 50
     ((eq? id 'rule-hitlist) (seconds 45)) ;; 45
-    ((eq? id 'rule-sniper) (seconds 60)) ;; 60
+    ((eq? id 'rule-sniper) (seconds 75)) ;; 75
     ((eq? id 'rule-money-pressure) (seconds 40)) ;; 40
     ((eq? id 'rule-fuel-pressure) (seconds 30)) ;; 30
-    ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
+    ((eq? id 'rule-buzzer-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-flop-this) (seconds 90)) ;; 90
     ((eq? id 'complication-brittle-bones) (seconds 75)) ;; 75
     ((eq? id 'complication-rotten-eggs) (seconds 60)) ;; 60
@@ -1045,7 +1047,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! (-> *mod-rule-slot-punishments* slot) #f)
         (+! *complications-rolled* 1)))
     (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (mod-rule-duration id)))
-    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1.0)))
+    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1.25)))
     (mod-rule-on-activate id))
   (none))
 
@@ -1306,7 +1308,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (is-klaww (string= (current-checkpoint-name) "ogre-start"))
         (racer-lavatube (or (and (target-on-racer?) (string= (current-checkpoint-name) "lavatube-start"))
                             (string= (current-checkpoint-name) "lavatube-middle")
-                            (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
+                            (string= (current-checkpoint-name) "lavatube-after-ribbon")))
+        (deep-lavatube (or (string= (current-checkpoint-name) "lavatube-middle")
+                      (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
 
     (cond
       ;; Resources
@@ -1332,17 +1336,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'rule-money-pressure)
        (if (or (< money-left 30) is-minigame is-klaww (eq? level-name 'finalboss)
-               (mod-rule-active? 'complication-hidden-treasure))
-           0 6))
+               (string= (current-checkpoint-name) "lavatube-after-ribbon"))
+           0 7))
 
       ((eq? id 'complication-hidden-treasure)
-       (if (or is-klaww (eq? level-name 'finalboss))
+       (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube)
            0 10))
 
       ;; Enemies
       ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
        (cond
-         ((sparse-lurker-level? level-name) 0)
+         ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
          ((eq? id 'complication-glare) 10)
          ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
          (else 7)))
@@ -1367,12 +1371,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-vendetta)
        (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name))
                is-minigame)
-           0 3))
+           0 10))
 
       ((eq? id 'complication-eco-reserve)
        (cond
-         ((or (eq? level-name 'finalboss) is-klaww) 20)
-         ((yellow-eco-level? level-name) 6)
+         ((or (eq? level-name 'finalboss) is-klaww) 16)
+         ((yellow-eco-level? level-name) 5)
          (else 0)))
 
       ((eq? id 'complication-red-stop)
@@ -1384,7 +1388,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ;; Movement
       ((eq? id 'complication-jak-rabbit)
-       (if on-racer 0 8))
+       (if on-racer 0 7))
 
       ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
             (cond
@@ -1428,7 +1432,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (cond 
          ((or (target-billy-game?) (eq? level-name 'finalboss) is-klaww) 0)
          ((or (eq? level-name 'training)) 2)
-         (else 10)))
+         (else 9)))
 
       ((eq? id 'rule-survivor)
             (cond
@@ -1458,13 +1462,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (or (eq? level-name 'firecanyon) on-racer) 35 0))
 
       ((eq? id 'complication-rotten-eggs)
-       (if (or is-klaww (eq? level-name 'finalboss)) 0 10))
+       (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 10))
 
       ((or (eq? id 'complication-disassociate) (eq? id 'complication-wings-tied))
        (if on-flut 40 0))
 
       ((eq? id 'complication-fuel-shortage)
-       (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 5))
+       (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 6))
 
       ((or (eq? id 'complication-brittle-bones))
        (if (or (eq? level-name 'finalboss) is-klaww) 5 10))
@@ -1560,7 +1564,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 (set! new-progress (min goal (+ (-> *mod-rule-slot-progress* slot) amount)))
                 (set! (-> *mod-rule-slot-progress* slot) new-progress)
                 (when (>= new-progress goal)
-                (sound-play "buzzer-pickup") ;; or slider2001
+                (sound-play "buzzer-pickup") ;; or slider2001, buzzer-pickup, cursor-options, cursor-up-down, ecohit2
                 (set! *mod-rule-last-outcome* 'success)
                 (+! *rules-followed* 1)
                   (mod-rule-finish-slot slot #t)))
@@ -1776,7 +1780,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (when (and (> goal 0) (< progress goal) punishment)
             (mod-rule-handle-slot-failure slot punishment))
           
-          (if (not (movie?)) (sound-play "cursor-up-down"))
+          (if (not (movie?)) (sound-play "cursor-options"))
           
           ;; State resets were moved to mod-rule-deactivate-slot
           (when (and (= id (-> *mod-rule-active-slots* slot))
@@ -1821,7 +1825,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (mod-rule-handle-slot-failure slot punishment))))))
   (none))
 
-(defun mod-rule-trigger-freeze ()
+(defun mod-rule-trigger-dont-move ()
   (when (mod-rule-active? 'rule-dont-move)
     (let ((punishment (mod-rule-punishment-for-id 'rule-dont-move)))
       (when punishment
@@ -2060,6 +2064,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (mod-rule-handle-slot-expiry slot)))
          (dotimes (slot 3)
            (let ((pending-id (-> *mod-rule-pending-slots* slot)))
+             (when pending-id
+               (let* ((rolling-left (max 0 (- (-> *mod-rule-slot-roll-ready-times* slot) (current-time))))
+                      (whole-second (the int (/ rolling-left (seconds 1)))))
+                 (if (> whole-second 2)
+                   (set! (-> *mod-rule-roll-last-warn-second* slot) -1)
+                   (when (and (>= whole-second 0)
+                              (!= whole-second (-> *mod-rule-roll-last-warn-second* slot)))
+                     (set! (-> *mod-rule-roll-last-warn-second* slot) whole-second)
+                     (sound-play "cursor-up-down")))))
              (when (and pending-id
                         (>= (current-time) (-> *mod-rule-slot-roll-ready-times* slot)))
                (if (eq? pending-id 'mod-rule-pending-roll)
@@ -2296,6 +2309,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defbehavior global-countdown-proc process ()
   (loop
     (when (and *global-countdown-active?* (not *global-countdown-lost?*))
+      ;; The countup timer always runs
+      (let ((up-elapsed (- (current-time) *global-countup-last-update-time*)))
+        ;; Detect save/load time-warp
+        (when (or (< up-elapsed 0) (> up-elapsed (seconds 10)))
+          (set! up-elapsed 0))
+        (when (> up-elapsed 0)
+          (set! *global-countup-timer* (+ *global-countup-timer* up-elapsed)))
+        (set! *global-countup-last-update-time* (current-time)))
       (cond
         ((or (global-countdown-paused?)
              (and *target*
@@ -2311,9 +2332,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (when (or (< elapsed 0) (> elapsed (seconds 10)))
              (set! elapsed 0))
            (when (> elapsed 0)
-             (set! *global-countdown-remaining-time* (max 0 (- *global-countdown-remaining-time* elapsed)))
-             (set! *global-countup-timer* (+ *global-countup-timer* elapsed))) 
+             (set! *global-countdown-remaining-time* (max 0 (- *global-countdown-remaining-time* elapsed))))
            (set! *global-countdown-last-update-time* (current-time))
+           ;; Beep on second during the final 10 seconds
+           (let ((whole-second (the int (/ *global-countdown-remaining-time* (seconds 1)))))
+             (if (> whole-second 9)
+               (set! *global-countdown-last-warn-second* -1)
+               (when (and (>= whole-second 0)
+                          (!= whole-second *global-countdown-last-warn-second*))
+                 (set! *global-countdown-last-warn-second* whole-second)
+                 (sound-play "slider2001"))))
            (when (<= *global-countdown-remaining-time* 0)
              (format #t "COUNTDOWN: lost triggered~%")
              (set! *global-countdown-remaining-time* 0)
@@ -2342,9 +2370,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
-  (set! *global-countdown-remaining-time* (seconds 60)) ;; global countdown start - 60
+  (set! *global-countdown-remaining-time* (seconds 30)) ;; global countdown start - 30
   (set! *global-countup-timer* 0)
   (set! *global-countdown-last-update-time* (current-time))
+  (set! *global-countup-last-update-time* (current-time))
   (set! *mod-rule-last-update-time* (current-time))
   (set! *mod-rule-last-reverted-cell-task* 0)
   (set! *mod-rule-last-reverted-cell-until* 0)
@@ -2375,6 +2404,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          ;; Saved file HAS a countdown.
          (set! *global-countdown-remaining-time* saved-time)
          (set! *global-countdown-last-update-time* (current-time))
+         (set! *global-countup-last-update-time* (current-time))
          (cond
            ((not *global-countdown-active?*)
             ;; SCENARIO A: system was dormant (fresh boot / post-crash reload).

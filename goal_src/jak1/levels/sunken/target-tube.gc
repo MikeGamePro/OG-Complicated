@@ -465,7 +465,7 @@
         event)
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (mod-rule-trigger-grounded)
       (mod-rule-trigger-brittle-bones)
       (set-time! (-> self state-time))

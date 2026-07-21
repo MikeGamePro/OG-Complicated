@@ -30,7 +30,7 @@
 (define-extern target-bonk-event-handler (function process int symbol event-message-block object :behavior target))
 (define-extern mod-rule-trigger-grounded (function none))
 (define-extern mod-rule-trigger-brittle-bones (function none))
-(define-extern mod-rule-trigger-freeze (function none))
+(define-extern mod-rule-trigger-dont-move (function none))
 (define-extern mod-rule-trigger-keep-it-low (function none))
 (define-extern mod-rule-trigger-sizeable (function symbol))
 (define-extern mod-rule-trigger-hands-off (function none))
@@ -391,7 +391,7 @@
       (target-state-hook-exit))
   :trans
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       ((-> self state-hook))
       (when (= (-> self control ground-pat material) (pat-material ice))
         (target-effect-exit)
@@ -601,7 +601,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-freeze)
+    (mod-rule-trigger-dont-move)
       (vector-turn-to (-> self control transv))
       (set! (-> self control mod-surface) *turn-around-mods*)
       (set! (-> self control bend-target) 1.0))
@@ -743,7 +743,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-freeze)
+    (mod-rule-trigger-dont-move)
       (set! (-> self control bend-target) 1.0)
       (set! (-> self control mod-surface) *duck-mods*)
       (target-collide-set! 'duck (the-as float 1.0)))
@@ -803,7 +803,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-freeze)
+    (mod-rule-trigger-dont-move)
       (set! (-> self control bend-target) 1.0)
       (target-collide-set! 'duck (the-as float 1.0))
       (if (not (ja-group? eichar-duck-roll-ja)) (set! (-> self control mod-surface) *duck-mods*)))
@@ -852,7 +852,7 @@
     (behavior ((arg0 float) (arg1 float) (arg2 surface))
         (mod-rule-trigger-brittle-bones)
         (mod-rule-trigger-grounded)
-        (mod-rule-trigger-freeze)
+        (mod-rule-trigger-dont-move)
       (when (= (-> self control unknown-symbol40) 'launch)
         (level-hint-spawn (text-id sidekick-launcher1) "sksp009d" (the-as entity #f) *entity-pool* (game-task none))
         (level-hint-spawn (text-id sidekick-launcher2) "sksp009e" (the-as entity #f) *entity-pool* (game-task none))
@@ -938,7 +938,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       ((-> target-jump enter) arg0 arg1 (the-as surface #f))
       (set! (-> self control mod-surface) *forward-jump-mods*))
   :exit target-exit
@@ -963,7 +963,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-grounded)
       (when (= (-> self control unknown-symbol40) 'launch)
@@ -1015,7 +1015,7 @@
     (behavior ((arg0 float) (arg1 float) (arg2 basic))
         (mod-rule-trigger-brittle-bones)
         (mod-rule-trigger-grounded)
-        (mod-rule-trigger-freeze)
+        (mod-rule-trigger-dont-move)
       (when (and (= (-> self control unknown-symbol40) 'launch) (!= arg2 'launch))
         enter-state
         (let ((a0-3 (-> self control unknown-dword60))
@@ -1065,7 +1065,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float) (arg2 symbol))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (logclear! (-> self control status) (cshape-moving-flags onsurf onground tsurf))
       (set! (-> self control mod-surface) *turn-around-mods*))
@@ -1106,7 +1106,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float) (arg2 symbol))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (sound-play "jump" :vol 80 :pitch -0.4)
       (init-var-jump arg0 arg1 (the-as vector #t) (the-as vector #f) (-> self control transv))
@@ -1234,7 +1234,7 @@
   :event target-dangerous-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (target-start-attack)
       (target-danger-set! 'spin #f)
@@ -1299,7 +1299,7 @@
         (else (target-dangerous-event-handler proc argc message block))))
   :enter
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (if (or (and (= (-> self fact eco-type) (pickup-type eco-yellow)) (>= (-> self fact eco-level) 1.0))
               (not (time-elapsed? (-> self control unknown-dword82) (seconds 1.5))))
         (go target-yellow-blast))
@@ -1428,7 +1428,7 @@
           (else (target-dangerous-event-handler proc argc message block)))))
   :enter
     (behavior ((arg0 symbol))
-    (mod-rule-trigger-freeze)
+    (mod-rule-trigger-dont-move)
     (if (< (- (current-time) *last-launch-time*) (seconds 1.0))
         (mod-rule-counter-add-progress 'rule-one-frame 1))
       (set-time! (-> self state-time))
@@ -1534,7 +1534,7 @@
   :event target-dangerous-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-grounded)
       (set-time! (-> self state-time))
@@ -1561,7 +1561,7 @@
   :event target-dangerous-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (if (and (= (-> self control ground-pat material) (pat-material ice)) (< 32768.0 (-> self control ctrl-xz-vel)))
         (set-forward-vel (the-as float 32768.0)))
       (set-time! (-> self state-time))
@@ -1637,7 +1637,7 @@
           (else (target-dangerous-event-handler proc argc message block)))))
   :enter
     (behavior ((arg0 float) (arg1 float) (arg2 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (when (and (= (-> self fact eco-type) (pickup-type eco-yellow)) (>= (-> self fact eco-level) 1.0))
         (mod-rule-trigger-brittle-bones)
         (mod-rule-trigger-grounded)
@@ -1823,7 +1823,7 @@
       (target-standard-event-handler proc argc message block))
   :enter
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *wheel-mods*)
       (+! (-> self control unknown-int50) 1)
@@ -1898,7 +1898,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-grounded)
       (set! (-> self control mod-surface) *wheel-flip-mods*))

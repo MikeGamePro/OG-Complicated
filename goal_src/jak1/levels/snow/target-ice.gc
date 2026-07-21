@@ -5,7 +5,7 @@
 
 ;; DECOMP BEGINS
 
-(define-extern mod-rule-trigger-cold-feet (function (none)))
+;; (define-extern mod-rule-trigger-cold-feet (function (none)))
 
 (defstate target-ice-stance (target)
   :event target-standard-event-handler
@@ -15,7 +15,7 @@
   :exit target-state-hook-exit
   :trans
     (behavior ()
-      (mod-rule-trigger-cold-feet)
+      ;; (mod-rule-trigger-cold-feet)
       ((-> self state-hook))
       (if (!= (-> self control ground-pat material) (pat-material ice)) (go target-stance))
       (when (move-legs?)
@@ -105,7 +105,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-freeze)
+      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *walk-mods*))
   :exit
@@ -114,7 +114,7 @@
       (target-state-hook-exit))
   :trans
     (behavior ()
-      (mod-rule-trigger-cold-feet)
+      ;; (mod-rule-trigger-cold-feet)
       ((-> self state-hook))
       (when (!= (-> self control ground-pat material) (pat-material ice))
         (remove-exit)
