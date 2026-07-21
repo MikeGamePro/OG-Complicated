@@ -1,50 +1,33 @@
 {
   "schemaVersion": "1.0.0",
-  "sourceName": "OG-Input-delayed-legacy",
+  "sourceName": "OG-Complicated",
   "lastUpdated": "2026-07-20T20:21:46Z",
   "mods": {
     "input-delayed": {
-      "displayName": "Jak 1 the jak 3 legacy",
-      "description": "mike",
+      "displayName": "A Complicated Mod",
+      "description": "A complicated mod with rules.",
       "authors": [
-        "Zed"
+        "MikeGamePro"
       ],
       "tags": [
         "gameplay",
         "challenge"
       ],
-      "websiteUrl": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy",
+      "websiteUrl": "https://github.com/my-opengoal-mods/OG-Complicated",
       "supportedGames": [
         "jak1"
       ],
       "versions": [
         {
-          "version": "4.1.5",
+          "version": "1.0.0",
           "publishedDate": "2026-07-20T20:02:36Z",
           "supportedGames": [
             "jak1"
           ],
           "assets": {
-            "windows": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.5/windows-v4.1.5.zip",
-            "linux": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.5/linux-v4.1.5.tar.gz",
-            "macos": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.5/macos-intel-v4.1.5.tar.gz"
-          },
-          "assetDownloadCounts": {
-            "windows": 0,
-            "linux": 0,
-            "macos": 0
-          }
-        },
-        {
-          "version": "4.1.4",
-          "publishedDate": "2026-07-20T19:54:29Z",
-          "supportedGames": [
-            "jak1"
-          ],
-          "assets": {
-            "windows": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.4/windows-v4.1.4.zip",
-            "linux": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.4/linux-v4.1.4.tar.gz",
-            "macos": "https://github.com/my-opengoal-mods/OG-Input-delayed-legacy/releases/download/v4.1.4/macos-intel-v4.1.4.tar.gz"
+            "windows": "https://github.com/my-opengoal-mods/OG-Complicated/releases/download/v1.0.0/windows-v1.0.0.zip",
+            "linux": "https://github.com/my-opengoal-mods/OG-Complicated/releases/download/v1.0.0/linux-v1.0.0.tar.gz",
+            "macos": "https://github.com/my-opengoal-mods/OG-Complicated/releases/download/v1.0.0/macos-intel-v1.0.0.tar.gz"
           },
           "assetDownloadCounts": {
             "windows": 0,
