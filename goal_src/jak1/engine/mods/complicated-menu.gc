@@ -1,0 +1,179 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; name: complicated-menu.gc
+;; name in dgo: complicated-menu
+;; dgos: ENGINE, GAME
+
+(bundles "ENGINE.CGO" "GAME.CGO")
+
+;; ---------------------------------------------------------------------------
+;; Complicated Options pause-menu screen.
+;;
+;; Inserts a "COMPLICATED OPTIONS" entry into the pause menu's GAME OPTIONS
+;; screen, between INPUT OPTIONS (index 0) and PLAY HINTS (originally index 1).
+;; Currently exposes one toggle — SHOW COUNTUP TIMER — backed by the
+;; persisted *complicated-settings* flag.
+;;
+;; Standalone version of the technique used in mario-menu.gc:
+;;   1. *game-options-complicated* is a local copy of *game-options-pc*'s
+;;      entries with the Complicated submenu spliced in at index 1.
+;;   2. *complicated-options* holds the Complicated submenu items.
+;;   3. We save the vanilla init-game-options into
+;;      *complicated-orig-init-game-options* at file-load time, then replace
+;;      init-game-options with a wrapper that runs the original, then swaps
+;;      *options-remap*'s game-settings slot to *game-options-complicated*
+;;      and registers *complicated-options* under a new
+;;      (progress-screen complicated-options) slot, then fixes up
+;;      value-to-modify on the shifted entries.
+;;
+;; Load order: place complicated-menu.gc in game.gp AFTER pc/progress-pc.gc
+;; so this redefinition wins.
+;; ---------------------------------------------------------------------------
+
+;; ---- Complicated Options submenu ------------------------------------------
+
+(deftype complicated-settings (basic)
+  ((show-countup-timer? symbol))
+  (:methods 
+    (commit-to-file (_type_) none) 
+    (load-from-file (_type_) none)
+    ;; Add the new method declarations here:
+    (write-to-file (_type_ string) symbol)
+    (read-from-file (_type_ string) symbol)
+  )
+)
+
+;; 1. The custom write-to-file method
+(defmethod write-to-file ((obj complicated-settings) (filename string))
+  "Serialize obj to filename. Returns #t on success."
+  (if (not filename) (return #f))
+  (let ((file (new 'stack 'file-stream filename 'write)))
+    (if (not (file-stream-valid? file)) (return #f))
+    ;; Manually write out your specific variables to the stream
+    (format file "(complicated-settings~%")
+    (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
+    (format file "  )~%")
+    (file-stream-close file))
+  #t)
+
+;; 2. The commit-to-file method (with correct syntax!)
+(defmethod commit-to-file ((obj complicated-settings))
+  "Persist obj to the complicated-settings.gc path."
+  (format (clear *pc-temp-string-1*) "~S/complicated-settings.gc" *pc-settings-folder*)
+  (write-to-file obj *pc-temp-string-1*)
+  (none))
+
+;; 3. The custom 'new' method for allocation
+(defmethod new complicated-settings ((allocation symbol) (type-to-make type))
+  (let ((obj (object-new allocation type-to-make (the-as int (-> type-to-make size)))))
+    ;; You can call an 'initialize' or 'reset' method here in the future
+    obj))
+
+;; 4. Actually allocate the global object so it isn't null!
+(define *complicated-settings* (the complicated-settings #f))
+(define-once *complicated-settings* (new 'global 'complicated-settings))
+
+(defun countup-timer-setting-changed! ((new-val symbol))
+  "Toggle the countup-timer HUD display. Persists immediately."
+  (set! (-> *complicated-settings* show-countup-timer?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+  
+
+(define *complicated-options*
+  (new 'static 'boxed-array :type game-option
+       ;; [0] SHOW COUNTUP TIMER toggle
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-show-timer)
+            :scale #t
+            :on-change (lambda ((val object))
+                         (countup-timer-setting-changed! (the-as symbol val))
+                         (none)))
+       ;; [1] BACK
+       (new 'static 'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t)))
+
+;; ---- Replacement for *game-options-pc* -------------------------------------
+;; Mirrors the 10-entry *game-options-pc* (progress-pc.gc) but with a
+;; COMPLICATED OPTIONS submenu entry inserted at index 1. Every other entry
+;; keeps its original on-confirm/:param3 plumbing; value-to-modify gets
+;; wired in init-game-options below.
+(define *game-options-complicated*
+  (new 'static 'boxed-array :type game-option
+       ;; [0] INPUT OPTIONS
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id input-options)
+            :scale #t
+            :param3 (game-option-menu input-options))
+       ;; [1] COMPLICATED OPTIONS  ← NEW
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-title)
+            :scale #t
+            :param3 (game-option-menu complicated-options))
+       ;; [2] PLAY HINTS  (was [1])
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id play-hints)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (set! (-> *setting-control* default play-hints) (-> *pc-settings* memcard-play-hints?))))
+       ;; [3] SUBTITLES  (was [2])
+       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id subtitles) :scale #t)
+       ;; [4] HINTTITLES  (was [3])
+       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id hinttitles) :scale #t)
+       ;; [5] LANGUAGE  (was [4])
+       (new 'static 'game-option :option-type (game-option-type language) :name (text-id language) :scale #t)
+       ;; [6] SUBTITLES LANGUAGE  (was [5])
+       (new 'static 'game-option :option-type (game-option-type language-subtitles) :name (text-id subtitles-language) :scale #t)
+       ;; [7] TEXT LANGUAGE  (was [6])
+       (new 'static 'game-option :option-type (game-option-type language-text) :name (text-id text-language) :scale #t)
+       ;; [8] SUBTITLES SPEAKER  (was [7])
+       (new 'static 'game-option :option-type (game-option-type speaker) :name (text-id subtitles-speaker) :scale #t)
+       ;; [9] MISC OPTIONS  (was [8])
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id misc-options)
+            :scale #t
+            :param3 (game-option-menu misc-options))
+       ;; [10] BACK  (was [9])
+       (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
+
+;; ---- init-game-options override --------------------------------------------
+(define *complicated-orig-init-game-options* init-game-options)
+
+(defun init-game-options ((obj progress))
+  ;; Run the vanilla PC-port body first — sets up *options-remap* for every
+  ;; vanilla screen and value-to-modify for *game-options-pc*.
+  ((the (function progress none) *complicated-orig-init-game-options*) obj)
+
+  ;; Redirect the GAME OPTIONS screen to our extended array.
+  (set! (-> *options-remap* (progress-screen game-settings)) *game-options-complicated*)
+  ;; Register the new COMPLICATED OPTIONS screen.
+  (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
+
+  ;; Value-to-modify wiring for *game-options-complicated*. All indices
+  ;; shift +1 vs progress-pc.gc since the Complicated entry is at index 1.
+  (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
+  (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
+  (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
+  (set! (-> *game-options-complicated* 5 value-to-modify) (&-> *setting-control* default language))
+  (set! (-> *game-options-complicated* 6 value-to-modify) (&-> *progress-carousell* int-backup))
+  (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
+  (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
+
+  ;; Complicated submenu value-to-modify:
+  ;;   [0] Show Countup Timer toggle → *complicated-settings* show-countup-timer?
+  ;;   [1] Back (no backing value)
+  (set! (-> *complicated-options* 0 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (none))
+
+  (defun show-countup-timer-enabled? ()
+  "Safely check if the countup timer should be displayed."
+  (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))

@@ -47,6 +47,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; Force specific rule: (mod-rule-activate-slot 0 'rule-grounded)
 ;; Check if a specific slot is active: (mod-rule-slot-active? 0)
 
+(define-extern show-countup-timer-enabled? (function symbol))
+
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
   `(-> *game-info* fuel))
@@ -2243,7 +2245,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (font-flags shadow kerning large)
            0.8)
          ;; Draw countup timer
-        (when *show-countup?* (let* ((up-total-centis (max 0 (the int (/ (* *global-countup-timer* 100)
+        (when (show-countup-timer-enabled?) (let* ((up-total-centis (max 0 (the int (/ (* *global-countup-timer* 100)
                                                             (seconds 1)))))
                         (up-total-seconds (the int (/ up-total-centis 100)))
                         (up-minutes (the int (/ up-total-seconds 60)))

@@ -371,4 +371,7 @@
   ;; keep blocking-plane stuff loaded
   "blocking-plane.o"
   "ef-plane-ag.go"
+;;   "complicated-settings.o" ;; added
+  "complicated-menu.o" ;; added
+    ;; "complicated.o"
  ))
