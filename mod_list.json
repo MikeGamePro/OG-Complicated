@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "sourceName": "OG-Input-delayed-legacy",
-  "lastUpdated": "2026-07-20T20:21:46Z",
+  "lastUpdated": "2026-07-21T01:46:21Z",
   "mods": {
     "input-delayed": {
       "displayName": "A Complicated Mod",
@@ -20,7 +20,7 @@
       "versions": [
         {
           "version": "0.0.1",
-          "publishedDate": "2026-07-21T01:39:40Z",
+          "publishedDate": "2026-07-21T01:46:21Z",
           "supportedGames": [
             "jak1"
           ],
