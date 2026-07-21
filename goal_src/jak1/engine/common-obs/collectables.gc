@@ -378,8 +378,8 @@
          (logtest? (-> self flags) (collectable-flags can-collect))
          (!= (-> self next-state name) 'pickup)
          (not (and (= (-> self type) fuel-cell)
-                   (target-on-flut?)
-                   (mod-rule-active? 'complication-wings-tied)))
+                   (or (mod-rule-active? 'complication-fuel-shortage) (and (target-on-flut?)
+                   (mod-rule-active? 'complication-wings-tied)))))
          (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
     (go-virtual pickup #f (process->handle *target*))))
   :trans

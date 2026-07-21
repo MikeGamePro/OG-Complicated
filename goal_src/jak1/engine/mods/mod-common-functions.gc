@@ -383,7 +383,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hitlist) (seconds 45)) ;; 45
     ((eq? id 'rule-sniper) (seconds 75)) ;; 75
     ((eq? id 'rule-money-pressure) (seconds 40)) ;; 40
-    ((eq? id 'rule-fuel-pressure) (seconds 30)) ;; 30
+    ((eq? id 'rule-fuel-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-buzzer-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-flop-this) (seconds 90)) ;; 90
     ((eq? id 'complication-brittle-bones) (seconds 75)) ;; 75
@@ -394,15 +394,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-ohko) (seconds 60)) ;; 60
     ((eq? id 'complication-heating-balloons) (seconds 30)) ;; 30
     ((eq? id 'complication-glare) (seconds 60)) ;; 60
-    ((eq? id 'complication-disassociate) (seconds 45)) ;; 45
+    ((eq? id 'complication-disassociate) (seconds 50)) ;; 50
     ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
     ((eq? id 'complication-wings-tied) (seconds 60)) ;; 60
     ((eq? id 'rule-survivor) (seconds 75)) ;; 75
     ((eq? id 'complication-fuel-shortage) (seconds 45)) ;; 45
     ((eq? id 'complication-hidden-treasure) (seconds 60)) ;; 60
     ((eq? id 'complication-drought) (seconds 45)) ;; 45
-    ((eq? id 'complication-jak-rabbit) (seconds 60)) ;; 60
-    ((eq? id 'rule-vendetta) (seconds 60)) ;; 60
+    ((eq? id 'complication-jak-rabbit) (seconds 45)) ;; 45
+    ((eq? id 'rule-vendetta) (seconds 40)) ;; 40
     ((eq? id 'rule-blue-crate) (seconds 60)) ;; 60
     ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
@@ -1317,7 +1317,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-buzzer-pressure)
        (if (or (< buzzer-left 2) (mod-rule-active? 'rule-distancing) is-minigame is-klaww
                (eq? level-name 'jungleb) (eq? level-name 'finalboss) (eq? level-name 'sunkenb))
-           0 7))
+           0 9))
 
       ((eq? id 'rule-distancing)
        (if (or (< buzzer-left 1) (mod-rule-active? 'rule-buzzer-pressure) is-klaww
@@ -1337,7 +1337,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-money-pressure)
        (if (or (< money-left 30) is-minigame is-klaww (eq? level-name 'finalboss)
                (string= (current-checkpoint-name) "lavatube-after-ribbon"))
-           0 7))
+           0 9))
 
       ((eq? id 'complication-hidden-treasure)
        (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube)
@@ -1398,7 +1398,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 2)
               (is-klaww 1)
               ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
-              (else 4)))
+              (else 5)))
 
       ((eq? id 'rule-dont-move)
             (cond
@@ -1426,7 +1426,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (or (not (launcher-level? level-name)) is-minigame) 0 5))
 
       ((eq? id 'rule-for-billy)
-       (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (eq? level-name 'swamp)) 7 0))
+       (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (> *global-countdown-remaining-time* (seconds 210)) (eq? level-name 'swamp)) 8 0))
 
       ((eq? id 'complication-rgyb)
        (cond 
@@ -2370,7 +2370,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
-  (set! *global-countdown-remaining-time* (seconds 30)) ;; global countdown start - 30
+  (set! *global-countdown-remaining-time* (seconds 60)) ;; global countdown start - 60
   (set! *global-countup-timer* 0)
   (set! *global-countdown-last-update-time* (current-time))
   (set! *global-countup-last-update-time* (current-time))
