@@ -65,6 +65,7 @@
     (orb-placer-maintenance))
   (mod-rule-trigger-ohko)
   (mod-rule-trigger-distancing)
+  (mod-rule-trigger-speed)
   (none))
 
 (defun runs-on-orb-pickup ((parent process-tree))

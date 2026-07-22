@@ -47,7 +47,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; Force specific rule: (mod-rule-activate-slot 0 'rule-grounded)
 ;; Check if a specific slot is active: (mod-rule-slot-active? 0)
 
+;; add new options here (getter)
 (define-extern show-countup-timer-enabled? (function symbol))
+(define-extern one-frame-toggle-enabled? (function symbol))
+(define-extern crash-toggle-enabled? (function symbol))
+(define-extern math-quiz-toggle-enabled? (function symbol))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -114,10 +118,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 39) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 41) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
+(define *math-quiz-val1* 0)
+(define *math-quiz-val2* 0)
+(define *math-quiz-op* 0) ;; 0 = +, 1 = -, 2 = *
+(define *math-quiz-answer* 0)
+(define *math-quiz-current-guess* 0)
 (define *mod-rule-all-cell-tasks*
   (new 'static
        'boxed-array
@@ -331,6 +340,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-for-billy) "FOR BILLY")
     ((eq? id 'rule-cold-feet) "COLD FEET")
     ((eq? id 'complication-overclock) "OVERCLOCK")
+    ((eq? id 'rule-speed) "SPEED")
+    ((eq? id 'rule-math-quiz) "QUICK MATHS")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -374,6 +385,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-for-billy) "PROTECT FARTHY\c12S SNACKS.")
     ((eq? id 'rule-cold-feet) "KEEP OFF THE ICE.")
     ((eq? id 'complication-overclock) "CITADEL DISCS ARE FASTER.")
+    ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
+    ((eq? id 'rule-math-quiz) "ANSWER CORRECTLY.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -416,6 +429,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-for-billy) (seconds 150)) ;; 150
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
+    ((eq? id 'rule-speed) (seconds 60)) ;; 60
+    ((eq? id 'rule-math-quiz) (seconds 20)) ;; 20
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -431,6 +446,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-vendetta) 1)
     ((eq? id 'rule-one-frame) 1)
     ((eq? id 'rule-for-billy) 1)
+    ((eq? id 'rule-speed) 1)
     (else 0)))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -470,6 +486,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-dont-move)
          (eq? id 'rule-for-billy)
          (eq? id 'rule-cold-feet)
+         (eq? id 'rule-speed)
+          (eq? id 'rule-math-quiz)
          )
      'rule)
     ((or
@@ -866,7 +884,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (can-revert (and (mod-rule-can-revert-collected-cell?) (mod-rule-punishment-rollable? 'punishment-revert-cell)))
          (can-extra-rule (and (< (mod-rule-active-slot-count) 2) (mod-rule-punishment-rollable? 'punishment-extra-rule)))
          (can-blind (mod-rule-punishment-rollable? 'punishment-blind))
-         (can-crash (mod-rule-punishment-rollable? 'punishment-crash))
+         (can-crash (and (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash)))
          (total-weight 0)
          (roll 0))
 
@@ -969,6 +987,20 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-distancing)
     (set! *closest-buzzer-dist* 1000000000.0))
 
+((eq? id 'rule-math-quiz)
+     (set! *math-quiz-op* (knuth-rand-int-range 0 3))
+     (let ((min-val (if (= *math-quiz-op* 2) 2 10))
+           (max-val (if (= *math-quiz-op* 2) 13 61)))
+       (set! *math-quiz-val1* (knuth-rand-int-range min-val max-val))
+       (set! *math-quiz-val2* (knuth-rand-int-range min-val max-val)))
+     (set! *math-quiz-current-guess* 0)
+     (cond
+       ((= *math-quiz-op* 0) (set! *math-quiz-answer* (+ *math-quiz-val1* *math-quiz-val2*)))
+       ((= *math-quiz-op* 1) (set! *math-quiz-answer* (- *math-quiz-val1* *math-quiz-val2*)))
+       ((= *math-quiz-op* 2) (set! *math-quiz-answer* (* *math-quiz-val1* *math-quiz-val2*)))))
+
+       
+
     ((eq? id 'complication-jak-rabbit)
      (set! (-> *TARGET-bank* jump-height-min) (meters 2.02))
      (set! (-> *TARGET-bank* jump-height-max) (meters 7))
@@ -1037,7 +1069,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-deactivate-slot slot)
     (set! (-> *mod-rule-active-slots* slot) id)
     (set! *mod-rule-last-outcome* 'none)
-    (sound-play "warning")
+    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-dont-move)) (sound-play "warning") (sound-play "ecohit2"))
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
     (set! (-> *mod-rule-slot-progress* slot) 0)
     (if (eq? (mod-rule-type id) 'rule)
@@ -1125,6 +1157,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 36) 'rule-sniper)
     ((= idx 37) 'rule-cold-feet)
     ((= idx 38) 'complication-overclock)
+    ((= idx 39) 'rule-speed)
+    ((= idx 40) 'rule-math-quiz)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1277,7 +1311,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'lavatube)))
 
 (defun sole-zoomer-level? ((level symbol))
-  (or (eq? level 'firecanyon)
+  (or (string= (current-checkpoint-name) "firecanyon-start")
       (eq? level 'rolling)
       (string= (current-checkpoint-name) "ogre-race")))
 
@@ -1421,11 +1455,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-cold-feet)
        (if (eq? level-name 'snow) 10 0))
 
+      ((eq? id 'rule-math-quiz)
+       (if (math-quiz-toggle-enabled?) 7 0))
+
       ((eq? id 'complication-overclock)
        (if (eq? level-name 'citadel) 30 0))
 
       ((eq? id 'rule-one-frame)
-       (if (or (not (launcher-level? level-name)) is-minigame) 0 5))
+       (if (or (not (and (one-frame-toggle-enabled?) (launcher-level? level-name))) is-minigame) 0 7))
 
       ((eq? id 'rule-for-billy)
        (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (> *global-countdown-remaining-time* (seconds 210)) (eq? level-name 'swamp)) 8 0))
@@ -1458,10 +1495,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (else 8)))
 
       ((eq? id 'complication-heating-balloons)
-       (if (or (eq? level-name 'firecanyon) (and (eq? level-name 'lavatube) on-racer)) 50 0))
+       (if (or (string= (current-checkpoint-name) "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
 
       ((eq? id 'complication-bus-driver)
-       (if (or (eq? level-name 'firecanyon) on-racer) 35 0))
+       (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 35 0))
+
+      ((eq? id 'rule-speed)
+       (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 0 0))
 
       ((eq? id 'complication-rotten-eggs)
        (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 10))
@@ -1780,7 +1820,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           
           ;; Logic for handling failures
           (when (and (> goal 0) (< progress goal) punishment)
-            (mod-rule-handle-slot-failure slot punishment))
+            (if (eq? id 'rule-math-quiz)
+              (if (= *math-quiz-current-guess* *math-quiz-answer*)
+                  (mod-rule-counter-add-progress 'rule-math-quiz 1)
+                  (mod-rule-handle-slot-failure slot punishment))
+              (mod-rule-handle-slot-failure slot punishment)))
           
           (if (not (movie?)) (sound-play "cursor-options"))
           
@@ -1799,6 +1843,30 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! found #t))
       (+! slot 1))
     result))
+
+(defun mod-rule-update-math-quiz ()
+  (when (mod-rule-active? 'rule-math-quiz)
+    (let ((slot (mod-rule-find-active-slot 'rule-math-quiz)))
+      (when (>= slot 0)
+        (when (cpad-pressed? 0 up)
+          (+! *math-quiz-current-guess* 1)
+          (sound-play "cursor-up-down"))
+        (when (cpad-pressed? 0 down)
+          (-! *math-quiz-current-guess* 1)
+          (sound-play "cursor-up-down"))
+        (when (cpad-pressed? 0 right)
+          (+! *math-quiz-current-guess* 5)
+          (sound-play "cursor-up-down"))
+        (when (cpad-pressed? 0 left)
+          (-! *math-quiz-current-guess* 5)
+          (sound-play "cursor-up-down"))
+        (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
+          (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
+            (if (= *math-quiz-current-guess* *math-quiz-answer*)
+              (mod-rule-counter-add-progress 'rule-math-quiz 1)
+              (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
+                (mod-rule-handle-slot-failure slot punishment)))))))
+  (none))
 
 (defun mod-rule-reroll-id ((id symbol))
   (let ((slot 0) (found #f))
@@ -1979,6 +2047,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (not (movie?)) (target-attack-up *target* 'attack 'explode)))
   (none))
 
+(defun mod-rule-trigger-speed ()
+      (when (and (mod-rule-active? 'rule-speed)
+                 (>= (-> *target* control ctrl-xz-vel) (meters 40)))
+        (mod-rule-counter-add-progress 'rule-speed 1))
+  (none))
+
 ;; (defun mod-rule-trigger-wings-tied ()
 ;;   (when (mod-rule-active? 'complication-wings-tied)
 ;;     (none))
@@ -2060,6 +2134,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! *mean-look-clear-time* 0)
   (logclear! (-> *target* mask) (process-mask sleep)))
          (mod-rule-update-timed-punishments)
+         (mod-rule-update-math-quiz)
          (dotimes (slot 3)
            (when (and (-> *mod-rule-active-slots* slot)
                       (>= (current-time) (-> *mod-rule-slot-end-times* slot)))
@@ -2159,13 +2234,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (tenths (the int (* dist-meters 10))))
           (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row 8))
-    (when (eq? id 'complication-bus-driver)
+    (when (eq? id 'rule-math-quiz)
+      (let ((op-string (cond ((= *math-quiz-op* 0) "+") ((= *math-quiz-op* 1) "-") (else "*"))))
+        (format (clear *temp-string*) "~D ~S ~D = ~D" 
+                *math-quiz-val1* 
+                op-string 
+                *math-quiz-val2* 
+                *math-quiz-current-guess*)
+        (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)))
+    (when (or (eq? id 'complication-bus-driver)
+              (eq? id 'rule-speed))
           (draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
           (-! row 2)
             (let* ((dist-meters (/ (-> *target* control ctrl-xz-vel) 4096.0))
                   (tenths (the int (* dist-meters 10))))
               (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
-              (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4))
+              (if (mod-rule-active? 'complication-bus-driver)
+                  (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4)))
           (+! row 8))
     row))
 

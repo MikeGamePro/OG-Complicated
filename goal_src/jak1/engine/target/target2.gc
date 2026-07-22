@@ -1327,7 +1327,6 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
       ((-> target-swim-stance enter))
       (die-on-next-update! (-> self water bob))
       (set! (-> self control unknown-uint20) (the-as uint (current-time))))
@@ -1336,6 +1335,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-dont-move)
       ((-> self state-hook))
       (if (and (logtest? (-> self control status) (cshape-moving-flags onsurf))
                (not (logtest? (-> self control status) (cshape-moving-flags on-water))))
@@ -1396,7 +1396,6 @@
       (target-standard-event-handler proc argc message block))
   :enter
     (behavior ()
-      (mod-rule-trigger-dont-move)
       (set-time! (-> self state-time))
       (logclear! (-> self water flag) (water-flag swim-ground))
       (set! (-> self control mod-surface) *dive-mods*)
@@ -1418,6 +1417,7 @@
         (set! (-> self control override-quat-alpha) 0.0)))
   :trans
     (behavior ()
+      (mod-rule-trigger-dont-move)
       (if (time-elapsed? (-> self water swim-time) (seconds 0.5)) (go target-stance))
       (cond
         ((time-elapsed? (-> self control last-time-on-surface) (seconds 0.1))

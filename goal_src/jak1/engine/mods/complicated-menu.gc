@@ -17,8 +17,12 @@
 ;; ---- Complicated Options submenu ------------------------------------------
 
 (deftype complicated-settings (basic)
+;; add new options here
   ((show-countup-timer? symbol)
-  (test-toggle? symbol))
+  (one-frame-toggle? symbol)
+  (crash-toggle? symbol)
+  (math-quiz-toggle? symbol)
+  )
   (:methods
     (reset (_type_) _type_)
     (commit-to-file (_type_) none)
@@ -27,8 +31,11 @@
     (read-from-file (_type_ string) symbol)))
 
 (defmethod reset ((obj complicated-settings))
-  ;; default values for new settings go here
+  ;; default values for new settings
   (set! (-> obj show-countup-timer?) #f)
+  (set! (-> obj one-frame-toggle?) #t)
+  (set! (-> obj crash-toggle?) #t)
+  (set! (-> obj math-quiz-toggle?) #t)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -43,8 +50,12 @@
            ;; add new options here
              (("show-countup-timer?")
               (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
-            (("test-toggle?")
-              (set! (-> obj test-toggle?) (file-stream-read-symbol file)))
+            (("one-frame-toggle?")
+              (set! (-> obj one-frame-toggle?) (file-stream-read-symbol file)))
+            (("crash-toggle?")
+              (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
+            (("math-quiz-toggle?")
+              (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
               )))))
     (file-stream-close file))
   #t)
@@ -67,7 +78,9 @@
     (format file "(complicated-settings~%")
     ;; add new options here
     (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
-    (format file "  (test-toggle? ~A)~%" (-> obj test-toggle?))
+    (format file "  (one-frame-toggle? ~A)~%" (-> obj one-frame-toggle?))
+    (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
+    (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -91,16 +104,25 @@
   (commit-to-file *complicated-settings*)
   (none))
 
-(defun test-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* test-toggle?) new-val)
+(defun one-frame-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* one-frame-toggle?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+
+(defun crash-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* crash-toggle?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+
+(defun math-quiz-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* math-quiz-toggle?) new-val)
   (commit-to-file *complicated-settings*)
   (none))
   
-
 (define *complicated-options*
   (new 'static 'boxed-array :type game-option
   ;; add new options here
-       ;; [0] SHOW COUNTUP TIMER toggle
+       ;; [0] SPEEDRUN TIMER toggle
        (new 'static 'game-option
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-show-timer)
@@ -109,13 +131,27 @@
                          (countup-timer-setting-changed! (the-as symbol val))
                          (none)))
       (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-crash-toggle)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (crash-toggle-changed! (the-as symbol val))
+                        (none)))  
+      (new 'static 'game-option
           :option-type (game-option-type on-off)
-          :name (text-id complicated-opts-test-toggle)
+          :name (text-id complicated-opts-one-frame-toggle)
           :scale #t
           :on-change (lambda ((val object))
-                        (test-toggle-changed! (the-as symbol val))
+                        (one-frame-toggle-changed! (the-as symbol val))
                         (none)))
-       ;; [1] BACK
+      (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-math-quiz-toggle)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (math-quiz-toggle-changed! (the-as symbol val))
+                        (none)))
+       ;; [-] BACK
        (new 'static 'game-option
             :option-type (game-option-type button)
             :name (text-id back)
@@ -180,8 +216,20 @@
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; add new options here
   (set! (-> *complicated-options* 0 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* test-toggle?))
+  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* crash-toggle?))
+  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
+  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
   (none))
 
+;; add new options here (getter)
 (defun show-countup-timer-enabled? ()
 (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
+
+(defun one-frame-toggle-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* one-frame-toggle?))))
+
+(defun crash-toggle-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
+
+(defun math-quiz-toggle-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* math-quiz-toggle?))))

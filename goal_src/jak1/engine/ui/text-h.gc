@@ -800,7 +800,9 @@
   (complicated-opts-title #x161a)
   ;; add new options here, but don't change the order of the existing ones, or it will break save files
   (complicated-opts-show-timer #x161b)
-  (complicated-opts-test-toggle #x161c)
+  (complicated-opts-one-frame-toggle #x161c)
+  (complicated-opts-crash-toggle #x161d)
+  (complicated-opts-math-quiz-toggle #x161e)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

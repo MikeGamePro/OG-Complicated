@@ -1,13 +1,14 @@
 **why the hell do enemies randomly despawn**
 
 finish drought (disable water draw)
-get to 40 live rules/comps
+get to 40 live rules/comps (might need 50)
 new zoomer rule
-settings
+settings (in progress)
+don't start timers until blackout ends
 
 maybe rename: keep it low, one frame, hands on
 maybe add settings for timer placement
 consider replacement for jak rabbit
 maybe improve all other sounds
-rgyb refresh
+rgyb refresh (or swap powerup)
 look at orb refresh on hidden treasure again
