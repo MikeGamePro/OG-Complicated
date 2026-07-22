@@ -798,7 +798,9 @@
   (input-opts-analog-sensitivity #x1619)
   ;; complicated mod
   (complicated-opts-title #x161a)
+  ;; add new options here, but don't change the order of the existing ones, or it will break save files
   (complicated-opts-show-timer #x161b)
+  (complicated-opts-test-toggle #x161c)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)
