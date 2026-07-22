@@ -1,0 +1,187 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; name: complicated-menu.gc
+;; name in dgo: complicated-menu
+;; dgos: ENGINE, GAME
+
+(bundles "ENGINE.CGO" "GAME.CGO")
+
+;; ---------------------------------------------------------------------------
+;; Complicated Options pause-menu screen.
+;;
+;; Load order: place complicated-menu.gc in game.gp AFTER pc/progress-pc.gc
+;; so this redefinition wins.
+;; ---------------------------------------------------------------------------
+
+;; ---- Complicated Options submenu ------------------------------------------
+
+(deftype complicated-settings (basic)
+  ((show-countup-timer? symbol)
+  (test-toggle? symbol))
+  (:methods
+    (reset (_type_) _type_)
+    (commit-to-file (_type_) none)
+    (load-from-file (_type_) none)
+    (write-to-file (_type_ string) symbol)
+    (read-from-file (_type_ string) symbol)))
+
+(defmethod reset ((obj complicated-settings))
+  ;; default values for new settings go here
+  (set! (-> obj show-countup-timer?) #f)
+  obj)
+
+(defmethod read-from-file ((obj complicated-settings) (filename string))
+  (if (not filename) (return #f))
+  (let ((file (new 'stack 'file-stream filename 'read)))
+    (when (not (file-stream-valid? file)) (return #f))
+    (with-settings-scope (file)
+      (case-str (file-stream-read-word file)
+        (("complicated-settings")
+         (dosettings (file)
+           (case-str *pc-temp-string*
+           ;; add new options here
+             (("show-countup-timer?")
+              (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
+            (("test-toggle?")
+              (set! (-> obj test-toggle?) (file-stream-read-symbol file)))
+              )))))
+    (file-stream-close file))
+  #t)
+
+(defmethod load-from-file ((obj complicated-settings))
+  (format (clear *pc-temp-string-1*) "~S/complicated-settings.gc" *pc-settings-folder*)
+  (cond
+    ((pc-filepath-exists? *pc-temp-string-1*)
+     (unless (read-from-file obj *pc-temp-string-1*)
+       (reset obj)))
+    (else
+     (reset obj)
+     (commit-to-file obj)))
+  (none))
+
+(defmethod write-to-file ((obj complicated-settings) (filename string))
+  (if (not filename) (return #f))
+  (let ((file (new 'stack 'file-stream filename 'write)))
+    (if (not (file-stream-valid? file)) (return #f))
+    (format file "(complicated-settings~%")
+    ;; add new options here
+    (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
+    (format file "  (test-toggle? ~A)~%" (-> obj test-toggle?))
+    (format file "  )~%")
+    (file-stream-close file))
+  #t)
+
+(defmethod commit-to-file ((obj complicated-settings))
+  (format (clear *pc-temp-string-1*) "~S/complicated-settings.gc" *pc-settings-folder*)
+  (write-to-file obj *pc-temp-string-1*)
+  (none))
+
+(defmethod new complicated-settings ((allocation symbol) (type-to-make type))
+  (let ((obj (object-new allocation type-to-make (the-as int (-> type-to-make size)))))
+    (load-from-file obj)
+    obj))
+
+(define *complicated-settings* (the complicated-settings #f))
+(define-once *complicated-settings* (new 'global 'complicated-settings))
+
+;; add new options here (handler)
+(defun countup-timer-setting-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* show-countup-timer?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+
+(defun test-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* test-toggle?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+  
+
+(define *complicated-options*
+  (new 'static 'boxed-array :type game-option
+  ;; add new options here
+       ;; [0] SHOW COUNTUP TIMER toggle
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-show-timer)
+            :scale #t
+            :on-change (lambda ((val object))
+                         (countup-timer-setting-changed! (the-as symbol val))
+                         (none)))
+      (new 'static 'game-option
+          :option-type (game-option-type on-off)
+          :name (text-id complicated-opts-test-toggle)
+          :scale #t
+          :on-change (lambda ((val object))
+                        (test-toggle-changed! (the-as symbol val))
+                        (none)))
+       ;; [1] BACK
+       (new 'static 'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t)))
+
+(define *game-options-complicated*
+  (new 'static 'boxed-array :type game-option
+       ;; [0] INPUT OPTIONS
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id input-options)
+            :scale #t
+            :param3 (game-option-menu input-options))
+       ;; [1] COMPLICATED OPTIONS  ← NEW
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-title)
+            :scale #t
+            :param3 (game-option-menu complicated-options))
+       ;; [2] PLAY HINTS  (was [1])
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id play-hints)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (set! (-> *setting-control* default play-hints) (-> *pc-settings* memcard-play-hints?))))
+       ;; [3] SUBTITLES  (was [2])
+       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id subtitles) :scale #t)
+       ;; [4] HINTTITLES  (was [3])
+       (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id hinttitles) :scale #t)
+       ;; [5] LANGUAGE  (was [4])
+       (new 'static 'game-option :option-type (game-option-type language) :name (text-id language) :scale #t)
+       ;; [6] SUBTITLES LANGUAGE  (was [5])
+       (new 'static 'game-option :option-type (game-option-type language-subtitles) :name (text-id subtitles-language) :scale #t)
+       ;; [7] TEXT LANGUAGE  (was [6])
+       (new 'static 'game-option :option-type (game-option-type language-text) :name (text-id text-language) :scale #t)
+       ;; [8] SUBTITLES SPEAKER  (was [7])
+       (new 'static 'game-option :option-type (game-option-type speaker) :name (text-id subtitles-speaker) :scale #t)
+       ;; [9] MISC OPTIONS  (was [8])
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id misc-options)
+            :scale #t
+            :param3 (game-option-menu misc-options))
+       ;; [10] BACK  (was [9])
+       (new 'static 'game-option :option-type (game-option-type button) :name (text-id back) :scale #t)))
+
+;; ---- init-game-options override --------------------------------------------
+(define *complicated-orig-init-game-options* init-game-options)
+
+(defun init-game-options ((obj progress))
+  ((the (function progress none) *complicated-orig-init-game-options*) obj)
+  (set! (-> *options-remap* (progress-screen game-settings)) *game-options-complicated*)
+  (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
+  (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
+  (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
+  (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
+  (set! (-> *game-options-complicated* 5 value-to-modify) (&-> *setting-control* default language))
+  (set! (-> *game-options-complicated* 6 value-to-modify) (&-> *progress-carousell* int-backup))
+  (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
+  (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
+  ;; add new options here
+  (set! (-> *complicated-options* 0 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* test-toggle?))
+  (none))
+
+(defun show-countup-timer-enabled? ()
+(the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))

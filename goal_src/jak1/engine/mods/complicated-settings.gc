@@ -1,0 +1,18 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; name: complicated-settings.gc
+;; name in dgo: complicated-settings
+;; dgos: ENGINE, GAME
+
+;; ---------------------------------------------------------------------------
+;; Persisted settings for the Complicated mod.
+;;
+;; Mirrors the shape of *mario-settings* (see mario-menu.gc): a single
+;; 'static struct instance, mutated via set!, and written to disk via
+;; commit-to-file whenever a menu option changes it.
+;;
+;; NOTE: this assumes the same settings-persistence framework used by
+;; *mario-settings* / *pc-settings*. If your mod-settings.gc framework
+;; declares things differently, adjust this deftype to match it.
+;; ---------------------------------------------------------------------------
