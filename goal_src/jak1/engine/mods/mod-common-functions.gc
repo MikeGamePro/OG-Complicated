@@ -2305,7 +2305,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun global-countdown-add-seconds ((seconds-to-add float))
   (when *global-countdown-active?*
     (set! *global-countdown-remaining-time*
-          (+ *global-countdown-remaining-time* (seconds seconds-to-add))))
+          (+ *global-countdown-remaining-time*
+             (the int (* seconds-to-add (the float TICKS_PER_SECOND))))))
   (none))
 
 (defbehavior global-countdown-proc process ()

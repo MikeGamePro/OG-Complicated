@@ -4,7 +4,6 @@ finish drought (disable water draw)
 get to 40 live rules/comps
 new zoomer rule
 settings
-remove auto collect during fuel shortage
 
 maybe rename: keep it low, one frame, hands on
 maybe add settings for timer placement
