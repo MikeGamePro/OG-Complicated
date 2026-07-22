@@ -269,6 +269,174 @@
 
 (#if PC_PORT (defconstant STICK_DEADZONE (-> *pc-settings* stick-deadzone)) (defconstant STICK_DEADZONE 0.3))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DELAYED INPUT MOD (complication)
+;; ---------------------------------------------------------------------------
+;; Records the raw controller state each frame into a per-pad ring buffer, then
+;; feeds the game the state from `delay` seconds ago instead of the live state.
+;; The result: you have to *anticipate* — every button press and stick motion
+;; only takes effect X seconds after you actually do it.
+;;
+;; It works by swapping the raw hardware fields (button0 / sticks / pressure)
+;; right after they are read in service-cpads, so every downstream derived value
+;; (button0-abs, button0-rel, stick0-dir, cheat codes, gameplay reads) is built
+;; from the delayed input for free. Only applied while `*master-mode*` is 'game,
+;; so menus and pause stay responsive, AND only while the "Input Delay"
+;; complication is toggled on (see complicated-menu.gc).
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ring buffer size. must be a power of two (mask below is size-1).
+;; 512 frames covers >1.7s at 300fps and >8.5s at 60fps of input history.
+(defconstant INPUT-DELAY-MAX-FRAMES 512)
+(defconstant INPUT-DELAY-FRAME-MASK 511)
+
+;; one recorded snapshot of raw controller input, tagged with capture time.
+(deftype input-delay-frame (structure)
+  ((time    time-frame) ;; when this frame was captured (get-current-time units)
+   (button0 uint16)     ;; raw digital button bitmask
+   (rightx  uint8)      ;; raw analog sticks
+   (righty  uint8)
+   (leftx   uint8)
+   (lefty   uint8)
+   (abutton uint8 12)   ;; raw pressure-sensitive button values
+   ))
+
+;; per-controller ring buffer of recorded input frames.
+(deftype input-delay-buffer (basic)
+  ((frames input-delay-frame 512 :inline) ;; INPUT-DELAY-MAX-FRAMES
+   (head   int32)  ;; index the next frame is written to
+   (count  int32)  ;; number of valid frames stored (saturates at max)
+   )
+  (:methods
+   (new (symbol type) _type_)))
+
+(defmethod new input-delay-buffer ((allocation symbol) (type-to-make type))
+  (let ((this (object-new allocation type-to-make (the-as int (-> type-to-make size)))))
+    (set! (-> this head) 0)
+    (set! (-> this count) 0)
+    this))
+
+;; global config + storage for all four controllers.
+(deftype input-delay-info (basic)
+  ((enabled? symbol)     ;; is the delay complication currently active?
+   (delay    time-frame) ;; how far back to play input from
+   (buffers  input-delay-buffer 4)
+   )
+  (:methods
+   (new (symbol type) _type_)))
+
+(defmethod new input-delay-info ((allocation symbol) (type-to-make type))
+  (let ((this (object-new allocation type-to-make (the-as int (-> type-to-make size)))))
+    ;; off by default -- only turned on when the "Input Delay" complication
+    ;; is enabled via the Complicated Options menu.
+    (set! (-> this enabled?) #f)
+    (set! (-> this delay) (seconds 0.15)) ;; default: 150ms of delay
+    (dotimes (i 4)
+      (set! (-> this buffers i) (new 'global 'input-delay-buffer)))
+    this))
+
+(define *input-delay* (new 'global 'input-delay-info))
+
+(defun input-delay-reset ((buf input-delay-buffer))
+  "Forget all recorded history so playback starts fresh."
+  (set! (-> buf head) 0)
+  (set! (-> buf count) 0)
+  (none))
+
+(defun input-delay-record ((buf input-delay-buffer) (pad cpad-info) (now time-frame))
+  "Store the pad's current raw input at the head of the ring buffer."
+  (let ((f (-> buf frames (-> buf head))))
+    (set! (-> f time) now)
+    (set! (-> f button0) (-> pad button0))
+    (set! (-> f rightx) (-> pad rightx))
+    (set! (-> f righty) (-> pad righty))
+    (set! (-> f leftx) (-> pad leftx))
+    (set! (-> f lefty) (-> pad lefty))
+    (dotimes (i 12)
+      (set! (-> f abutton i) (-> pad abutton i))))
+  (set! (-> buf head) (logand (+ (-> buf head) 1) INPUT-DELAY-FRAME-MASK))
+  (when (< (-> buf count) INPUT-DELAY-MAX-FRAMES)
+    (1+! (-> buf count)))
+  (none))
+
+(defun input-delay-apply ((pad cpad-info) (f input-delay-frame))
+  "Overwrite the pad's raw input with a recorded frame."
+  (set! (-> pad button0) (-> f button0))
+  (set! (-> pad rightx) (-> f rightx))
+  (set! (-> pad righty) (-> f righty))
+  (set! (-> pad leftx) (-> f leftx))
+  (set! (-> pad lefty) (-> f lefty))
+  (dotimes (i 12)
+    (set! (-> pad abutton i) (-> f abutton i)))
+  (none))
+
+(defun input-delay-neutral ((pad cpad-info))
+  "Force the pad to a do-nothing state (no buttons, centered sticks).
+   Used during the initial ramp-up before enough history exists."
+  (set! (-> pad button0) (the-as uint 0))
+  (set! (-> pad rightx) (the-as uint 128))
+  (set! (-> pad righty) (the-as uint 128))
+  (set! (-> pad leftx) (the-as uint 128))
+  (set! (-> pad lefty) (the-as uint 128))
+  (dotimes (i 12)
+    (set! (-> pad abutton i) 0))
+  (none))
+
+(defun input-delay-playback ((buf input-delay-buffer) (pad cpad-info) (target time-frame))
+  "Overwrite the pad with the newest recorded frame at or before `target` time.
+   Falls back to the oldest frame if the buffer is full but doesn't reach that
+   far back, or to neutral input if we don't have enough history yet."
+  (let ((pick -1)
+        (oldest -1))
+    (dotimes (i (-> buf count))
+      ;; walk newest -> oldest
+      (let ((idx (logand (- (- (-> buf head) 1) i) INPUT-DELAY-FRAME-MASK)))
+        (set! oldest idx)
+        (when (and (= pick -1) (>= target (-> buf frames idx time)))
+          (set! pick idx))))
+    (cond
+      ((>= pick 0)
+       (input-delay-apply pad (-> buf frames pick)))
+      ((= (-> buf count) INPUT-DELAY-MAX-FRAMES)
+       ;; buffer full but delay exceeds what we can store: use the oldest we have
+       (input-delay-apply pad (-> buf frames oldest)))
+      (else
+       ;; not enough history recorded yet: do nothing until it fills in
+       (input-delay-neutral pad))))
+  (none))
+
+(defun service-input-delay ((pad cpad-info) (buf input-delay-buffer))
+  "Record this frame's live input, then replace it with delayed input."
+  (let ((now (get-current-time)))
+    (input-delay-record buf pad now)
+    (input-delay-playback buf pad (- now (-> *input-delay* delay))))
+  (none))
+
+(defun set-input-delay! ((sec float))
+  "Set the input delay (in seconds) and clear old history, without changing
+   whether the complication is enabled. Prefer (input-delay-enable! on sec)
+   from other files -- this is here if you just want to change the amount
+   while it's already running."
+  (set! (-> *input-delay* delay) (the-as time-frame (the int (* 300.0 sec)))) ;; 300 ticks/sec
+  (dotimes (i 4)
+    (input-delay-reset (-> *input-delay* buffers i)))
+  sec)
+
+(defun input-delay-enable! ((on symbol) (delay-sec float))
+  "Public entry point for other files: turn the Input Delay complication on
+   (#t) or off (#f), and if turning it on, use `delay-sec` seconds of delay.
+   Always clears old history so playback starts fresh.
+   Examples:
+     (input-delay-enable! #t 0.15)  ;; turn on with 150ms of delay
+     (input-delay-enable! #t 0.5)   ;; turn on with half a second of delay
+     (input-delay-enable! #f 0.0)   ;; turn off (delay-sec is ignored)"
+  (when on
+    (set! (-> *input-delay* delay) (the-as time-frame (the int (* 300.0 delay-sec)))))
+  (set! (-> *input-delay* enabled?) on)
+  (dotimes (i 4)
+    (input-delay-reset (-> *input-delay* buffers i)))
+  on)
+
 (defun service-cpads ()
   "Read from cpads and update vibration"
   ;; iterate over pads
@@ -278,6 +446,18 @@
             (history (-> *cpad-history-list* cpads pad-idx)))
         ;; read from hardware.
         (cpad-get-data pad)
+        ;; INPUT DELAY COMPLICATION: swap the just-read raw input for the input
+        ;; from `delay` seconds ago, but only while the complication is active,
+        ;; we're actually in gameplay, and the pad is connected. This keeps
+        ;; menus/pause responsive and leaves input untouched when the
+        ;; complication is off. Everything computed below (button0-abs/rel,
+        ;; stick dir, cheat codes) is then built from the delayed input
+        ;; automatically.
+        (if (and (-> *input-delay* enabled?)
+                 (= *master-mode* 'game)
+                 (zero? (logand (-> pad valid) 128)))
+          (service-input-delay pad (-> *input-delay* buffers pad-idx))
+          (input-delay-reset (-> *input-delay* buffers pad-idx)))
         (cond
           ((zero? (logand (-> pad valid) 128))
            (dotimes (buzz-idx 2)

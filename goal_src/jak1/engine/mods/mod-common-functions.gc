@@ -118,15 +118,38 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 41) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 43) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
+
 (define *math-quiz-val1* 0)
 (define *math-quiz-val2* 0)
-(define *math-quiz-op* 0) ;; 0 = +, 1 = -, 2 = *
+(define *math-quiz-op* 0) ;; + - *
 (define *math-quiz-answer* 0)
 (define *math-quiz-current-guess* 0)
+
+(define *jak-quiz-questions*
+  (new 'static 'boxed-array :type string
+       "WHICH LEVEL HAS NO YELLOW ECO VENT?"
+       "WHAT COLOR IS FISHERMAN\c12S BANDANA?"
+       "WHO IS THE GREEN SAGE?"))
+
+(define *jak-quiz-choices*
+  (new 'static 'boxed-array :type string
+       "SNOWY MOUNTAIN" "SPIDER CAVE" "CITADEL" "LOST PRECURSOR CITY"
+       "BLUE" "ORANGE" "RED" "GREEN"
+       "GOL" "KEIRA" "SAMOS" "MAIA"))
+
+(define *jak-quiz-answers*
+  (new 'static 'boxed-array :type int32
+       3
+       2
+       2))
+
+(define *jak-quiz-current-question* 0)
+(define *jak-quiz-current-guess* 0)
+
 (define *mod-rule-all-cell-tasks*
   (new 'static
        'boxed-array
@@ -342,6 +365,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) "OVERCLOCK")
     ((eq? id 'rule-speed) "SPEED")
     ((eq? id 'rule-math-quiz) "QUICK MATHS")
+    ((eq? id 'rule-jak-quiz) "YOU DON\c12T KNOW JAK")
+    ((eq? id 'complication-bad-ping) "BAD PING")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -357,7 +382,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-fuel-pressure) "COLLECT A POWER CELL.")
     ((eq? id 'rule-buzzer-pressure) "COLLECT 2 SCOUT FLIES.")
     ((eq? id 'rule-flop-this) "LURKERS MAY ONLY BE KILLED WITH GROUND POUNDS.")
-    ((eq? id 'complication-brittle-bones) "JUMPS HAVE A 10% CHANCE TO DAMAGE YOU.")
+    ((eq? id 'complication-brittle-bones) "ALL JUMPS HAVE A 10% CHANCE TO DAMAGE YOU.")
     ((eq? id 'complication-rotten-eggs) "ORBS KILL YOU.")
     ((eq? id 'complication-eco-allergy) "ECO DAMAGES YOU.")
     ((eq? id 'rule-keep-it-low) "DO NOT JUMP KICK.")
@@ -370,7 +395,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-bus-driver) "ZOOMER EXPLODES IF TOO SLOW.")
     ((eq? id 'complication-fuel-shortage) "ALL POWER CELLS ARE GONE.")
     ((eq? id 'complication-hidden-treasure) "ORBS ARE INVISIBLE.")
-    ((eq? id 'complication-wings-tied) "YOU CANNOT COLLECT CELLS ON FLUT FLUT.")
+    ((eq? id 'complication-wings-tied) "YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT.")
     ((eq? id 'complication-jak-rabbit) "JUMP HEIGHTS ARE DOUBLED.")
     ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
     ((eq? id 'rule-blue-crate) "DO NOT BREAK ANY CRATES WITH BLUE ECO.")
@@ -387,6 +412,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) "CITADEL DISCS ARE FASTER.")
     ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
     ((eq? id 'rule-math-quiz) "ANSWER CORRECTLY.")
+    ((eq? id 'rule-jak-quiz) "ANSWER CORRECTLY.")
+    ((eq? id 'complication-bad-ping) "YOU HAVE 120MS INPUT DELAY.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -431,6 +458,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
     ((eq? id 'rule-speed) (seconds 60)) ;; 60
     ((eq? id 'rule-math-quiz) (seconds 20)) ;; 20
+    ((eq? id 'rule-jak-quiz) (seconds 15)) ;; 15
+    ((eq? id 'complication-bad-ping) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -487,7 +516,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-for-billy)
          (eq? id 'rule-cold-feet)
          (eq? id 'rule-speed)
-          (eq? id 'rule-math-quiz)
+         (eq? id 'rule-math-quiz)
+         (eq? id 'rule-jak-quiz)
          )
      'rule)
     ((or
@@ -510,6 +540,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-rgyb)
          (eq? id 'complication-butter-fingers)
          (eq? id 'complication-overclock)
+         (eq? id 'complication-bad-ping)
          )
          
      'complication)
@@ -589,6 +620,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-fall-damage) (seconds 120))
     ((eq? punishment 'punishment-trip) (seconds 120))
     ((eq? punishment 'punishment-edge) (seconds 180))
+    ((eq? punishment 'punishment-delay) (seconds 60))
     (else 0)))
 
 (defun mod-rule-find-timed-punishment-slot ((punishment symbol))
@@ -638,7 +670,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (case punishment
     (('punishment-fall-damage)
       (set! (-> *TARGET-bank* fall-far) (meters 30))
-      (set! (-> *TARGET-bank* fall-far-inc) (meters 20))))
+      (set! (-> *TARGET-bank* fall-far-inc) (meters 20)))
+    (('punishment-delay)
+      (input-delay-enable! #f 0.0)))
   (none))
 
 (defun mod-rule-update-timed-punishments ()
@@ -875,6 +909,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (weight-revert      5)
          (weight-extra-rule  5)
          (weight-crash       2)
+         (weight-delay       3)
          (can-countdown (mod-rule-punishment-rollable? 'punishment-countdown))
          (can-fall-damage (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
          (can-trip (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip)))
@@ -885,6 +920,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (can-extra-rule (and (< (mod-rule-active-slot-count) 2) (mod-rule-punishment-rollable? 'punishment-extra-rule)))
          (can-blind (mod-rule-punishment-rollable? 'punishment-blind))
          (can-crash (and (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash)))
+         (can-delay (and (not (mod-rule-active? 'complication-bad-ping)) (mod-rule-punishment-rollable? 'punishment-delay)))
          (total-weight 0)
          (roll 0))
 
@@ -914,6 +950,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
     (when can-crash
       (+! total-weight weight-crash))
+    
+    (when can-delay
+      (+! total-weight weight-delay))
 
     ;; If every option got excluded, fall back to countdown.
     (when (<= total-weight 0)
@@ -976,6 +1015,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (return 'punishment-crash))
         (set! total-weight next-weight)))
         
+    (when can-delay
+      (let ((next-weight (+ total-weight weight-delay)))
+        (when (< roll next-weight)
+          (return 'punishment-delay))
+        (set! total-weight next-weight)))
     #f))
 
 (defun mod-rule-on-activate ((id symbol))
@@ -986,6 +1030,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
     ((eq? id 'rule-distancing)
     (set! *closest-buzzer-dist* 1000000000.0))
+
+    ((eq? id 'complication-bad-ping)
+    (input-delay-enable! #t 0.12))
+
+((eq? id 'rule-jak-quiz)
+     (set! *jak-quiz-current-question* (knuth-rand-int-range 0 (length *jak-quiz-questions*)))
+     (set! *jak-quiz-current-guess* -1))
 
 ((eq? id 'rule-math-quiz)
      (set! *math-quiz-op* (knuth-rand-int-range 0 3))
@@ -1042,6 +1093,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (set! (-> (the-as fact-info-target (-> *target* fact)) health) 3.0))
           ((eq? id 'complication-hidden-treasure)
                     (refresh-money-actors))
+          ((eq? id 'complication-bad-ping)
+           (input-delay-enable! #f 0.0))
+
           ((eq? id 'complication-jak-rabbit)
            (set! (-> *TARGET-bank* jump-height-min) (meters 1.01))
            (set! (-> *TARGET-bank* jump-height-max) (meters 3.5))
@@ -1069,7 +1123,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-deactivate-slot slot)
     (set! (-> *mod-rule-active-slots* slot) id)
     (set! *mod-rule-last-outcome* 'none)
-    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-dont-move)) (sound-play "warning") (sound-play "ecohit2"))
+    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-jak-quiz) (eq? id 'rule-dont-move)) (sound-play "warning") (sound-play "ecohit2"))
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
     (set! (-> *mod-rule-slot-progress* slot) 0)
     (if (eq? (mod-rule-type id) 'rule)
@@ -1159,6 +1213,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 38) 'complication-overclock)
     ((= idx 39) 'rule-speed)
     ((= idx 40) 'rule-math-quiz)
+    ((= idx 41) 'rule-jak-quiz)
+    ((= idx 42) 'complication-bad-ping)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1451,12 +1507,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
 
+      ((eq? id 'complication-bad-ping)
+       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 9))
+
       ;; Special
       ((eq? id 'rule-cold-feet)
        (if (eq? level-name 'snow) 10 0))
 
       ((eq? id 'rule-math-quiz)
-       (if (math-quiz-toggle-enabled?) 7 0))
+       (if (or (mod-rule-active? 'rule-jak-quiz) (not (math-quiz-toggle-enabled?))) 0 6))
+
+      ((eq? id 'rule-jak-quiz) 
+       (if (mod-rule-active? 'rule-math-quiz) 0 8))
 
       ((eq? id 'complication-overclock)
        (if (eq? level-name 'citadel) 30 0))
@@ -1725,7 +1787,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-punishment-name ((punishment symbol))
   (cond
     ((eq? punishment 'punishment-money) "LOSE 50 ORBS")
-    ((eq? punishment 'punishment-warp) "WARP TO GEYSER ROCK")
+    ((eq? punishment 'punishment-warp) "WARP TO GEYSER")
     ((eq? punishment 'punishment-countdown) "LOSE 30 SECONDS")
     ((eq? punishment 'punishment-revert-cell) "REVERT A RANDOM CELL")
     ((eq? punishment 'punishment-extra-rule) "EXTRA RULE")
@@ -1733,6 +1795,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
     ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 3 MINUTES")
+    ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     (else "NONE")))
 
@@ -1741,6 +1804,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-fall-damage) "FALL DAMAGE")
     ((eq? punishment 'punishment-trip) "TRIP")
     ((eq? punishment 'punishment-edge) "LEDGE GRAB")
+    ((eq? punishment 'punishment-delay) "INPUT DELAY")
     (else (mod-rule-punishment-name punishment))))
 
 (defun mod-rule-apply-extra-rule-punishment ((failed-slot int))
@@ -1791,6 +1855,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge)
      (none)
      (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-delay)
+      (input-delay-enable! #t 0.2)
+     (mod-rule-start-timed-punishment punishment))
     (else
      (none)))
   (none))
@@ -1817,18 +1884,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let ((goal (-> *mod-rule-slot-goals* slot))
               (progress (-> *mod-rule-slot-progress* slot))
               (punishment (-> *mod-rule-slot-punishments* slot)))
-          
-          ;; Logic for handling failures
           (when (and (> goal 0) (< progress goal) punishment)
-            (if (eq? id 'rule-math-quiz)
-              (if (= *math-quiz-current-guess* *math-quiz-answer*)
-                  (mod-rule-counter-add-progress 'rule-math-quiz 1)
-                  (mod-rule-handle-slot-failure slot punishment))
+            (unless (eq? id 'rule-math-quiz)
               (mod-rule-handle-slot-failure slot punishment)))
-          
           (if (not (movie?)) (sound-play "cursor-options"))
-          
-          ;; State resets were moved to mod-rule-deactivate-slot
           (when (and (= id (-> *mod-rule-active-slots* slot))
                      (or (<= goal 0) (>= progress goal) (not punishment)))
             (set! *mod-rule-last-outcome* 'success)
@@ -1848,24 +1907,31 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (mod-rule-active? 'rule-math-quiz)
     (let ((slot (mod-rule-find-active-slot 'rule-math-quiz)))
       (when (>= slot 0)
-        (when (cpad-pressed? 0 up)
-          (+! *math-quiz-current-guess* 1)
-          (sound-play "cursor-up-down"))
-        (when (cpad-pressed? 0 down)
-          (-! *math-quiz-current-guess* 1)
-          (sound-play "cursor-up-down"))
-        (when (cpad-pressed? 0 right)
-          (+! *math-quiz-current-guess* 5)
-          (sound-play "cursor-up-down"))
-        (when (cpad-pressed? 0 left)
-          (-! *math-quiz-current-guess* 5)
-          (sound-play "cursor-up-down"))
-        (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
-          (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
+        (let ((time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
+          (when (<= time-left 0)
             (if (= *math-quiz-current-guess* *math-quiz-answer*)
               (mod-rule-counter-add-progress 'rule-math-quiz 1)
               (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
-                (mod-rule-handle-slot-failure slot punishment)))))))
+                (mod-rule-handle-slot-failure slot punishment)))
+            (none))
+          (when (cpad-pressed? 0 up)
+            (+! *math-quiz-current-guess* 1)
+            (sound-play "cursor-up-down"))
+          (when (cpad-pressed? 0 down)
+            (-! *math-quiz-current-guess* 1)
+            (sound-play "cursor-up-down"))
+          (when (cpad-pressed? 0 right)
+            (+! *math-quiz-current-guess* 5)
+            (sound-play "cursor-up-down"))
+          (when (cpad-pressed? 0 left)
+            (-! *math-quiz-current-guess* 5)
+            (sound-play "cursor-up-down"))
+          (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
+                    (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
+            (if (= *math-quiz-current-guess* *math-quiz-answer*)
+              (mod-rule-counter-add-progress 'rule-math-quiz 1)
+              (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
+                (mod-rule-handle-slot-failure slot punishment))))))))
   (none))
 
 (defun mod-rule-reroll-id ((id symbol))
@@ -2093,6 +2159,44 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (and *target*
            (logtest? (-> *target* state-flags) (state-flags grabbed)))))
 
+(defun mod-rule-update-jak-quiz ()
+  (when (mod-rule-active? 'rule-jak-quiz)
+    (let ((slot (mod-rule-find-active-slot 'rule-jak-quiz)))
+      (when (>= slot 0)
+        (let* ((q-idx *jak-quiz-current-question*)
+               (base-choice-idx (* q-idx 4))
+               (time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
+          (when (<= time-left 0)
+            (if (= *jak-quiz-current-guess* (-> *jak-quiz-answers* q-idx))
+              (mod-rule-counter-add-progress 'rule-jak-quiz 1)
+              (let ((punishment (mod-rule-punishment-for-id 'rule-jak-quiz)))
+                (mod-rule-handle-slot-failure slot punishment)))
+            (none))
+          (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
+            (cond
+              ((<= *jak-quiz-current-guess* 0)
+                (set! *jak-quiz-current-guess* 3))
+              (else
+                (-! *jak-quiz-current-guess* 1)))
+            (sound-play "cursor-up-down"))
+          (when (or (cpad-pressed? 0 down) (cpad-pressed? 0 left))
+            (cond
+              ((= *jak-quiz-current-guess* -1)
+                (set! *jak-quiz-current-guess* 0))
+              ((>= *jak-quiz-current-guess* 3)
+                (set! *jak-quiz-current-guess* 0))
+              (else
+                (+! *jak-quiz-current-guess* 1)))
+            (sound-play "cursor-up-down"))
+          (when (and (>= *jak-quiz-current-guess* 0)
+                  (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
+                    (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
+            (if (= *jak-quiz-current-guess* (-> *jak-quiz-answers* q-idx))
+              (mod-rule-counter-add-progress 'rule-jak-quiz 1)
+              (let ((punishment (mod-rule-punishment-for-id 'rule-jak-quiz)))
+                (mod-rule-handle-slot-failure slot punishment))))))))
+  (none))
+
 (defbehavior mod-rule-manager-proc process ()
   (when (not *global-countdown-lost?*)
     (loop
@@ -2135,6 +2239,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (logclear! (-> *target* mask) (process-mask sleep)))
          (mod-rule-update-timed-punishments)
          (mod-rule-update-math-quiz)
+         (mod-rule-update-jak-quiz)
          (dotimes (slot 3)
            (when (and (-> *mod-rule-active-slots* slot)
                       (>= (current-time) (-> *mod-rule-slot-end-times* slot)))
@@ -2194,6 +2299,30 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     (if (< slot 3) slot -1)))
 
+(define *mod-rule-desc-line-1* (new 'global 'string 128 (the-as string #f)))
+(define *mod-rule-desc-line-2* (new 'global 'string 128 (the-as string #f)))
+(define *mod-rule-punish-line-1* (new 'global 'string 128 (the-as string #f)))
+(define *mod-rule-punish-line-2* (new 'global 'string 128 (the-as string #f)))
+(define *mod-rule-quiz-line-1* (new 'global 'string 128 (the-as string #f)))
+(define *mod-rule-quiz-line-2* (new 'global 'string 128 (the-as string #f)))
+
+(defun mod-rule-copy-range! ((dst string) (src string) (start int) (end int))
+  (let ((j 0))
+    (dotimes (i (- end start))
+      (set! (-> dst data j) (-> src data (+ start i)))
+      (+! j 1))
+    (set! (-> dst data j) 0))
+  dst)
+
+(defun mod-rule-wrap-point ((str string) (max-len int))
+  (let ((len (length str)))
+    (if (<= len max-len)
+      len
+      (let ((break-idx -1))
+        (dotimes (i (+ max-len 1))
+          (if (= (-> str data i) 32) (set! break-idx i)))
+        (if (>= break-idx 0) break-idx max-len)))))
+
 (defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int))
   (let* ((id (-> *mod-rule-active-slots* slot))
          (punishment (-> *mod-rule-slot-punishments* slot))
@@ -2201,15 +2330,37 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (progress (-> *mod-rule-slot-progress* slot))
          (show-progress? (and (> goal 0) (eq? (mod-rule-goal-kind id) 'counter)))
          (time-left (max 0 (- (-> *mod-rule-slot-end-times* slot) (current-time))))
-         (row y))
+         (row y)
+         (desc (mod-rule-description id))
+         (break-idx (mod-rule-wrap-point desc 25)))
     (draw-string-xy-scaled (mod-rule-name id) buf 10 row (font-color green) (font-flags shadow kerning large) 0.5)
     (+! row 10)
-    (draw-string-xy-scaled (mod-rule-description id) buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
-    (+! row 9)
+    (if (>= break-idx (length desc))
+      (begin
+        (draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (+! row 9))
+      (begin
+        (mod-rule-copy-range! *mod-rule-desc-line-1* desc 0 break-idx)
+        (mod-rule-copy-range! *mod-rule-desc-line-2* desc (+ break-idx 1) (length desc))
+        (draw-string-xy-scaled *mod-rule-desc-line-1* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (+! row 9)
+        (draw-string-xy-scaled *mod-rule-desc-line-2* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (+! row 9)))
     (when punishment
       (draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
-      (draw-string-xy-scaled (mod-rule-punishment-name punishment) buf 80 row (font-color white) (font-flags shadow kerning large) 0.3)
-      (+! row 8))
+      (let* ((punishment-str (mod-rule-punishment-name punishment))
+            (punish-break-idx (mod-rule-wrap-point punishment-str 16)))
+        (if (>= punish-break-idx (length punishment-str))
+          (begin
+            (draw-string-xy-scaled punishment-str buf 80 row (font-color white) (font-flags shadow kerning large) 0.3)
+            (+! row 8))
+          (begin
+            (mod-rule-copy-range! *mod-rule-punish-line-1* punishment-str 0 punish-break-idx)
+            (mod-rule-copy-range! *mod-rule-punish-line-2* punishment-str (+ punish-break-idx 1) (length punishment-str))
+            (draw-string-xy-scaled *mod-rule-punish-line-1* buf 80 row (font-color white) (font-flags shadow kerning large) 0.3)
+            (+! row 8)
+            (draw-string-xy-scaled *mod-rule-punish-line-2* buf 80 row (font-color white) (font-flags shadow kerning large) 0.3)
+            (+! row 8)))))
     (when show-progress?
       (draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
       (draw-string-xy-scaled (string-format "~D/~D" progress goal) buf 80 row (font-color white) (font-flags shadow kerning large) 0.5)
@@ -2242,6 +2393,42 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 *math-quiz-val2* 
                 *math-quiz-current-guess*)
         (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)))
+    (when (eq? id 'rule-jak-quiz)
+      (let* ((q-idx *jak-quiz-current-question*)
+            (base-choice-idx (* q-idx 4))
+            (choice-str
+              (if (= *jak-quiz-current-guess* -1)
+                "USE D-PAD"
+                (-> *jak-quiz-choices*
+                    (+ base-choice-idx *jak-quiz-current-guess*)))))
+        (format (clear *temp-string*) "~S" (-> *jak-quiz-questions* q-idx))
+        (let ((quiz-break-idx (mod-rule-wrap-point *temp-string* 30)))
+          (if (>= quiz-break-idx (length *temp-string*))
+            (begin
+              (draw-string-xy-scaled *temp-string* buf 10 row
+                                    (font-color white)
+                                    (font-flags shadow kerning large)
+                                    0.35)
+              (+! row 8))
+            (begin
+              (mod-rule-copy-range! *mod-rule-quiz-line-1* *temp-string* 0 quiz-break-idx)
+              (mod-rule-copy-range! *mod-rule-quiz-line-2* *temp-string* (+ quiz-break-idx 1) (length *temp-string*))
+              (draw-string-xy-scaled *mod-rule-quiz-line-1* buf 10 row
+                                    (font-color white)
+                                    (font-flags shadow kerning large)
+                                    0.35)
+              (+! row 8)
+              (draw-string-xy-scaled *mod-rule-quiz-line-2* buf 10 row
+                                    (font-color white)
+                                    (font-flags shadow kerning large)
+                                    0.35)
+              (+! row 8))))
+        (format (clear *temp-string*) " ~S" choice-str)
+        (draw-string-xy-scaled *temp-string* buf 20 row
+                              (font-color white)
+                              (font-flags shadow kerning large)
+                              0.4)
+        (+! row 12)))
     (when (or (eq? id 'complication-bus-driver)
               (eq? id 'rule-speed))
           (draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
@@ -2363,7 +2550,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                      (mod-rule-draw-slot
                        global-buf
                        secondary
-                       94))
+                       (+ end-row 4)))
                     (else
                      (mod-rule-draw-last-outcome
                        global-buf
