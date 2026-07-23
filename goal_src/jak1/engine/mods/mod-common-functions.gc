@@ -52,6 +52,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define-extern one-frame-toggle-enabled? (function symbol))
 (define-extern crash-toggle-enabled? (function symbol))
 (define-extern math-quiz-toggle-enabled? (function symbol))
+ (define-extern trivia-toggle-enabled? (function symbol))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -129,26 +130,84 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *math-quiz-answer* 0)
 (define *math-quiz-current-guess* 0)
 
-(define *jak-quiz-questions*
+(define *trivia-questions*
   (new 'static 'boxed-array :type string
-       "WHICH LEVEL HAS NO YELLOW ECO VENT?"
-       "WHAT COLOR IS FISHERMAN\c12S BANDANA?"
-       "WHO IS THE GREEN SAGE?"))
+        "WHICH LEVEL HAS NO YELLOW ECO VENT?"
+        "WHAT COLOR IS THE FISHERMAN\c12S BANDANA?"
+        "HOW MANY MOTHER SPIDERS ARE IN SPIDER CAVE?"
+        "WHAT IS PRECURSOR BASIN\c12S INTERNAL NAME?"
+        "HOW MANY SCOUT FLIES ARE THERE IN TOTAL?"
+        "WHAT IS THE WORLD\c12S LARGEST OCEAN?"
+        "WHAT IS THE LARGEST BONE IN THE HUMAN BODY?"
+        "WHAT IS THE SMALLEST PRIME NUMBER?"
+        "WHAT IS THE CAPITAL OF IRELAND?"
+        "WHICH CONTINENT HAS THE MOST COUNTRIES?"
+        "WHAT PLANET IS CLOSEST TO THE SUN?"
+        "WHICH BLOOD TYPE IS THE UNIVERSAL DONOR?"
+        "WHICH VITAMIN IS PRODUCED BY SUNLIGHT?"
+        "HOW MANY DEGREES ARE IN A CIRCLE?"
+        "WHAT TYPE IS THE POKEMON CUBONE?"
+        "HOW MANY POINTS IS A TOUCHDOWN WORTH?"
+        "WHO DEVELOPED THE THEORY OF RELATIVITY?"
+        "WHAT IS THE CURRENCY OF JAPAN?"
+        "WHAT IS THE BOILING POINT OF WATER IN CELSIUS?"
+        "IN POKEMON, FAIRY IS WEAK TO WHAT TYPE?"
+        "WHAT IS THE SQUARE ROOT OF 196?"
+       ))
 
-(define *jak-quiz-choices*
+(define *trivia-choices*
   (new 'static 'boxed-array :type string
-       "SNOWY MOUNTAIN" "SPIDER CAVE" "CITADEL" "LOST PRECURSOR CITY"
-       "BLUE" "ORANGE" "RED" "GREEN"
-       "GOL" "KEIRA" "SAMOS" "MAIA"))
+        "LOST PRECURSOR CITY" "SNOWY MOUNTAIN" "SPIDER CAVE" "CITADEL"
+        "RED" "BLUE" "ORANGE" "GREEN"
+        "7" "8" "9" "10"
+        "ROLLING" "RACER" "HILLS" "BASIN"
+        "96" "104" "112" "114"
+        "PACIFIC" "ATLANTIC" "INDIAN" "ARCTIC"
+        "FEMUR" "TIBIA" "HUMERUS" "PELVIS"
+        "1" "2" "3" "4"
+        "DUBLIN" "BELFAST" "CORK" "GALWAY"
+        "AFRICA" "ASIA" "EUROPE" "SOUTH AMERICA"
+        "MERCURY" "VENUS" "EARTH" "MARS"
+        "O-" "A+" "B-" "AB+"
+        "A" "B" "C" "D"
+        "45" "90" "180" "360"
+        "GROUND" "FIRE" "NORMAL" "STEEL"
+        "3" "5" "6" "8"
+        "EINSTEIN" "NEWTON" "GALILEO" "TESLA"
+        "YEN" "PESO" "EURO" "WON"
+        "90" "100" "110" "120"
+        "STEEL" "FIRE" "DARK" "PSYCHIC"
+        "11" "12" "13" "14"
+       ))
 
-(define *jak-quiz-answers*
-  (new 'static 'boxed-array :type int32
-       3
-       2
-       2))
+(define *trivia-current-question* 0)
+(define *trivia-current-guess* 0)
 
-(define *jak-quiz-current-question* 0)
-(define *jak-quiz-current-guess* 0)
+;; tracks which trivia questions have already been rolled this run, sized to match *trivia-questions*
+(define *trivia-questions-used* (new 'global 'boxed-array symbol 21))
+
+(defun mod-rule-clear-trivia-used ()
+  (let ((i 0))
+    (while (< i 21)
+      (set! (-> *trivia-questions-used* i) #f)
+      (+! i 1)))
+  (none))
+
+(defun mod-rule-trivia-pick-question ()
+  (let ((count (length *trivia-questions*))
+        (all-used? #t)
+        (i 0))
+    (while (< i count)
+      (when (not (-> *trivia-questions-used* i))
+        (set! all-used? #f))
+      (+! i 1))
+    (when all-used?
+      (mod-rule-clear-trivia-used))
+    (let ((idx (knuth-rand-int-range 0 count)))
+      (while (-> *trivia-questions-used* idx)
+        (set! idx (knuth-rand-int-range 0 count)))
+      (set! (-> *trivia-questions-used* idx) #t)
+      idx)))
 
 (define *mod-rule-all-cell-tasks*
   (new 'static
@@ -365,7 +424,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) "OVERCLOCK")
     ((eq? id 'rule-speed) "SPEED")
     ((eq? id 'rule-math-quiz) "QUICK MATHS")
-    ((eq? id 'rule-jak-quiz) "YOU DON\c12T KNOW JAK")
+    ((eq? id 'rule-trivia) "YOU DON\c12T KNOW JAK")
     ((eq? id 'complication-bad-ping) "BAD PING")
     (else "UNKNOWN")))
 
@@ -412,7 +471,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) "CITADEL DISCS ARE FASTER.")
     ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
     ((eq? id 'rule-math-quiz) "ANSWER CORRECTLY.")
-    ((eq? id 'rule-jak-quiz) "ANSWER CORRECTLY.")
+    ((eq? id 'rule-trivia) "ANSWER CORRECTLY.")
     ((eq? id 'complication-bad-ping) "YOU HAVE 120MS INPUT DELAY.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
@@ -458,7 +517,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
     ((eq? id 'rule-speed) (seconds 60)) ;; 60
     ((eq? id 'rule-math-quiz) (seconds 20)) ;; 20
-    ((eq? id 'rule-jak-quiz) (seconds 15)) ;; 15
+    ((eq? id 'rule-trivia) (seconds 15)) ;; 15
     ((eq? id 'complication-bad-ping) (seconds 60)) ;; 60
     (else (seconds 30))))
 
@@ -517,7 +576,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-cold-feet)
          (eq? id 'rule-speed)
          (eq? id 'rule-math-quiz)
-         (eq? id 'rule-jak-quiz)
+         (eq? id 'rule-trivia)
          )
      'rule)
     ((or
@@ -1034,9 +1093,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-bad-ping)
     (input-delay-enable! #t 0.12))
 
-((eq? id 'rule-jak-quiz)
-     (set! *jak-quiz-current-question* (knuth-rand-int-range 0 (length *jak-quiz-questions*)))
-     (set! *jak-quiz-current-guess* -1))
+((eq? id 'rule-trivia)
+     (set! *trivia-current-question* (mod-rule-trivia-pick-question))
+     (set! *trivia-current-guess* -1))
 
 ((eq? id 'rule-math-quiz)
      (set! *math-quiz-op* (knuth-rand-int-range 0 3))
@@ -1123,7 +1182,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-deactivate-slot slot)
     (set! (-> *mod-rule-active-slots* slot) id)
     (set! *mod-rule-last-outcome* 'none)
-    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-jak-quiz) (eq? id 'rule-dont-move)) (sound-play "warning") (sound-play "ecohit2"))
+    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-trivia) (eq? id 'rule-dont-move)) (sound-play "warning") (sound-play "ecohit2"))
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
     (set! (-> *mod-rule-slot-progress* slot) 0)
     (if (eq? (mod-rule-type id) 'rule)
@@ -1167,6 +1226,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f))
   (mod-rule-clear-player-hit-cache)
   (mod-rule-clear-recent-rolls)
+  (mod-rule-clear-trivia-used)
   (set! *mod-rule-current-slot* 0)
   (none))
 
@@ -1213,7 +1273,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 38) 'complication-overclock)
     ((= idx 39) 'rule-speed)
     ((= idx 40) 'rule-math-quiz)
-    ((= idx 41) 'rule-jak-quiz)
+    ((= idx 41) 'rule-trivia)
     ((= idx 42) 'complication-bad-ping)
     (else #f)))
 
@@ -1407,7 +1467,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (cond
       ;; Resources
       ((eq? id 'rule-buzzer-pressure)
-       (if (or (< buzzer-left 2) (mod-rule-active? 'rule-distancing) is-minigame is-klaww
+       (if (or (< buzzer-left 3) (mod-rule-active? 'rule-distancing) is-minigame is-klaww
                (eq? level-name 'jungleb) (eq? level-name 'finalboss) (eq? level-name 'sunkenb))
            0 9))
 
@@ -1508,17 +1568,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
 
       ((eq? id 'complication-bad-ping)
-       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 9))
+       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 8))
 
       ;; Special
       ((eq? id 'rule-cold-feet)
        (if (eq? level-name 'snow) 10 0))
 
       ((eq? id 'rule-math-quiz)
-       (if (or (mod-rule-active? 'rule-jak-quiz) (not (math-quiz-toggle-enabled?))) 0 6))
+       (if (or (mod-rule-active? 'rule-trivia) (not (math-quiz-toggle-enabled?)) (eq? level-name 'training)) 0 4))
 
-      ((eq? id 'rule-jak-quiz) 
-       (if (mod-rule-active? 'rule-math-quiz) 0 8))
+      ((eq? id 'rule-trivia) 
+       (if (or (mod-rule-active? 'rule-math-quiz) (not (trivia-toggle-enabled?)) (eq? level-name 'training)) 0 5))
 
       ((eq? id 'complication-overclock)
        (if (eq? level-name 'citadel) 30 0))
@@ -1926,12 +1986,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (when (cpad-pressed? 0 left)
             (-! *math-quiz-current-guess* 5)
             (sound-play "cursor-up-down"))
-          (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
-                    (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
-            (if (= *math-quiz-current-guess* *math-quiz-answer*)
-              (mod-rule-counter-add-progress 'rule-math-quiz 1)
-              (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
-                (mod-rule-handle-slot-failure slot punishment))))))))
+          ;; (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) ;; BROKEN
+          ;;           (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
+          ;;   (if (= *math-quiz-current-guess* *math-quiz-answer*)
+          ;;     (mod-rule-counter-add-progress 'rule-math-quiz 1)
+          ;;     (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
+          ;;       (mod-rule-handle-slot-failure slot punishment))))
+                ))))
   (none))
 
 (defun mod-rule-reroll-id ((id symbol))
@@ -2159,50 +2220,99 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (and *target*
            (logtest? (-> *target* state-flags) (state-flags grabbed)))))
 
-(defun mod-rule-update-jak-quiz ()
-  (when (mod-rule-active? 'rule-jak-quiz)
-    (let ((slot (mod-rule-find-active-slot 'rule-jak-quiz)))
-      (when (>= slot 0)
-        (let* ((q-idx *jak-quiz-current-question*)
-               (base-choice-idx (* q-idx 4))
-               (time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
-          (when (<= time-left 0)
-            (if (= *jak-quiz-current-guess* (-> *jak-quiz-answers* q-idx))
-              (mod-rule-counter-add-progress 'rule-jak-quiz 1)
-              (let ((punishment (mod-rule-punishment-for-id 'rule-jak-quiz)))
-                (mod-rule-handle-slot-failure slot punishment)))
-            (none))
-          (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
-            (cond
-              ((<= *jak-quiz-current-guess* 0)
-                (set! *jak-quiz-current-guess* 3))
-              (else
-                (-! *jak-quiz-current-guess* 1)))
-            (sound-play "cursor-up-down"))
-          (when (or (cpad-pressed? 0 down) (cpad-pressed? 0 left))
-            (cond
-              ((= *jak-quiz-current-guess* -1)
-                (set! *jak-quiz-current-guess* 0))
-              ((>= *jak-quiz-current-guess* 3)
-                (set! *jak-quiz-current-guess* 0))
-              (else
-                (+! *jak-quiz-current-guess* 1)))
-            (sound-play "cursor-up-down"))
-          (when (and (>= *jak-quiz-current-guess* 0)
-                  (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
-                    (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
-            (if (= *jak-quiz-current-guess* (-> *jak-quiz-answers* q-idx))
-              (mod-rule-counter-add-progress 'rule-jak-quiz 1)
-              (let ((punishment (mod-rule-punishment-for-id 'rule-jak-quiz)))
-                (mod-rule-handle-slot-failure slot punishment))))))))
+(define *trivia-shuffle-map* (new 'static 'boxed-array :type int32 0 1 2 3))
+
+(defun get-trivia-choice-str ((q-idx int) (guess-idx int))
+  (let ((shuffled-idx (-> *trivia-shuffle-map* guess-idx)))
+    (cond
+      ;; Dynamic questions here
+      (else
+        (-> *trivia-choices* (+ (* q-idx 4) shuffled-idx))))))
+
+(define *trivia-last-tracked-question* -1)
+
+(defun get-trivia-answer ((q-idx int))
+  (cond
+    ((= q-idx 2) 0)
+    ((= q-idx 4) 1)
+    ((= q-idx 7) 1)
+    ((= q-idx 12) 3)
+    ((= q-idx 13) 3)
+    ((= q-idx 15) 2)
+    ((= q-idx 18) 1)
+    ((= q-idx 20) 3)
+    ;; Dynamic questions here
+    (else 
+      0)))
+
+(defun shuffle-trivia-choices ((q-idx int))
+  (set! (-> *trivia-shuffle-map* 0) 0)
+  (set! (-> *trivia-shuffle-map* 1) 1)
+  (set! (-> *trivia-shuffle-map* 2) 2)
+  (set! (-> *trivia-shuffle-map* 3) 3)
+  ;; Do not shuffle
+  (when (and (!= q-idx 2) 
+             (!= q-idx 4)
+             (!= q-idx 7)
+             (!= q-idx 12)
+             (!= q-idx 13)
+             (!= q-idx 15)
+             (!= q-idx 18)
+             (!= q-idx 20))
+    (dotimes (i 4)
+      (let* ((j (rand-vu-int-range 0 3))
+             (temp (-> *trivia-shuffle-map* i)))
+        (set! (-> *trivia-shuffle-map* i) (-> *trivia-shuffle-map* j))
+        (set! (-> *trivia-shuffle-map* j) temp))))
   (none))
+
+(defun mod-rule-update-trivia ()
+  (when (mod-rule-active? 'rule-trivia)
+    (let ((slot (mod-rule-find-active-slot 'rule-trivia)))
+      (when (>= slot 0)
+        (let* ((q-idx *trivia-current-question*))          
+          (when (!= q-idx *trivia-last-tracked-question*)
+            (set! *trivia-last-tracked-question* q-idx)
+            (shuffle-trivia-choices q-idx)
+            (set! *trivia-current-guess* -1))
+          (let* ((base-choice-idx (* q-idx 4))
+                 (time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
+            (when (<= time-left 0)
+              (if (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx))
+                (mod-rule-counter-add-progress 'rule-trivia 1)
+                (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
+                  (mod-rule-handle-slot-failure slot punishment)))
+              (none))
+            (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
+              (cond
+                ((< *trivia-current-guess* 0)
+                 (set! *trivia-current-guess* 0))
+                ((>= *trivia-current-guess* 3)
+                 (set! *trivia-current-guess* 0))
+                (else
+                 (+! *trivia-current-guess* 1)))
+              (sound-play "cursor-up-down"))
+            (when (or (cpad-pressed? 0 down) (cpad-pressed? 0 left))
+              (cond
+                ((= *trivia-current-guess* 0)
+                 (set! *trivia-current-guess* 3))
+                (else
+                 (-! *trivia-current-guess* 1)))
+              (sound-play "cursor-up-down"))
+            ;; (when (and (>= *trivia-current-guess* 0) ;; BROKEN
+            ;;        (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
+            ;;          (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
+            ;;   (if (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx))
+            ;;     (mod-rule-counter-add-progress 'rule-trivia 1)
+            ;;     (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
+            ;;       (mod-rule-handle-slot-failure slot punishment))))
+                ))))
+  (none)))
 
 (defbehavior mod-rule-manager-proc process ()
   (when (not *global-countdown-lost?*)
     (loop
     (let ((elapsed (- (current-time) *mod-rule-last-update-time*)))
-    
-      ;; Safely intercept time-warps to adjust all absolute timers up or down
       (when (or (< elapsed 0) (> elapsed (seconds 10)))
         (dotimes (slot 3)
           (when (-> *mod-rule-active-slots* slot)
@@ -2239,7 +2349,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (logclear! (-> *target* mask) (process-mask sleep)))
          (mod-rule-update-timed-punishments)
          (mod-rule-update-math-quiz)
-         (mod-rule-update-jak-quiz)
+         (mod-rule-update-trivia)
          (dotimes (slot 3)
            (when (and (-> *mod-rule-active-slots* slot)
                       (>= (current-time) (-> *mod-rule-slot-end-times* slot)))
@@ -2386,23 +2496,21 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10)) buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row 8))
     (when (eq? id 'rule-math-quiz)
-      (let ((op-string (cond ((= *math-quiz-op* 0) "+") ((= *math-quiz-op* 1) "-") (else "*"))))
-        (format (clear *temp-string*) "~D ~S ~D = ~D" 
-                *math-quiz-val1* 
-                op-string 
-                *math-quiz-val2* 
-                *math-quiz-current-guess*)
-        (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)))
-    (when (eq? id 'rule-jak-quiz)
-      (let* ((q-idx *jak-quiz-current-question*)
-            (base-choice-idx (* q-idx 4))
+          (let ((op-string (cond ((= *math-quiz-op* 0) "+") ((= *math-quiz-op* 1) "-") (else "*"))))
+            (format (clear *temp-string*) "~D ~S ~D = ~1L~D" 
+                    *math-quiz-val1* 
+                    op-string 
+                    *math-quiz-val2* 
+                    *math-quiz-current-guess*)
+            (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)))
+    (when (eq? id 'rule-trivia)
+      (let* ((q-idx *trivia-current-question*)
             (choice-str
-              (if (= *jak-quiz-current-guess* -1)
+              (if (= *trivia-current-guess* -1)
                 "USE D-PAD"
-                (-> *jak-quiz-choices*
-                    (+ base-choice-idx *jak-quiz-current-guess*)))))
-        (format (clear *temp-string*) "~S" (-> *jak-quiz-questions* q-idx))
-        (let ((quiz-break-idx (mod-rule-wrap-point *temp-string* 30)))
+                (get-trivia-choice-str q-idx *trivia-current-guess*))))
+        (format (clear *temp-string*) "~S" (-> *trivia-questions* q-idx))
+        (let ((quiz-break-idx (mod-rule-wrap-point *temp-string* 27)))
           (if (>= quiz-break-idx (length *temp-string*))
             (begin
               (draw-string-xy-scaled *temp-string* buf 10 row
@@ -2425,9 +2533,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (+! row 8))))
         (format (clear *temp-string*) " ~S" choice-str)
         (draw-string-xy-scaled *temp-string* buf 20 row
-                              (font-color white)
+                              (font-color progress-memcard)
                               (font-flags shadow kerning large)
-                              0.4)
+                              0.5)
         (+! row 12)))
     (when (or (eq? id 'complication-bus-driver)
               (eq? id 'rule-speed))

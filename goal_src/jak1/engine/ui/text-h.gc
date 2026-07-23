@@ -803,6 +803,7 @@
   (complicated-opts-one-frame-toggle #x161c)
   (complicated-opts-crash-toggle #x161d)
   (complicated-opts-math-quiz-toggle #x161e)
+  (complicated-opts-trivia-toggle #x161f)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

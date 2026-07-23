@@ -22,6 +22,7 @@
   (one-frame-toggle? symbol)
   (crash-toggle? symbol)
   (math-quiz-toggle? symbol)
+  (trivia-toggle? symbol)
   )
   (:methods
     (reset (_type_) _type_)
@@ -36,6 +37,7 @@
   (set! (-> obj one-frame-toggle?) #t)
   (set! (-> obj crash-toggle?) #t)
   (set! (-> obj math-quiz-toggle?) #t)
+  (set! (-> obj trivia-toggle?) #t)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -56,6 +58,8 @@
               (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
             (("math-quiz-toggle?")
               (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
+            (("trivia-toggle?")
+              (set! (-> obj trivia-toggle?) (file-stream-read-symbol file)))
               )))))
     (file-stream-close file))
   #t)
@@ -81,6 +85,7 @@
     (format file "  (one-frame-toggle? ~A)~%" (-> obj one-frame-toggle?))
     (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
     (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
+    (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -118,6 +123,11 @@
   (set! (-> *complicated-settings* math-quiz-toggle?) new-val)
   (commit-to-file *complicated-settings*)
   (none))
+
+(defun trivia-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* trivia-toggle?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
   
 (define *complicated-options*
   (new 'static 'boxed-array :type game-option
@@ -151,6 +161,13 @@
            :on-change (lambda ((val object))
                         (math-quiz-toggle-changed! (the-as symbol val))
                         (none)))
+      (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-trivia-toggle)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (trivia-toggle-changed! (the-as symbol val))
+                        (none)))
        ;; [-] BACK
        (new 'static 'game-option
             :option-type (game-option-type button)
@@ -165,13 +182,13 @@
             :name (text-id input-options)
             :scale #t
             :param3 (game-option-menu input-options))
-       ;; [1] COMPLICATED OPTIONS  ← NEW
+       ;; [1] COMPLICATED OPTIONS
        (new 'static 'game-option
             :option-type (game-option-type menu)
             :name (text-id complicated-opts-title)
             :scale #t
             :param3 (game-option-menu complicated-options))
-       ;; [2] PLAY HINTS  (was [1])
+       ;; [2] PLAY HINTS
        (new 'static 'game-option
             :option-type (game-option-type on-off)
             :name (text-id play-hints)
@@ -179,19 +196,19 @@
             :on-confirm
             (lambda ()
               (set! (-> *setting-control* default play-hints) (-> *pc-settings* memcard-play-hints?))))
-       ;; [3] SUBTITLES  (was [2])
+       ;; [3] SUBTITLES
        (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id subtitles) :scale #t)
-       ;; [4] HINTTITLES  (was [3])
+       ;; [4] HINTTITLES
        (new 'static 'game-option :option-type (game-option-type on-off) :name (text-id hinttitles) :scale #t)
-       ;; [5] LANGUAGE  (was [4])
+       ;; [5] LANGUAGE
        (new 'static 'game-option :option-type (game-option-type language) :name (text-id language) :scale #t)
-       ;; [6] SUBTITLES LANGUAGE  (was [5])
+       ;; [6] SUBTITLES LANGUAGE
        (new 'static 'game-option :option-type (game-option-type language-subtitles) :name (text-id subtitles-language) :scale #t)
-       ;; [7] TEXT LANGUAGE  (was [6])
+       ;; [7] TEXT LANGUAGE
        (new 'static 'game-option :option-type (game-option-type language-text) :name (text-id text-language) :scale #t)
-       ;; [8] SUBTITLES SPEAKER  (was [7])
+       ;; [8] SUBTITLES SPEAKER
        (new 'static 'game-option :option-type (game-option-type speaker) :name (text-id subtitles-speaker) :scale #t)
-       ;; [9] MISC OPTIONS  (was [8])
+       ;; [9] MISC OPTIONS
        (new 'static 'game-option
             :option-type (game-option-type menu)
             :name (text-id misc-options)
@@ -219,6 +236,7 @@
   (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* crash-toggle?))
   (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
   (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
   (none))
 
 ;; add new options here (getter)
@@ -233,3 +251,6 @@
 
 (defun math-quiz-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* math-quiz-toggle?))))
+
+(defun trivia-toggle-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* trivia-toggle?))))
