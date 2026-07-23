@@ -515,7 +515,7 @@
            (('training)
             (level-hint-spawn (text-id training-eco-reminder) "sagevb23" (the-as entity #f) *entity-pool* (game-task none)))))
         (((pickup-type eco-green)) (sound-play "g-eco-pickup"))
-        (((pickup-type eco-green) (pickup-type eco-pill)) (sound-play "pill-pickup")))
+        (((pickup-type eco-green) (pickup-type eco-pill)) (sound-play "pill-pickup") (mod-rule-counter-add-progress 'rule-green-pilled 1))) ;; single pill?
       (runs-on-eco-pickup (-> self fact pickup-type) (ppointer->process (-> self parent))) ;; trigger hook for mod base
       (if (nonzero? (-> self part)) (kill-and-free-particles (-> self part)))
       (let ((gp-6 (handle->process (-> self pickup-handle))))
@@ -716,8 +716,8 @@
     (behavior ()
       (loop
         (if (mod-rule-active? 'complication-hidden-treasure)
-            (set! (-> self draw status) (draw-status hidden))
-            (set! (-> self draw status) (draw-status)))
+            (logior! (-> self draw status) (draw-status hidden))
+            (logclear! (-> self draw status) (draw-status hidden)))
 
         (quaternion-rotate-y! (-> self root quat) (-> self root quat) (* 40049.777 (seconds-per-frame)))
         (let ((f30-0 (-> self bob-amount)))

@@ -257,6 +257,7 @@
              ((= (-> block param 0) 'cut) (stop! (-> self sound)) (set! (-> self play-sound?) #f) #f))))))
   :enter
     (behavior ()
+      (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (logclear! (-> self mask) (process-mask actor-pause))
       (process-entity-status! self (entity-perm-status bit-3) #t)
       (set! (-> self play-sound?) #t))

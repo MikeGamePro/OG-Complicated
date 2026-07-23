@@ -95,6 +95,7 @@
   :trans rider-trans
   :code
     (behavior ()
+    (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (ja-no-eval :num! (seek!))
       (until (ja-done? 0)
         (suspend)

@@ -5,6 +5,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-rule-counter-add-progress (function symbol int none))
+
 (defun birth-func-copy-target-y-rot ((arg0 int) (arg1 sparticle-cpuinfo) (arg2 sparticle-launchinfo))
   (let ((v1-0 *target*))
     (when v1-0
@@ -1971,6 +1973,7 @@
 
 (defbehavior process-drawable-burn-effect target ((arg0 time-frame))
   (sound-play "get-burned")
+  (mod-rule-counter-add-progress 'rule-burn 1)
   (let ((s5-1 (new 'stack 'rgbaf))
         (s3-0 (current-time))
         (s4-1 (-> self parent)))

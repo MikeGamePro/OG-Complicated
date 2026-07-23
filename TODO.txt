@@ -4,10 +4,10 @@ finish drought (disable water draw)
 new zoomer rule
 settings (in progress)
 don't start timers until blackout ends
-2nd slot good job! goes over 1st
+invisible jak
 
 50 live rules
-maybe rename: keep it low, one frame, hands on
+maybe rename: keep it low, one frame, hands on, bloodlust
 maybe add settings for timer placement
 consider replacement for jak rabbit
 maybe improve all other sounds

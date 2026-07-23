@@ -237,6 +237,7 @@
         (('query) (return #t) v0-0)))
   :enter
     (behavior ()
+      (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (set-time! (-> self state-time))
       (set! (-> self wiggled?) #f)
       ;; og:preserve-this PAL patch here

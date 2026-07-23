@@ -165,7 +165,8 @@
             (if (type-type? (-> proc type) fuel-cell) (save-reminder (get-task-control (-> self entity extra perm task)) 1 0)))))))
   :exit
     (behavior ()
-      (sound-stop (-> self sound-id)))
+      (sound-stop (-> self sound-id))
+      (mod-rule-counter-add-progress 'rule-button-pusher 1))
   :trans
     (behavior ()
       (if (and (not (-> self child)) (task-complete? *game-info* (-> self entity extra perm task))) (go eggtop-close #f))

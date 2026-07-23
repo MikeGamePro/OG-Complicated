@@ -230,6 +230,8 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
+      (if (mod-rule-active? 'complication-flut)
+        (send-event *target* 'change-mode 'flut #f))
       (set! (-> self control mod-surface) *walk-mods*)
       (set-time! (-> self state-time)))
   :exit

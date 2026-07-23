@@ -92,6 +92,7 @@
         (('move-to) (move-to-vec-or-quat! self (the-as vector (-> block param 0)) (the-as quaternion (-> block param 1))))))
   :enter
     (behavior ()
+    (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (press! self #t))
   :trans rider-trans
   :code
