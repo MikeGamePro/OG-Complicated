@@ -337,12 +337,6 @@
 
 (define *input-delay* (new 'global 'input-delay-info))
 
-(defun input-delay-reset ((buf input-delay-buffer))
-  "Forget all recorded history so playback starts fresh."
-  (set! (-> buf head) 0)
-  (set! (-> buf count) 0)
-  (none))
-
 (defun input-delay-record ((buf input-delay-buffer) (pad cpad-info) (now time-frame))
   "Store the pad's current raw input at the head of the ring buffer."
   (let ((f (-> buf frames (-> buf head))))
@@ -357,6 +351,12 @@
   (set! (-> buf head) (logand (+ (-> buf head) 1) INPUT-DELAY-FRAME-MASK))
   (when (< (-> buf count) INPUT-DELAY-MAX-FRAMES)
     (1+! (-> buf count)))
+  (none))
+
+(defun input-delay-reset ((buf input-delay-buffer) (pad cpad-info))
+  (set! (-> buf head) 0)
+  (set! (-> buf count) 0)
+  (input-delay-record buf pad (get-current-time))
   (none))
 
 (defun input-delay-apply ((pad cpad-info) (f input-delay-frame))
@@ -383,9 +383,6 @@
   (none))
 
 (defun input-delay-playback ((buf input-delay-buffer) (pad cpad-info) (target time-frame))
-  "Overwrite the pad with the newest recorded frame at or before `target` time.
-   Falls back to the oldest frame if the buffer is full but doesn't reach that
-   far back, or to neutral input if we don't have enough history yet."
   (let ((pick -1)
         (oldest -1))
     (dotimes (i (-> buf count))
@@ -397,11 +394,12 @@
     (cond
       ((>= pick 0)
        (input-delay-apply pad (-> buf frames pick)))
-      ((= (-> buf count) INPUT-DELAY-MAX-FRAMES)
-       ;; buffer full but delay exceeds what we can store: use the oldest we have
+      ((> (-> buf count) 0)
+       ;; target predates everything we've recorded: use the oldest real
+       ;; frame we've got instead of snapping to neutral.
        (input-delay-apply pad (-> buf frames oldest)))
       (else
-       ;; not enough history recorded yet: do nothing until it fills in
+       ;; genuinely no history recorded at all yet.
        (input-delay-neutral pad))))
   (none))
 
@@ -419,7 +417,7 @@
    while it's already running."
   (set! (-> *input-delay* delay) (the-as time-frame (the int (* 300.0 sec)))) ;; 300 ticks/sec
   (dotimes (i 4)
-    (input-delay-reset (-> *input-delay* buffers i)))
+    (input-delay-reset (-> *input-delay* buffers i) (-> *cpad-list* cpads i)))
   sec)
 
 (defun input-delay-enable! ((on symbol) (delay-sec float))
@@ -434,7 +432,7 @@
     (set! (-> *input-delay* delay) (the-as time-frame (the int (* 300.0 delay-sec)))))
   (set! (-> *input-delay* enabled?) on)
   (dotimes (i 4)
-    (input-delay-reset (-> *input-delay* buffers i)))
+    (input-delay-reset (-> *input-delay* buffers i) (-> *cpad-list* cpads i)))
   on)
 
 (defun service-cpads ()
@@ -457,7 +455,7 @@
                  (= *master-mode* 'game)
                  (zero? (logand (-> pad valid) 128)))
           (service-input-delay pad (-> *input-delay* buffers pad-idx))
-          (input-delay-reset (-> *input-delay* buffers pad-idx)))
+          (input-delay-reset (-> *input-delay* buffers pad-idx) pad))
         (cond
           ((zero? (logand (-> pad valid) 128))
            (dotimes (buzz-idx 2)

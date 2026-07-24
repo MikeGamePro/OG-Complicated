@@ -1,16 +1,14 @@
 **why the hell do enemies randomly despawn**
 
-finish drought (disable water draw)
+REVIEW DROUGHT (call on every frame may be bad)
 new zoomer rule
 settings (in progress)
 don't start timers until blackout ends
-check for blue eco task in beach for one frame
 
-50 live rules
+50 live rules (3 more)
 maybe rename: keep it low, one frame, hands on, bloodlust
 maybe add settings for timer placement
 consider replacement for jak rabbit
-maybe improve all other sounds
 rgyb refresh (or swap powerup)
 look at orb refresh on hidden treasure again
 

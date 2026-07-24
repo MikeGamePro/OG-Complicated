@@ -229,6 +229,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! (-> *trivia-questions-used* idx) #t)
       idx)))
 
+(defun hide-all-water ((hide? symbol))
+  (iterate-process-tree *active-pool*
+    (lambda ((p process))
+      (when (type-type? (-> p type) water-anim)
+        (if hide?
+          (logior! (-> (the-as water-anim p) draw status) (draw-status hidden))
+          (logclear! (-> (the-as water-anim p) draw status) (draw-status hidden)))))
+    *null-kernel-context*))
+
+(defun refresh-money-actors ()
+  (iterate-process-tree *active-pool*
+    (lambda ((p process))
+      (when (type-type? (-> p type) money)
+        (logclear! (-> (the-as money p) draw status) (draw-status hidden))
+        (restore-collide-with-as (-> (the-as money p) root))))
+    *null-kernel-context*))
+
 (define *mod-rule-all-cell-tasks*
   (new 'static
        'boxed-array
@@ -428,7 +445,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-wings-tied) "WINGS TIED")
     ((eq? id 'complication-fuel-shortage) "FUEL SHORTAGE")
     ((eq? id 'complication-hidden-treasure) "HIDDEN TREASURE")
-    ((eq? id 'complication-drought) "LIKE A STONE")
+    ((eq? id 'complication-drought) "DROUGHT")
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
     ((eq? id 'rule-survivor) "SURVIVOR")
     ((eq? id 'rule-vendetta) "VENDETTA")
@@ -474,7 +491,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-keep-it-low) "DO NOT JUMP KICK.")
     ((eq? id 'complication-sizeable) "ROLLJUMPS COST 3 ORBS.")
     ((eq? id 'complication-heating-balloons) "COOLING BALLOONS MELT YOU.")
-    ((eq? id 'complication-drought) "JAK FORGOT HOW TO SWIM.")
+    ((eq? id 'complication-drought) "ALL WATER, LAVA, AND DARK ECO ARE GONE.")
     ((eq? id 'complication-ohko) "JAK IS LIMITED TO ONE HEALTH.")
     ((eq? id 'complication-critical) "CELLS CAN ONLY BE COLLECTED AT ONE HEALTH.")
     ((eq? id 'complication-glare) "JAK FREEZES WHEN LURKERS SEE HIM.")
@@ -837,7 +854,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    minutes
                    seconds-part
                    deciseconds)))
-
 
 (defun mod-rule-task-has-fuel-cell-entity? ((task game-task))
   (let ((level-idx 0)
@@ -1220,14 +1236,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (none)))
   (none))
 
-(defun refresh-money-actors ()
-  (iterate-process-tree *active-pool*
-    (lambda ((p process))
-      (when (type-type? (-> p type) money)
-        (logclear! (-> (the-as money p) draw status) (draw-status hidden))
-        (restore-collide-with-as (-> (the-as money p) root))))
-    *null-kernel-context*))
-
 (defun mod-rule-deactivate-slot ((slot int))
   (when (and (>= slot 0) (< slot 3))
     (let ((id (-> *mod-rule-active-slots* slot)))
@@ -1551,15 +1559,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'robocave)
       (eq? level 'citadel)))
 
-(defun water-level? ((level symbol))
-  (or (eq? level 'beach)
-      (eq? level 'jungle)
-      (eq? level 'misty)
-      (eq? level 'darkcave)
-      (eq? level 'village1)
-      (eq? level 'village2)
-      (eq? level 'sunkenb)
-      (eq? level 'sunken)))
+(defun no-drought-level? ((level symbol))
+  (or (eq? level 'swamp)
+      (string= (current-checkpoint-name) "ogre-race")
+      (eq? level 'snow)
+      (eq? level 'lavatube)
+      (eq? level 'citadel)
+      (eq? level 'finalboss)))
 
 (defun button-level? ((level symbol))
   (or (eq? level 'jungle)
@@ -1738,8 +1744,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-rgyb)
        (cond 
-         ((or (target-billy-game?) (eq? level-name 'finalboss) is-klaww) 0)
-         ((or (eq? level-name 'training)) 2)
+         ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 0)
          (else 9)))
 
       ((eq? id 'rule-survivor)
@@ -1748,14 +1753,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               ((or (eq? level-name 'village1) (eq? level-name 'village2)) 3)
               (else 8)))
 
-      ;; ((eq? id 'complication-ohko)
-      ;; 0)
-
       ((eq? id 'complication-drought)
        (cond
-         ((water-level? level-name) 8)
-         ((or (eq? level-name 'maincave) (eq? level-name 'rolling) (eq? level-name 'training)) 3)
-         (else 0)))
+         ((no-drought-level? level-name) 0)
+         ((or (eq? level-name 'rolling) (eq? level-name 'training)) 3)
+         (else 10)))
 
       ((eq? id 'complication-eco-allergy)
        (cond
