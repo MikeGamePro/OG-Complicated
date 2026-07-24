@@ -1,11 +1,12 @@
 **why the hell do enemies randomly despawn**
 
 new zoomer rule
+new "do not" rule
 settings (in progress)
 at least 50 trivia
 
 don't start timers until blackout ends
-50 live rules (3 more)
+50 live rules (1 more)
 maybe rename: keep it low, one frame, hands on, bloodlust
 maybe add settings for timer placement
 consider replacement for jak rabbit

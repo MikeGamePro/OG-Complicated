@@ -873,19 +873,25 @@
 (defbehavior ogreboss-pick-target ogreboss ()
   (local-vars (gp-0 int))
   (cond
-    ((rand-vu-percent? (the-as float 0.4)) (set! gp-0 (rand-vu-int-range 0 (+ (-> self target-count) -1))))
+    ((rand-vu-percent? (the-as float 0.4)) 
+     (set! gp-0 (rand-vu-int-range 0 (+ (-> self target-count) -1)))
+     ;; Skip middle-man platform (index 1 / isle-c) if active
+     (when (and (= gp-0 1) (mod-rule-active? 'rule-middle-man))
+       (set! gp-0 0)))
     (else
      (set! gp-0 0)
      (let ((f30-0 4096000.0)
            (s5-0 (target-pos 0)))
        (dotimes (s4-0 (-> self target-count))
-         (let* ((v1-6 (-> self target-actor-array s4-0))
-                (s3-0 (if v1-6 (-> v1-6 extra process))))
-           (when s3-0
-             (let ((f0-0 (vector-vector-distance s5-0 (-> (the-as process-drawable s3-0) root trans))))
-               (when (< f0-0 f30-0)
-                 (set! f30-0 f0-0)
-                 (set! gp-0 s4-0)))))))))
+         ;; Skip index 1 if the middle-man condition is met
+         (when (not (and (= s4-0 1) (mod-rule-active? 'rule-middle-man)))
+           (let* ((v1-6 (-> self target-actor-array s4-0))
+                  (s3-0 (if v1-6 (-> v1-6 extra process))))
+             (when s3-0
+               (let ((f0-0 (vector-vector-distance s5-0 (-> (the-as process-drawable s3-0) root trans))))
+                 (when (< f0-0 f30-0)
+                   (set! f30-0 f0-0)
+                   (set! gp-0 s4-0))))))))))
   gp-0)
 
 (defbehavior ogreboss-shoot-boulder ogreboss ((arg0 pickup-type))
