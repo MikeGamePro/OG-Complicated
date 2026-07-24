@@ -30,7 +30,7 @@
   (if *show-input-display* (input-display-on) (input-display-off))
 
   (if (= (-> *target* control ground-pat material) (pat-material ice))
-      (mod-rule-trigger-cold-feet)
+      (mod-rule-trigger-failure 'rule-cold-feet)
       (none))
 
   (when (mod-rule-active? 'complication-drought)
@@ -66,7 +66,7 @@
   (when *debug-segment*
     (orb-placer-maintenance))
   (mod-rule-trigger-ohko)
-  (mod-rule-trigger-distancing)
+  (mod-rule-trigger-failure 'rule-distancing)
   (mod-rule-trigger-speed)
   (none))
 

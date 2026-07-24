@@ -13,7 +13,6 @@
 
 (define-extern *buzzer-dist-tracker* (float))
 (define-extern *closest-buzzer-dist* (float))
-(define-extern mod-rule-trigger-blue-crate (function none))
 
 (defskelgroup *crate-barrel-sg*
   crate
@@ -597,7 +596,7 @@
                        (f30-0 (vector-vector-distance (-> gp-2 world-sphere) (-> a1-3 world-sphere))))
                   (when (and (< f30-0 (-> *FACT-bank* suck-suck-dist)) (!= (-> self defense) 'steel))
                     (logior! (-> self fact options) (fact-options can-collect))
-                    (mod-rule-trigger-blue-crate)
+                    (mod-rule-trigger-failure 'rule-blue-crate)
                     (go-virtual die #f 0))
                   (when (rand-vu-percent? 0.5)
                     (let ((s5-0 (new 'stack-no-clear 'vector)))

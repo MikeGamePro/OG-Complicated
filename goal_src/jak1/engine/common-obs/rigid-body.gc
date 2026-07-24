@@ -9,8 +9,6 @@
 
 ;; DECOMP BEGINS
 
-(define-extern mod-rule-trigger-middle-man (function (none)))
-
 (defmethod clear-force-torque! ((this rigid-body))
   (set! (-> this force quad) (-> *null-vector* quad))
   (set! (-> this torque quad) (-> *null-vector* quad))
@@ -378,7 +376,7 @@
          (let ((v0-0 (-> self player-force))) (set! (-> v0-0 quad) (-> (the-as vector (-> arg3 param 0)) quad)) v0-0))))
     (('edge-grabbed)
      (when (eq? self (process-by-ename "ogre-isle-c-1"))
-       (mod-rule-trigger-middle-man))
+       (mod-rule-trigger-failure 'rule-middle-man))
      (let ((v1-44 (-> arg3 param 0)))
        (when (not (-> self player-impulse))
          (set! (-> self player-contact) #t)
@@ -386,7 +384,7 @@
          (vector-float*! (-> self player-force) *y-vector* (* -1.0 (-> self info player-weight))))))
     (('ridden)
      (when (eq? self (process-by-ename "ogre-isle-c-1"))
-       (mod-rule-trigger-middle-man))
+       (mod-rule-trigger-failure 'rule-middle-man))
      (let ((v1-48 (the-as object (-> arg3 param 0))))
        (when (the-as uint v1-48)
          (let ((v1-50 (handle->process (-> (the-as (pointer handle) v1-48) 0))))
