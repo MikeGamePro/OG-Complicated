@@ -3505,7 +3505,7 @@
              (hide-progress-icons)
              (draw-options self 115 25 0.82))
             (((progress-screen settings) (progress-screen settings-title)) (hide-progress-icons) (draw-options self 115 25 0.78))
-            (((progress-screen misc-options) (progress-screen complicated-options))
+            (((progress-screen misc-options) (progress-screen complicated-options) (progress-screen comp-timer-options))
              (hide-progress-icons)
              (draw-options self 115 25 0.79))
             (((progress-screen music-player)) (hide-progress-icons) (draw-options self 128 21 0.82))

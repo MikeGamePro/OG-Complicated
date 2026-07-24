@@ -25,6 +25,9 @@
   (trivia-toggle? symbol)
   (klaww-assist? symbol)
   (fish-assist? symbol)
+  (cell-increment float)
+  (orb-increment float)
+  (fly-increment float)
   )
   (:methods
     (reset (_type_) _type_)
@@ -42,6 +45,9 @@
   (set! (-> obj trivia-toggle?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
+  (set! (-> obj cell-increment) 30.0)
+  (set! (-> obj orb-increment) 1.0)
+  (set! (-> obj fly-increment) 0.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -57,18 +63,24 @@
            ;; add new options here
              (("show-countup-timer?")
               (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
-            (("one-frame-toggle?")
+             (("one-frame-toggle?")
               (set! (-> obj one-frame-toggle?) (file-stream-read-symbol file)))
-            (("crash-toggle?")
+             (("crash-toggle?")
               (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
-            (("math-quiz-toggle?")
+             (("math-quiz-toggle?")
               (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
-            (("trivia-toggle?")
+             (("trivia-toggle?")
               (set! (-> obj trivia-toggle?) (file-stream-read-symbol file)))
-            (("klaww-assist?")
+             (("klaww-assist?")
               (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
-            (("fish-assist?")
+             (("fish-assist?")
               (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
+             (("cell-increment")
+              (set! (-> obj cell-increment) (file-stream-read-float file)))
+             (("orb-increment")
+              (set! (-> obj orb-increment) (file-stream-read-float file)))
+             (("fly-increment")
+              (set! (-> obj fly-increment) (file-stream-read-float file)))
               )))))
     (file-stream-close file))
   #t)
@@ -97,6 +109,9 @@
     (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
+    (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
+    (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
+    (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
 
     (format file "  )~%")
     (file-stream-close file))
@@ -115,103 +130,200 @@
 (define *complicated-settings* (the complicated-settings #f))
 (define-once *complicated-settings* (new 'global 'complicated-settings))
 
-;; add new options here (handler)
+;; add new options here (handler) - ONLY memory updates here
 (defun countup-timer-setting-changed! ((new-val symbol))
   (set! (-> *complicated-settings* show-countup-timer?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun one-frame-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* one-frame-toggle?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun crash-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* crash-toggle?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun math-quiz-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* math-quiz-toggle?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun trivia-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* trivia-toggle?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun klaww-assist-changed! ((new-val symbol))
   (set! (-> *complicated-settings* klaww-assist?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
 
 (defun fish-assist-changed! ((new-val symbol))
   (set! (-> *complicated-settings* fish-assist?) new-val)
-  (commit-to-file *complicated-settings*)
   (none))
-  
+
+(defun cell-increment-changed! ((new-val float))
+  (set! (-> *complicated-settings* cell-increment) new-val)
+  (none))
+
+(defun orb-increment-changed! ((new-val float))
+  (set! (-> *complicated-settings* orb-increment) new-val)
+  (none))
+
+(defun fly-increment-changed! ((new-val float))
+  (set! (-> *complicated-settings* fly-increment) new-val)
+  (none))
+
+;; ---- Increment Options Submenu ---------------------------------------------
+(define *comp-timer-options*
+  (new 'static 'boxed-array :type game-option
+       ;; [0] CELL INCREMENT
+       (new 'static 'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-cell-increment)
+            :scale #t
+            :param1 0.0
+            :param2 120.0
+            :slider-step-size 5.0
+            :on-change (lambda ((val object))
+                         (cell-increment-changed! (the-as float val))
+                         (none))
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [1] ORB INCREMENT
+       (new 'static 'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-orb-increment)
+            :scale #t
+            :param1 0.0
+            :param2 10.0
+            :slider-step-size 0.1
+            :slider-show-decimal? #t
+            :on-change (lambda ((val object))
+                         (orb-increment-changed! (the-as float val))
+                         (none))
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [2] FLY INCREMENT
+       (new 'static 'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-fly-increment)
+            :scale #t
+            :param1 0.0
+            :param2 30.0
+            :slider-step-size 0.5
+            :on-change (lambda ((val object))
+                         (fly-increment-changed! (the-as float val))
+                         (none))
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [3] BACK
+       (new 'static 'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))))
+
+;; ---- Main Complicated Options Submenu --------------------------------------
 (define *complicated-options*
   (new 'static 'boxed-array :type game-option
-  ;; add new options here
-       ;; [0] SPEEDRUN TIMER toggle
+       ;; [0] INCREMENT OPTIONS SUBMENU
+       (new 'static 'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-increment-title)
+            :scale #t
+            :param3 (game-option-menu comp-timer-options))
+       ;; [1] SPEEDRUN TIMER toggle
        (new 'static 'game-option
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-show-timer)
             :scale #t
             :on-change (lambda ((val object))
                          (countup-timer-setting-changed! (the-as symbol val))
-                         (none)))
+                         (none))
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+      ;; [2] CRASH TOGGLE
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-crash-toggle)
            :scale #t
            :on-change (lambda ((val object))
                         (crash-toggle-changed! (the-as symbol val))
-                        (none)))  
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))  
+      ;; [3] ONE FRAME TOGGLE
       (new 'static 'game-option
           :option-type (game-option-type on-off)
           :name (text-id complicated-opts-one-frame-toggle)
           :scale #t
           :on-change (lambda ((val object))
                         (one-frame-toggle-changed! (the-as symbol val))
+                        (none))
+          :on-confirm (lambda ()
+                        (commit-to-file *complicated-settings*)
                         (none)))
+      ;; [4] MATH QUIZ TOGGLE
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-math-quiz-toggle)
            :scale #t
            :on-change (lambda ((val object))
                         (math-quiz-toggle-changed! (the-as symbol val))
-                        (none)))
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))
+      ;; [5] TRIVIA TOGGLE
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-trivia-toggle)
            :scale #t
            :on-change (lambda ((val object))
                         (trivia-toggle-changed! (the-as symbol val))
-                        (none)))
-
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))
+      ;; [6] KLAWW ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-klaww-assist)
            :scale #t
            :on-change (lambda ((val object))
                         (klaww-assist-changed! (the-as symbol val))
-                        (none)))
-
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))
+      ;; [7] FISH ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-fish-assist)
            :scale #t
            :on-change (lambda ((val object))
                         (fish-assist-changed! (the-as symbol val))
-                        (none)))
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))
 
-       ;; [-] BACK
-       (new 'static 'game-option
-            :option-type (game-option-type button)
-            :name (text-id back)
-            :scale #t)))
+      ;; [8] BACK
+      (new 'static 'game-option
+           :option-type (game-option-type button)
+           :name (text-id back)
+           :scale #t
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))))
 
 (define *game-options-complicated*
   (new 'static 'boxed-array :type game-option
@@ -263,6 +375,7 @@
   ((the (function progress none) *complicated-orig-init-game-options*) obj)
   (set! (-> *options-remap* (progress-screen game-settings)) *game-options-complicated*)
   (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
+  (set! (-> *options-remap* (progress-screen comp-timer-options)) *comp-timer-options*)
   (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
   (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
   (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
@@ -270,19 +383,25 @@
   (set! (-> *game-options-complicated* 6 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
-  ;; add new options here
-  (set! (-> *complicated-options* 0 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* crash-toggle?))
-  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
-  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  
+  ;; Complicated options mappings
+  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* crash-toggle?))
+  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  
+  ;; Increment options mappings
+  (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* cell-increment))
+  (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* orb-increment))
+  (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* fly-increment))
   (none))
 
 ;; add new options here (getter)
 (defun show-countup-timer-enabled? ()
-(the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
+  (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
 
 (defun one-frame-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* one-frame-toggle?))))
@@ -301,3 +420,18 @@
 
 (defun fish-assist-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* fish-assist?))))
+
+(defun orb-increment-value ()
+  (if *complicated-settings*
+      (-> *complicated-settings* orb-increment)
+      1.0))
+
+(defun cell-increment-value ()
+  (if *complicated-settings*
+      (the float (the int (-> *complicated-settings* cell-increment)))
+      30.0))
+
+(defun fly-increment-value ()
+  (if *complicated-settings*
+      (the float (the int (-> *complicated-settings* fly-increment)))
+      0.0))

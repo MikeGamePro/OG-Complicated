@@ -33,7 +33,7 @@
       (none))
 
   (when (mod-rule-active? 'complication-drought)
-      (set! *ocean-off* #t) (hide-all-water #f)) ;; REVIEW THIS because it might be bad running every frame
+      (set! *ocean-off* #t))
 
   (when *debug-segment*
     (when (and (cpad-pressed? 0 circle)
@@ -72,7 +72,7 @@
 (defun runs-on-orb-pickup ((parent process-tree))
   (let* ((from-cache? (and parent (type-type? (-> parent type) orb-cache-top))))
     ;; Code here runs on ANY orb pickup
-    (global-countdown-add-seconds 1.0)
+    (global-countdown-add-seconds (orb-increment-value))
     (mod-rule-trigger-rotten-eggs)
     (mod-rule-on-orb-pickup 1)
     (when from-cache?
@@ -86,14 +86,14 @@
 (defun runs-on-fly-pickup ()
   ;; Code here runs on any scout fly pickup
   (mod-rule-on-buzzer-pickup 1)
-  (global-countdown-add-seconds 7.0)
+  (global-countdown-add-seconds (fly-increment-value))
   (none))
 
 (defun runs-on-cell-pickup ((cell-event symbol))
   (case cell-event
     (('pickup)
      ;; Code here runs as soon as you pickup a powercell
-      (global-countdown-add-seconds 20.0)
+      (global-countdown-add-seconds (cell-increment-value))
       (mod-rule-on-cell-pickup 1)
      )
     (('cutscene-end)

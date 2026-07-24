@@ -15949,6 +15949,7 @@
   (speedrun-il-options)
   (speedrun-cat-ext-options)
   (complicated-options)
+  (comp-timer-options)
   ;; the last one!
   (max)
   )
