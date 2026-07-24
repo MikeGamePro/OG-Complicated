@@ -804,6 +804,8 @@
   (complicated-opts-crash-toggle #x161d)
   (complicated-opts-math-quiz-toggle #x161e)
   (complicated-opts-trivia-toggle #x161f)
+  (complicated-opts-klaww-assist #x1620)
+  (complicated-opts-fish-assist #x1621)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

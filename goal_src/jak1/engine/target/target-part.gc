@@ -1973,7 +1973,7 @@
 
 (defbehavior process-drawable-burn-effect target ((arg0 time-frame))
   (sound-play "get-burned")
-  (mod-rule-counter-add-progress 'rule-burn 1)
+  (mod-rule-counter-add-progress 'rule-cooked 1)
   (let ((s5-1 (new 'stack 'rgbaf))
         (s3-0 (current-time))
         (s4-1 (-> self parent)))

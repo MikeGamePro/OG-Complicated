@@ -230,7 +230,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (if (mod-rule-active? 'complication-flut)
+      (if (mod-rule-active? 'complication-joyride)
         (send-event *target* 'change-mode 'flut #f))
       (set! (-> self control mod-surface) *walk-mods*)
       (set-time! (-> self state-time)))
@@ -805,7 +805,6 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-dont-move)
       (set! (-> self control bend-target) 1.0)
       (target-collide-set! 'duck (the-as float 1.0))
       (if (not (ja-group? eichar-duck-roll-ja)) (set! (-> self control mod-surface) *duck-mods*)))
@@ -814,6 +813,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-dont-move)
       ((-> self state-hook))
       (if (and (or (not (cpad-hold? (-> self control cpad number) l1 r1))
                    (logtest? (-> self state-flags) (state-flags prevent-duck))

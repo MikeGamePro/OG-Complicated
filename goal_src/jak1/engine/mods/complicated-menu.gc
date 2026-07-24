@@ -23,6 +23,8 @@
   (crash-toggle? symbol)
   (math-quiz-toggle? symbol)
   (trivia-toggle? symbol)
+  (klaww-assist? symbol)
+  (fish-assist? symbol)
   )
   (:methods
     (reset (_type_) _type_)
@@ -38,10 +40,13 @@
   (set! (-> obj crash-toggle?) #t)
   (set! (-> obj math-quiz-toggle?) #t)
   (set! (-> obj trivia-toggle?) #t)
+  (set! (-> obj klaww-assist?) #f)
+  (set! (-> obj fish-assist?) #f)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
   (if (not filename) (return #f))
+  (reset obj)
   (let ((file (new 'stack 'file-stream filename 'read)))
     (when (not (file-stream-valid? file)) (return #f))
     (with-settings-scope (file)
@@ -60,6 +65,10 @@
               (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
             (("trivia-toggle?")
               (set! (-> obj trivia-toggle?) (file-stream-read-symbol file)))
+            (("klaww-assist?")
+              (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
+            (("fish-assist?")
+              (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
               )))))
     (file-stream-close file))
   #t)
@@ -86,6 +95,9 @@
     (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
     (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
     (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
+    (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
+    (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
+
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -128,6 +140,16 @@
   (set! (-> *complicated-settings* trivia-toggle?) new-val)
   (commit-to-file *complicated-settings*)
   (none))
+
+(defun klaww-assist-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* klaww-assist?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
+
+(defun fish-assist-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* fish-assist?) new-val)
+  (commit-to-file *complicated-settings*)
+  (none))
   
 (define *complicated-options*
   (new 'static 'boxed-array :type game-option
@@ -168,6 +190,23 @@
            :on-change (lambda ((val object))
                         (trivia-toggle-changed! (the-as symbol val))
                         (none)))
+
+      (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-klaww-assist)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (klaww-assist-changed! (the-as symbol val))
+                        (none)))
+
+      (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-fish-assist)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (fish-assist-changed! (the-as symbol val))
+                        (none)))
+
        ;; [-] BACK
        (new 'static 'game-option
             :option-type (game-option-type button)
@@ -237,6 +276,8 @@
   (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
   (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
   (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
   (none))
 
 ;; add new options here (getter)
@@ -254,3 +295,9 @@
 
 (defun trivia-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* trivia-toggle?))))
+
+(defun klaww-assist-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* klaww-assist?))))
+
+(defun fish-assist-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* fish-assist?))))
