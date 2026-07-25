@@ -456,7 +456,7 @@ baby-spider-default-event-handler
   :event baby-spider-default-event-handler
   :code
     (behavior ()
-      (notify-enemy-death self)
+      ;; (notify-enemy-death self)
       (cleanup-for-death self)
       (let ((v1-2 (-> self event-death))) (if v1-2 (send-event (ppointer->process (-> self parent)) v1-2)))))
 
