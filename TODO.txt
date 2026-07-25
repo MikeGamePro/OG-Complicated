@@ -4,6 +4,7 @@ new zoomer rule
 settings (in progress)
 at least 50 trivia
 
+add plunger-lurker as kill
 don't start timers until blackout ends
 50 live rules (1 more)
 maybe rename: keep it low, one frame, hands on, bloodlust

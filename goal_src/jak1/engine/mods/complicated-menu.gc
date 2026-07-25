@@ -45,9 +45,9 @@
   (set! (-> obj trivia-toggle?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
-  (set! (-> obj cell-increment) 30.0)
+  (set! (-> obj cell-increment) 20.0)
   (set! (-> obj orb-increment) 1.0)
-  (set! (-> obj fly-increment) 0.0)
+  (set! (-> obj fly-increment) 8.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -181,7 +181,7 @@
             :scale #t
             :param1 0.0
             :param2 120.0
-            :slider-step-size 5.0
+            :slider-step-size 1.0
             :on-change (lambda ((val object))
                          (cell-increment-changed! (the-as float val))
                          (none))
@@ -429,9 +429,9 @@
 (defun cell-increment-value ()
   (if *complicated-settings*
       (the float (the int (-> *complicated-settings* cell-increment)))
-      30.0))
+      20.0))
 
 (defun fly-increment-value ()
   (if *complicated-settings*
       (the float (the int (-> *complicated-settings* fly-increment)))
-      0.0))
+      8.0))

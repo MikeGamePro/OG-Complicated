@@ -1311,7 +1311,7 @@
       (set! (-> *run-attack-mods* turnvv) 655360.0)
       (target-start-attack)
       (target-danger-set! 'punch #f)
-      (mod-rule-trigger-failure 'rule-hands-off)
+      (mod-rule-trigger-failure 'rule-management)
       (if (or (< (fabs (-> self control local-slope-x)) 0.3) (< 0.3 (fabs (-> self control local-slope-z))))
         (set! (-> self control bend-target) 1.0)))
   :exit
