@@ -1091,6 +1091,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
+    (mod-rule-trigger-failure 'rule-landlubber)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *wade-mods*)
       (set-zero! (-> self water bob)))
@@ -1124,6 +1125,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
+    (mod-rule-trigger-failure 'rule-landlubber)
       (mod-rule-trigger-failure 'rule-dont-move)
       (-> target-wade-stance
           enter))
@@ -1278,6 +1280,7 @@
         (set! (-> self control override-quat-alpha) 0.0)))
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ((-> self state-hook))
       (if (and (logtest? (-> self control status) (cshape-moving-flags onsurf))
                (not (logtest? (-> self control status) (cshape-moving-flags on-water))))
@@ -1335,6 +1338,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (mod-rule-trigger-failure 'rule-dont-move)
       ((-> self state-hook))
       (if (and (logtest? (-> self control status) (cshape-moving-flags onsurf))
@@ -1417,6 +1421,7 @@
         (set! (-> self control override-quat-alpha) 0.0)))
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (mod-rule-trigger-failure 'rule-dont-move)
       (if (time-elapsed? (-> self water swim-time) (seconds 0.5)) (go target-stance))
       (cond
@@ -1503,6 +1508,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (if (and (cpad-pressed? (-> self control cpad number) x)
                (not (logtest? (-> self state-flags) (state-flags prevent-jump)))
                (not (logtest? (-> self water flag) (water-flag head-under-water bouncing))))

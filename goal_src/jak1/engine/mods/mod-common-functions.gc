@@ -124,7 +124,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 52) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 53) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
@@ -220,7 +220,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *trivia-current-question* 0)
 (define *trivia-current-guess* 0)
 
-;; tracks which trivia questions have already been rolled this run, sized to match *trivia-questions*
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
 (defun mod-rule-clear-trivia-used ()
@@ -515,6 +514,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-joyride) "JOYRIDE")
     ((eq? id 'rule-sagging-sails) "SAGGING SAILS")
     ((eq? id 'rule-middle-man) "MIDDLE MAN")
+    ((eq? id 'rule-landlubber) "LANDLUBBER")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -571,6 +571,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-joyride) "HEY! THERE\c12S THE FLUT-FLUT!")
     ((eq? id 'rule-sagging-sails) "MISS 3 5-POUND FISH.")
     ((eq? id 'rule-middle-man) "DO NOT TOUCH THE MIDDLE PLATFORM.")
+    ((eq? id 'rule-landlubber) "STAY OUT OF THE WATER.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -585,7 +586,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-fuel-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
     ((eq? id 'rule-flop-this) (seconds 90)) ;; 90
-    ((eq? id 'complication-brittle-bones) (seconds 60)) ;; 60
+    ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
     ((eq? id 'complication-rotten-eggs) (seconds 60)) ;; 60
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
     ((eq? id 'rule-keep-it-low) (seconds 90)) ;; 90
@@ -626,6 +627,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
     ((eq? id 'rule-sagging-sails) (seconds 30)) ;; 30
     ((eq? id 'rule-middle-man) (seconds 60)) ;; 60
+    ((eq? id 'rule-landlubber) (seconds 40)) ;; 40
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -689,7 +691,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (eq? id 'rule-button-pusher)
           (eq? id 'rule-cooked)
           (eq? id 'rule-sagging-sails)
-          (eq? id 'rule-middle-man)  
+          (eq? id 'rule-middle-man)
+          (eq? id 'rule-landlubber)
          )
      'rule)
     ((or
@@ -1105,7 +1108,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (not (mod-rule-punishment-used-by-active-slot? punishment))))
 
 (defun mod-rule-random-available-punishment ()
-  (let* (;; Define relative weights for each punishment here
+  (let* (
          (weight-countdown   10)
          (weight-fall-damage 10)
          (weight-trip        10)
@@ -1447,6 +1450,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 49) 'rule-sagging-sails)
     ((= idx 50) 'rule-middle-man)
     ((= idx 51) 'complication-cumbersome)
+    ((= idx 52) 'rule-landlubber)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1629,6 +1633,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'citadel)
       (eq? level 'finalboss)))
 
+(defun water-level? ((level symbol))
+  (or (eq? level 'beach)
+      (eq? level 'village1)
+      (eq? level 'training)
+      (eq? level 'jungle)
+      (eq? level 'village2)))
+
 (defun button-level? ((level symbol))
   (or (eq? level 'jungle)
       (and (eq? level 'jungleb) (not (task-complete? *game-info* (game-task jungle-eggtop))))
@@ -1652,218 +1663,219 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (money-left (- (max-money-current-level) (collected-money-current-level)))
         (buzzer-left (- 7 (collected-buzzer-current-level)))
         (is-minigame (or (target-fishing?) (target-billy-game?)))
-        (is-klaww (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (string= (current-checkpoint-name) "ogre-start")))
+        (is-klaww (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution)))
+          (string= (current-checkpoint-name) "ogre-start")))
         (racer-lavatube (or (and (target-on-racer?) (string= (current-checkpoint-name) "lavatube-start"))
-                            (string= (current-checkpoint-name) "lavatube-middle")
-                            (string= (current-checkpoint-name) "lavatube-after-ribbon")))
+          (string= (current-checkpoint-name) "lavatube-middle")
+          (string= (current-checkpoint-name) "lavatube-after-ribbon")))
         (deep-lavatube (or (string= (current-checkpoint-name) "lavatube-middle")
-                      (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
+          (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
 
     (cond
       ;; Resources
       ((eq? id 'complication-critical)
-       (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 8))
+        (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 8))
 
       ((eq? id 'rule-buzzer-pressure)
-       (if (or (< buzzer-left 3) (mod-rule-active? 'rule-distancing) is-minigame is-klaww
-               (eq? level-name 'jungleb) (eq? level-name 'finalboss) (eq? level-name 'sunkenb))
-           0 9))
+        (if (or (< buzzer-left 3) (mod-rule-active? 'rule-distancing) is-minigame is-klaww
+                (eq? level-name 'jungleb) (eq? level-name 'finalboss) (eq? level-name 'sunkenb))
+            0 9))
 
       ((eq? id 'rule-distancing)
-       (if (or (< buzzer-left 1) (mod-rule-active? 'rule-buzzer-pressure) is-klaww
-               (eq? level-name 'training) (eq? level-name 'jungleb) (eq? level-name 'finalboss))
-           0 10))
+        (if (or (< buzzer-left 1) (mod-rule-active? 'rule-buzzer-pressure) is-klaww
+                (eq? level-name 'training) (eq? level-name 'jungleb) (eq? level-name 'finalboss))
+            0 10))
 
       ((eq? id 'rule-blue-crate)
        (if (no-blue-eco-level? level-name) 0 9))
 
       ((eq? id 'rule-fuel-pressure)
-       (cond
-         ((or (< fuel-left 1) is-minigame is-klaww (eq? level-name 'jungleb) racer-lavatube (eq? level-name 'finalboss)) 0)
-         ((or (eq? level-name 'village1) (eq? level-name 'village2) (eq? level-name 'village3)
+        (cond
+          ((or (< fuel-left 1) is-minigame is-klaww (eq? level-name 'jungleb) racer-lavatube (eq? level-name 'finalboss)) 0)
+          ((or (eq? level-name 'village1) (eq? level-name 'village2) (eq? level-name 'village3)
               (mod-rule-active? 'complication-fuel-shortage)) 3)
-         (else 7)))
+          (else 7)))
 
       ((eq? id 'rule-money-pressure)
-       (if (or (< money-left 30) is-minigame is-klaww (eq? level-name 'finalboss)
-               (string= (current-checkpoint-name) "lavatube-after-ribbon"))
-           0 9))
+        (if (or (< money-left 30) is-minigame is-klaww (eq? level-name 'finalboss)
+                (string= (current-checkpoint-name) "lavatube-after-ribbon"))
+            0 9))
 
       ((eq? id 'complication-hidden-treasure)
-       (if (or is-klaww (eq? level-name 'finalboss) (string= (current-checkpoint-name) "firecanyon-start") deep-lavatube)
-           0 10))
+        (if (or is-klaww (eq? level-name 'finalboss) (string= (current-checkpoint-name) "firecanyon-start") deep-lavatube)
+            0 10))
 
       ;; Enemies
       ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
-       (cond
-         ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
-         ((eq? id 'complication-glare) 10)
-         ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
-         (else 7)))
+        (cond
+          ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
+          ((eq? id 'complication-glare) 10)
+          ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
+          (else 7)))
 
       ((eq? id 'rule-hitlist)
-       (if (or (sparse-hitlist-level? level-name) is-minigame) 0 10))
+        (if (or (sparse-hitlist-level? level-name) is-minigame) 0 10))
 
       ((eq? id 'rule-sniper)
        (if (and (not (mod-rule-active? 'rule-flop-this))
-               (or (eq? level-name 'swamp) (eq? level-name 'beach) 
-               (eq? level-name 'snow) (eq? level-name 'maincave) 
-               (eq? level-name 'robocave) (eq? level-name 'darkcave))) 6 0))
+                (or (eq? level-name 'swamp) (eq? level-name 'beach) 
+                    (eq? level-name 'snow) (eq? level-name 'maincave) 
+                    (eq? level-name 'robocave) (eq? level-name 'darkcave))) 
+            6 0))
 
       ((eq? id 'rule-flop-this)
-       (if (or (eq? level-name 'training) (eq? level-name 'lavatube)
-               (eq? level-name 'village3) (eq? level-name 'village2) (eq? level-name 'village1)
-               (eq? level-name 'rolling) (eq? level-name 'ogre)
-               (eq? level-name 'finalboss) (target-billy-game?)
-               (mod-rule-active? 'rule-sniper))
-           0 10))
+        (if (or (eq? level-name 'training) (eq? level-name 'lavatube)
+                (eq? level-name 'village3) (eq? level-name 'village2) (eq? level-name 'village1)
+                (eq? level-name 'rolling) (eq? level-name 'ogre)
+                (eq? level-name 'finalboss) (target-billy-game?)
+                (mod-rule-active? 'rule-sniper))
+            0 10))
 
       ((eq? id 'rule-vendetta)
-       (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name))
-               is-minigame)
-           0 20))
+        (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame)
+            0 20))
 
       ((eq? id 'complication-eco-reserve)
-       (cond
-         ((or (eq? level-name 'finalboss) is-klaww) 17)
-         ((yellow-eco-level? level-name) 5)
-         (else 0)))
+        (cond
+          ((or (eq? level-name 'finalboss) is-klaww) 17)
+          ((yellow-eco-level? level-name) 5)
+          (else 0)))
 
       ((eq? id 'complication-red-stop) ;; disabled
-       (if (red-eco-level? level-name) 0 0)) ;; 10
+        (if (red-eco-level? level-name) 0 0)) ;; 10
 
       ;; Crates
       ((eq? id 'rule-crate-break)
-       (if (or is-klaww is-minigame (sparse-crate-level? level-name)) 0 10))
+        (if (or is-klaww is-minigame (sparse-crate-level? level-name)) 0 10))
 
       ;; Movement
       ((eq? id 'complication-jak-rabbit)
-       (if on-racer 0 7))
+        (if on-racer 0 7))
 
       ((eq? id 'complication-cumbersome)
-       (if (< (current-orb-count) 20) 0 8))
+        (if (< (current-orb-count) 20) 0 8))
 
       ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
-            (cond
-              ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
-              ((and (eq? id 'rule-grounded) is-klaww) 2)
-              ((eq? id 'rule-grounded) 10)
-              ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 2)
-              (is-klaww 1)
-              ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
-              (else 5)))
+        (cond
+          ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
+          ((and (eq? id 'rule-grounded) is-klaww) 2)
+          ((eq? id 'rule-grounded) 10)
+          ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 2)
+          (is-klaww 1)
+          ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
+          (else 5)))
 
       ((eq? id 'rule-dont-move)
-            (cond
-              (is-minigame 0)
-              ((or (eq? level-name 'finalboss) is-klaww) 1)
-              (else 2)))
+        (cond
+          (is-minigame 0)
+          ((or (eq? level-name 'finalboss) is-klaww) 1)
+          (else 2)))
 
       ((eq? id 'complication-butter-fingers) ;; disabled
-            (cond
-              ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
-              ((eq? level-name 'training) 0) ;; 3
-              (else 0))) ;; 10
+        (cond
+          ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
+          ((eq? level-name 'training) 0) ;; 3
+          (else 0))) ;; 10
 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
-       (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
+        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
 
       ((eq? id 'complication-bad-ping)
-       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 8))
+        (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 8))
+
+      ;; Water
+      ((eq? id 'complication-drought)
+        (cond
+          ((no-drought-level? level-name) 0)
+          ((or (eq? level-name 'rolling) (eq? level-name 'training)) 3)
+          (else 10)))
+
+      ((eq? id 'rule-landlubber)
+        (cond
+          ((mod-rule-active? 'complication-drought) 0)
+          ((water-level? level-name) 10)
+          ((or (eq? level-name 'misty) (eq? level-name 'darkcave)) 6)
+          (else 0)))
 
       ;; Special
       ((eq? id 'rule-middle-man)
-       (if is-klaww 50 0))
+        (if is-klaww 50 0))
 
       ((eq? id 'rule-button-pusher)
-       (if (or (not (button-level? level-name)) is-minigame) 0 10))
+        (if (or (not (button-level? level-name)) is-minigame) 0 10))
 
       ((eq? id 'rule-cooked)
-       (if (or (not (burn-level? level-name)) is-minigame) 0 10))
+        (if (or (not (burn-level? level-name)) is-minigame) 0 10))
 
       ((eq? id 'rule-green-pilled)
-       (if (or (sparse-green-eco-level? level-name) is-minigame) 0 9))
+        (if (or (sparse-green-eco-level? level-name) is-minigame) 0 9))
 
       ((eq? id 'complication-joyride)
-       (if (or on-flut is-minigame (eq? level-name 'finalboss)) 0 8))
+        (if (or on-flut is-minigame (eq? level-name 'finalboss)) 0 8))
 
       ((eq? id 'rule-sagging-sails)
-       (if (target-fishing?) 50 0))
-
-      ;; ((eq? id 'complication-invisible-man) 0)
+        (if (target-fishing?) 50 0))
       
       ((eq? id 'rule-cold-feet)
-       (if (eq? level-name 'snow) 30 0))
+        (if (eq? level-name 'snow) 30 0))
 
       ((eq? id 'rule-math-quiz)
-       (if (or (mod-rule-active? 'rule-trivia) (not (math-quiz-toggle-enabled?)) (eq? level-name 'training)) 0 4))
+        (if (or (mod-rule-active? 'rule-trivia) (not (math-quiz-toggle-enabled?)) (eq? level-name 'training)) 0 4))
 
       ((eq? id 'rule-trivia) 
-       (if (or (mod-rule-active? 'rule-math-quiz) (not (trivia-toggle-enabled?)) (eq? level-name 'training)) 0 4))
+        (if (or (mod-rule-active? 'rule-math-quiz) (not (trivia-toggle-enabled?)) (eq? level-name 'training)) 0 4))
 
       ((eq? id 'complication-overclock)
-       (if (eq? level-name 'citadel) 30 0))
+        (if (eq? level-name 'citadel) 30 0))
 
       ((eq? id 'rule-one-frame)
-       (if (or (not (and (one-frame-toggle-enabled?) (launcher-level? level-name))) is-minigame) 0 7))
+        (if (or (not (and (one-frame-toggle-enabled?) (launcher-level? level-name))) is-minigame) 0 7))
 
       ((eq? id 'rule-for-billy)
-       (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) (> *global-countdown-remaining-time* (seconds 210)) (eq? level-name 'swamp)) 7 0))
+        (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution))) 
+          (> *global-countdown-remaining-time* (seconds 210)) 
+          (eq? level-name 'swamp)) 
+          7 0))
 
       ((eq? id 'complication-rgyb)
-       (cond 
-         ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 0)
-         (else 9)))
+        (cond 
+          ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 0)
+          (else 9)))
 
       ((eq? id 'rule-survivor)
-            (cond
-              ((or (mod-rule-active? 'rule-die) (eq? level-name 'training) (eq? level-name 'village1)) 0)
-              ((or (eq? level-name 'village1) (eq? level-name 'village2)) 3)
-              (else 8)))
-
-      ((eq? id 'complication-drought)
-       (cond
-         ((no-drought-level? level-name) 0)
-         ((or (eq? level-name 'rolling) (eq? level-name 'training)) 3)
-         (else 10)))
+        (cond
+          ((or (mod-rule-active? 'rule-die) (eq? level-name 'training) (eq? level-name 'village1)) 0)
+          ((or (eq? level-name 'village1) (eq? level-name 'village2)) 3)
+          (else 8)))
 
       ((eq? id 'complication-eco-allergy)
-       (cond
-         ((or (eq? level-name 'finalboss) (eq? level-name 'village3)) 0)
-         (is-klaww 2)
-         (else 8)))
+        (cond
+          ((or (eq? level-name 'finalboss) (eq? level-name 'village3)) 0)
+          (is-klaww 2)
+          (else 8)))
 
       ((eq? id 'complication-heating-balloons)
-       (if (or (string= (current-checkpoint-name) "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
+        (if (or (string= (current-checkpoint-name) "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
 
       ((eq? id 'complication-bus-driver)
-       (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 35 0))
+        (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 35 0))
 
       ((eq? id 'rule-speed) ;; disabled
-       (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 0 0)) ;; 25
+        (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 0 0)) ;; 25
 
       ((eq? id 'complication-rotten-eggs)
-       (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 8))
+        (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 8))
 
       ((or (eq? id 'complication-disassociate) (eq? id 'complication-wings-tied))
-       (if on-flut 40 0))
+        (if on-flut 40 0))
 
       ((eq? id 'complication-fuel-shortage)
-       (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 6))
+        (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 6))
 
-      ((or (eq? id 'complication-brittle-bones))
-       (if (or (eq? level-name 'finalboss) is-klaww) 4 8))
+      ((eq? id 'complication-brittle-bones)
+        (if (or (eq? level-name 'finalboss) is-klaww) 4 8))
 
       (else 10))))
-
-;; (defun mod-rule-can-roll-id? ((id symbol))
-;;   (> (mod-rule-roll-priority id) 0))
-
-;; (defun mod-rule-effective-roll-weight ((id symbol))
-;;   (let ((weight (mod-rule-roll-priority id)))
-;;     (if (> weight 0)
-;;       (* weight (mod-rule-recent-roll-factor id))
-;;       0)))
 
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
@@ -2020,19 +2032,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-enemy-killed-by-red-eco? ((enemy process-drawable))
   (eq? (mod-rule-last-player-hit-mode enemy) 'eco-red))
 
-;; (defun mod-rule-string-contains? ((haystack string) (needle string))
-;;   (let ((hay-len (length haystack))
-;;         (needle-len (length needle))
-;;         (idx 0))
-;;     (if (or (<= needle-len 0) (< hay-len needle-len))
-;;       #f
-;;       (begin
-;;         (while (<= idx (- hay-len needle-len))
-;;           (when (string= (substring! *temp-string* haystack idx (+ idx needle-len)) needle)
-;;             (return #t))
-;;           (+! idx 1))
-;;         #f))))
-
 (defun mod-rule-unique-enemy-type-seen? ((type-name symbol))
   (let ((slot 0)
         (seen #f))
@@ -2164,6 +2163,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (when (and (= id (-> *mod-rule-active-slots* slot))
                      (or (<= goal 0) (>= progress goal) (not punishment)))
             (set! *mod-rule-last-outcome* 'success)
+            (+! *rules-followed* 1)
             (mod-rule-finish-slot slot #t))))))
   (none))
 
@@ -2265,12 +2265,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (and (mod-rule-active? 'complication-ohko) *target*))
     (set! (-> (the-as fact-info-target (-> *target* fact)) health) 1.0))
   (none))
-
-;; (defun mod-rule-trigger-eco-reserve ()
-;;   (when (mod-rule-active? 'complication-eco-reserve) *target*
-
-;;     )
-;;   (none))
 
 (defun mod-rule-trigger-glare ()
   (when (mod-rule-active? 'complication-glare)
@@ -2707,11 +2701,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (set! rolling-left (max 0 (- (-> *mod-rule-slot-roll-ready-times* slot) (current-time))))))
       (+! slot 1))
     (when rolling-id
-      ;; (cond
-      ;;   ((eq? *mod-rule-last-outcome* 'success)
-      ;;    (draw-string-xy-scaled "GOOD JOB!" buf 10 50 (font-color green) (font-flags shadow kerning large) 0.4))
-      ;;   ((eq? *mod-rule-last-outcome* 'failed)
-      ;;    (draw-string-xy-scaled "RULE BROKEN!" buf 10 50 (font-color red) (font-flags shadow kerning large) 0.4)))
       (draw-string-xy-scaled "NEW RULE IN " buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
       (draw-string-xy-scaled (mod-rule-format-time-left rolling-left) buf 96 57 (font-color white) (font-flags shadow kerning large) 0.6)))
   (none))

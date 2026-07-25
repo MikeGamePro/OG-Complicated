@@ -6,7 +6,6 @@ at least 50 trivia
 
 add plunger-lurker as kill
 don't start timers until blackout ends
-50 live rules (1 more)
 maybe rename: keep it low, one frame, hands on, bloodlust
 maybe add settings for timer placement
 consider replacement for jak rabbit
