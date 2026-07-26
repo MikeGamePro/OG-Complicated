@@ -1171,7 +1171,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (weight-revert      10)
          (weight-extra-rule  10)
          (weight-crash       6)
-         (weight-delay       8)
+         (weight-delay       0) ;; disable for zed
          (can-countdown (mod-rule-punishment-rollable? 'punishment-countdown))
          (can-fall-damage (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
          (can-trip (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip)))
@@ -1837,8 +1837,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
         (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 10))
 
-      ((eq? id 'complication-bad-ping)
-        (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 8))
+      ((eq? id 'complication-bad-ping) ;; disable for zed
+        (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 0)) ;; 8
 
       ;; Water
       ((eq? id 'complication-drought)
