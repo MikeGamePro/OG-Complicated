@@ -577,7 +577,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) "KILL HIM. KILL HIM NOW.")
     ((eq? id 'rule-lurker-pressure) "KILL 6 LURKERS.")
     ((eq? id 'rule-hitlist) "KILL 3 UNIQUE LURKER TYPES.")
-    ((eq? id 'rule-sniper) "KILL A LURKER FROM AT LEAST 75 METERS AWAY.")
+    ((eq? id 'rule-sniper) "KILL A LURKER FROM AT LEAST 70 METERS AWAY.")
     ((eq? id 'rule-crate-break) "BREAK 5 CRATES.")
     ((eq? id 'rule-money-pressure) "COLLECT 20 ORBS.")
     ((eq? id 'rule-fuel-pressure) "COLLECT A POWER CELL.")
@@ -610,7 +610,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-dont-move) "DO NOT MOVE.")
     ((eq? id 'complication-rgyb) "BLUE AND YELLOW ECO ARE SWAPPED.")
     ((eq? id 'complication-butter-fingers) "JAK CANNOT GRAB LEDGES.")
-    ((eq? id 'rule-for-billy) "PROTECT FARTHY\c12S SNACKS.")
+    ((eq? id 'rule-for-billy) "PROTECT FARTHY\c12S SNACKS. DO NOT LEAVE BOGGY SWAMP.")
     ((eq? id 'rule-cold-feet) "KEEP OFF THE ICE.")
     ((eq? id 'complication-overclock) "CITADEL DISCS ARE FASTER.")
     ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
@@ -1716,9 +1716,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun burn-level? ((level symbol))
   (or (eq? level 'firecanyon)
+      (eq? level 'village1)
       (eq? level 'lavatube)
       (eq? level 'village3)
       (eq? level 'village2)
+      (eq? level 'sunken)
       (string= (current-checkpoint-name) "ogre-start")))
 
 (defun mod-rule-roll-priority ((id symbol))
@@ -1813,7 +1815,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-ohko) 0) ;; disabled
 
       ((eq? id 'complication-invisible-man)
-        (if (target-on-racer-or-flut?) 0 10))
+        (if on-racer 0 10))
 
       ;; Crates
       ((eq? id 'rule-crate-break)
@@ -1876,13 +1878,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (if (or (not (button-level? level-name)) is-minigame) 0 10))
 
       ((eq? id 'rule-cooked)
-        (if (or (not (burn-level? level-name)) is-minigame) 0 12))
+        (if (or on-racer (not (burn-level? level-name))) 0 12))
 
       ((eq? id 'rule-green-pilled)
         (if (or (sparse-green-eco-level? level-name) is-minigame) 0 9))
 
       ((eq? id 'complication-joyride)
-        (if (or on-flut is-minigame (eq? level-name 'finalboss)) 0 8))
+        (if (or on-flut is-minigame (eq? level-name 'finalboss) (eq? level-name 'firecanyon) (eq? level-name 'lavatube)) 0 8))
 
       ((eq? id 'rule-sagging-sails)
         (if (target-fishing?) 50 0))

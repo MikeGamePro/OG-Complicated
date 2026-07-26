@@ -30,6 +30,8 @@
 ;; (draw-complicated-mod-title)
 
   (if *show-input-display* (input-display-on) (input-display-off))
+  
+  (if (!= (current-level-name) 'swamp) (mod-rule-trigger-failure 'rule-for-billy))
 
   (if (= (-> *target* control ground-pat material) (pat-material ice))
       (mod-rule-trigger-failure 'rule-cold-feet)
@@ -165,7 +167,7 @@
     (when (and enemy (-> enemy root))
       (let ((distance (vector-vector-distance (-> enemy root trans) (target-pos 0))))
         (set! *last-kill-dist* distance)
-        (mod-rule-trigger-sniper (>= distance (meters 75)))))
+        (mod-rule-trigger-sniper (>= distance (meters 70)))))
     (format #t "enemy type: ~a~%" enemy-type)
     (mod-rule-trigger-disassociate)
     (mod-rule-trigger-lurker-pressure)
