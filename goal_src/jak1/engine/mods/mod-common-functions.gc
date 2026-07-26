@@ -2854,6 +2854,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (the int (* seconds-to-add (the float TICKS_PER_SECOND))))))
   (none))
 
+(defun draw-complicated-mod-title ()
+  (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf))
+                               (bucket-id debug-no-zbuf))
+    (let ((title-row 30)
+          (title-x 10))
+      (draw-string-xy-scaled "A COMPLICATED MOD" global-buf title-x title-row (font-color green) (font-flags shadow kerning large) 0.8)
+      (+! title-row 15)
+      (draw-string-xy-scaled "A COMPLICATED MOD WITH RULES." global-buf title-x title-row (font-color white) (font-flags shadow kerning large) 0.4)
+      (+! title-row 10)
+      (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (font-flags shadow kerning large) 1.0)))
+  (none))
+
 (defbehavior global-countdown-proc process ()
   (loop
     (when (and *global-countdown-active?* (not *global-countdown-lost?*))
