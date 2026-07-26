@@ -1,9 +1,10 @@
 **why the hell do enemies randomly despawn**
 
-new zoomer rule
 settings (in progress)
-at least 50 trivia
+at least 50 trivia (10 more)
+1 more rule for 50
 
+new zoomer rule
 add plunger-lurker as kill
 don't start timers until blackout ends
 maybe rename: keep it low, one frame, hands on, bloodlust

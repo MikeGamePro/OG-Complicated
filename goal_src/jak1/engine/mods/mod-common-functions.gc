@@ -224,7 +224,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         "KEVIN" "ANDY" "RICHIE" "CHARLIE"
         "MINECRAFT" "TETRIS" "GTA V" "SKYRIM"
         "SNOWY MOUNTAIN" "BOGGY SWAMP" "FORBIDDEN JUNGLE" "LOST PRECURSOR CITY"
-        "2020" "2021" "2022" "2023"
+        "2020" "2046" "2100" "2200"
         "MURDER" "PARLIAMENT" "FLOCK" "SCHOOL"
         "ACCOMODATE" "RECEIVE" "PRIVILEGE" "SEPARATE"
         "17TH" "18TH" "19TH" "20TH"
@@ -2080,6 +2080,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when *target*
     (let ((player-state (-> *target* state name)))
       (if (or (= player-state 'target-flop)
+              (= player-state 'target-flop-hit-ground)    
               ;; could not find a reliable way to detect flop so just excluding the situations where flut kills with dash, stomp, or eco
               (and (target-on-flut?) (not (or (= player-state 'target-flut-running-attack)
                                               (= player-state 'target-flut-double-jump)

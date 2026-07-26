@@ -151,7 +151,10 @@
   (none))
 
 (defun runs-on-enemy-death ((enemy process-drawable))
-(format #t "distance: ~f~%" (vector-vector-distance (-> enemy root trans) (target-pos 0)))
+  (format #t "distance: ~f~%" (vector-vector-distance (-> enemy root trans) (target-pos 0)))
+  (when *target*
+    (format #t "kill mode (target state): ~a~%" (-> *target* state name)))
+
   (let* ((enemy-type   (the-as symbol (-> enemy type)))
          (was-flop?    (mod-rule-enemy-killed-by-flop? enemy))
          (was-red?     (mod-rule-enemy-killed-by-red-eco? enemy))
