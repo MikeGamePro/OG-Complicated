@@ -8,6 +8,8 @@
 ;;---------------------------
 ;; pc menu extra stuff
 
+(define-extern global-countdown-reset (function none))
+
 (defconstant PROGRESS_PC_PAGE_HEIGHT 7)
 
 (defconstant PROGRESS_SCROLL_DIR_UP -1)
@@ -2955,6 +2957,7 @@
               (set! *quit-to-title* #t)
               (sound-play "start-options")
               (sound-volume-off)
+              (global-countdown-reset)
               (set! (-> *game-info* mode) 'play)
               (initialize! *game-info* 'game (the-as game-save #f) "title-start"))
              (else (sound-play "cursor-options") (set! (-> obj next-display-state) (progress-screen invalid)))))
