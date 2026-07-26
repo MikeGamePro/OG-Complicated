@@ -1704,7 +1704,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'village1)
       (eq? level 'training)
       (eq? level 'jungle)
-      (eq? level 'village2)))
+      (eq? level 'village2)
+      (eq? level 'sunken)
+      (eq? level 'sunkenb)))
 
 (defun button-level? ((level symbol))
   (or (eq? level 'jungle)
