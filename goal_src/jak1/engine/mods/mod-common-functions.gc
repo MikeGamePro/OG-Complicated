@@ -1437,7 +1437,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *mod-rule-recent-rolls* slot) #f))
   (none))
 
-(defun mod-rules-reset ()
+(defun mod-rules-reset-core ()
   (dotimes (slot 3)
     (mod-rule-deactivate-slot slot))
   (mod-rule-clear-all-timed-punishments)
@@ -1447,8 +1447,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-clear-recent-rolls)
   (mod-rule-clear-trivia-used)
   (set! *mod-rule-current-slot* 0)
-  ;; mod: a fresh run means a fresh set of lifetime stats.
+  (none))
+
+(defun mod-rules-reset ()
+  (mod-rules-reset-core)
+  ;; a fresh run means a fresh set of stats
   (mod-stats-reset!)
+  (none))
+
+(defun global-countdown-freeze-for-game-beaten ()
+  (kill-by-name 'global-countdown *active-pool*)
+  (mod-rules-reset-core)
+  (set! *global-countdown-active?* #f)
+  (set! *global-countdown-lost?* #f)
   (none))
 
 (defun mod-rule-id-from-index ((idx int))
@@ -1801,6 +1812,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-ohko) 0) ;; disabled
 
+      ((eq? id 'complication-invisible-man)
+        (if (target-on-racer-or-flut?) 0 10))
+
       ;; Crates
       ((eq? id 'rule-crate-break)
         (if (or is-klaww is-minigame (sparse-crate-level? level-name)) 0 10))
@@ -1897,7 +1911,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-rgyb)
         (cond 
           ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 0)
-          (else 9)))
+          (else 7)))
 
       ((eq? id 'rule-survivor)
         (cond

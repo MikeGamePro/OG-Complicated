@@ -27,6 +27,14 @@
 (define-extern global-countup-save-value (function int))
 (define-extern global-countup-resume-from-save (function int none))
 (define-extern mod-game-beaten-save-value (function int))
+(define-extern mod-stats-rules-rolled-save-value (function int))
+(define-extern mod-stats-rules-rolled-resume-from-save (function int none))
+(define-extern mod-stats-rules-broken-save-value (function int))
+(define-extern mod-stats-rules-broken-resume-from-save (function int none))
+(define-extern mod-stats-rules-followed-save-value (function int))
+(define-extern mod-stats-rules-followed-resume-from-save (function int none))
+(define-extern mod-stats-complications-rolled-save-value (function int))
+(define-extern mod-stats-complications-rolled-resume-from-save (function int none))
 
 ;; version identifier
 (defconstant SAVE_VERSION 1)
@@ -105,7 +113,11 @@
   (aspect-ratio 509)
   (mod-global-timer 510)
   (mod-game-beaten 511)
-  (mod-global-countup 512))
+  (mod-global-countup 512)
+  (mod-stats-rules-rolled 513)
+  (mod-stats-rules-broken 514)
+  (mod-stats-rules-followed 515)
+  (mod-stats-complications-rolled 516))
 
 ;; DECOMP BEGINS
 
@@ -612,8 +624,32 @@
                                                                                                             (set! (-> a0-91 user-uint64)
                                                                                                                   (the-as uint (global-countup-save-value))))
 
+                                                                                                          (let ((a0-92 (the-as game-save-tag (&+ v1-113 48))))
+                                                                                                            (set! (-> a0-92 elt-type) (game-save-elt mod-stats-rules-rolled))
+                                                                                                            (set! (-> a0-92 elt-count) 0)
+                                                                                                            (set! (-> a0-92 user-uint64)
+                                                                                                                  (the-as uint (mod-stats-rules-rolled-save-value))))
+
+                                                                                                          (let ((a0-93 (the-as game-save-tag (&+ v1-113 64))))
+                                                                                                            (set! (-> a0-93 elt-type) (game-save-elt mod-stats-rules-broken))
+                                                                                                            (set! (-> a0-93 elt-count) 0)
+                                                                                                            (set! (-> a0-93 user-uint64)
+                                                                                                                  (the-as uint (mod-stats-rules-broken-save-value))))
+
+                                                                                                          (let ((a0-94 (the-as game-save-tag (&+ v1-113 80))))
+                                                                                                            (set! (-> a0-94 elt-type) (game-save-elt mod-stats-rules-followed))
+                                                                                                            (set! (-> a0-94 elt-count) 0)
+                                                                                                            (set! (-> a0-94 user-uint64)
+                                                                                                                  (the-as uint (mod-stats-rules-followed-save-value))))
+
+                                                                                                          (let ((a0-95 (the-as game-save-tag (&+ v1-113 96))))
+                                                                                                            (set! (-> a0-95 elt-type) (game-save-elt mod-stats-complications-rolled))
+                                                                                                            (set! (-> a0-95 elt-count) 0)
+                                                                                                            (set! (-> a0-95 user-uint64)
+                                                                                                                  (the-as uint (mod-stats-complications-rolled-save-value))))
+
                                                                                                           (set! (-> arg0 length)
-                                                                                                                (&- (&+ v1-113 48)
+                                                                                                                (&- (&+ v1-113 112)
                                                                                                                     (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
                                                                                                           (if (< (-> arg0 allocated-length) (-> arg0 length))
                                                                                                             (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
@@ -638,10 +674,18 @@
           ;; ((= a0-1 (game-save-elt play-hints)) (set! (-> *setting-control* default play-hints) (= (-> save-data user-uint64) 1)))
           ((= a0-1 (game-save-elt mod-game-beaten))
            (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
-          ((= a0-1 (game-save-elt mod-global-timer))
+((= a0-1 (game-save-elt mod-global-timer))
            (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-global-countup))
           (global-countup-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-stats-rules-rolled))
+           (mod-stats-rules-rolled-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-stats-rules-broken))
+           (mod-stats-rules-broken-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-stats-rules-followed))
+           (mod-stats-rules-followed-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-stats-complications-rolled))
+           (mod-stats-complications-rolled-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
