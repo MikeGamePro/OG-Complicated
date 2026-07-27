@@ -129,6 +129,7 @@
        (arg0
         (set! (-> this cell-for-task) (current-task (-> this tasks)))
         (close-current! (-> this tasks))
+        (mod-rule-counter-add-progress 'rule-loyal-customer 1)
         (send-event *target* 'get-pickup 5 (- (-> *GAME-bank* money-oracle-inc)))
         (cond
           ((= (current-task (-> this tasks)) (-> this first-task))
