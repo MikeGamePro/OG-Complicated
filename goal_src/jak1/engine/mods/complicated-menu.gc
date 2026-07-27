@@ -28,6 +28,7 @@
   (cell-increment float)
   (orb-increment float)
   (fly-increment float)
+  (countdown-start-seconds float)
   )
   (:methods
     (reset (_type_) _type_)
@@ -48,6 +49,7 @@
   (set! (-> obj cell-increment) 20.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 8.0)
+  (set! (-> obj countdown-start-seconds) 30.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -81,6 +83,8 @@
               (set! (-> obj orb-increment) (file-stream-read-float file)))
              (("fly-increment")
               (set! (-> obj fly-increment) (file-stream-read-float file)))
+             (("countdown-start-seconds")
+              (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
               )))))
     (file-stream-close file))
   #t)
@@ -112,6 +116,7 @@
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
+    (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
 
     (format file "  )~%")
     (file-stream-close file))
@@ -171,6 +176,10 @@
   (set! (-> *complicated-settings* fly-increment) new-val)
   (none))
 
+(defun countdown-start-seconds-changed! ((new-val float))
+  (set! (-> *complicated-settings* countdown-start-seconds) new-val)
+  (none))
+
 ;; ---- Increment Options Submenu ---------------------------------------------
 (define *comp-timer-options*
   (new 'static 'boxed-array :type game-option
@@ -220,7 +229,22 @@
                           (commit-to-file *complicated-settings*)
                           (none)))
 
-       ;; [3] BACK
+      ;; [3] COUNTDOWN START TIME
+            (new 'static 'game-option
+                  :option-type (game-option-type slider)
+                  :name (text-id complicated-opts-countdown-start)
+                  :scale #t
+                  :param1 5.0
+                  :param2 300.0
+                  :slider-step-size 5.0
+                  :on-change (lambda ((val object))
+                              (countdown-start-seconds-changed! (the-as float val))
+                              (none))
+                  :on-confirm (lambda ()
+                                (commit-to-file *complicated-settings*)
+                                (none)))
+
+       ;; [4] BACK
        (new 'static 'game-option
             :option-type (game-option-type button)
             :name (text-id back)
@@ -397,6 +421,7 @@
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* cell-increment))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* orb-increment))
   (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* fly-increment))
+  (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (none))
 
 ;; add new options here (getter)
@@ -435,3 +460,8 @@
   (if *complicated-settings*
       (the float (the int (-> *complicated-settings* fly-increment)))
       8.0))
+
+(defun countdown-start-seconds-value ()
+  (if *complicated-settings*
+      (the float (the int (-> *complicated-settings* countdown-start-seconds)))
+      30.0))

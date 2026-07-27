@@ -58,6 +58,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define-extern orb-increment-value (function float))
 (define-extern fly-increment-value (function float))
 (define-extern cell-increment-value (function float))
+(define-extern countdown-start-seconds-value (function float))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -2948,7 +2949,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
-  (set! *global-countdown-remaining-time* (seconds 30)) ;; global countdown start - 30
+  (set! *global-countdown-remaining-time* (the int (* (countdown-start-seconds-value) (the float TICKS_PER_SECOND)))) ;; global countdown start
   (set! *global-countup-timer* 0)
   (set! *global-countdown-last-update-time* (current-time))
   (set! *global-countup-last-update-time* (current-time))

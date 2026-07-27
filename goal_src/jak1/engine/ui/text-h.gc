@@ -810,6 +810,7 @@
   (complicated-opts-orb-increment #x1623)
   (complicated-opts-fly-increment #x1624)
   (complicated-opts-cell-increment #x1625)
+   (complicated-opts-countdown-start #x1626)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)
