@@ -113,10 +113,10 @@
     (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
+    (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
-    (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
 
     (format file "  )~%")
     (file-stream-close file))
@@ -183,7 +183,22 @@
 ;; ---- Increment Options Submenu ---------------------------------------------
 (define *comp-timer-options*
   (new 'static 'boxed-array :type game-option
-       ;; [0] CELL INCREMENT
+      ;; [0] COUNTDOWN START TIME
+            (new 'static 'game-option
+                  :option-type (game-option-type slider)
+                  :name (text-id complicated-opts-countdown-start)
+                  :scale #t
+                  :param1 5.0
+                  :param2 300.0
+                  :slider-step-size 5.0
+                  :on-change (lambda ((val object))
+                              (countdown-start-seconds-changed! (the-as float val))
+                              (none))
+                  :on-confirm (lambda ()
+                                (commit-to-file *complicated-settings*)
+                                (none)))
+
+       ;; [1] CELL INCREMENT
        (new 'static 'game-option
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-cell-increment)
@@ -198,7 +213,7 @@
                           (commit-to-file *complicated-settings*)
                           (none)))
 
-       ;; [1] ORB INCREMENT
+       ;; [2] ORB INCREMENT
        (new 'static 'game-option
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-orb-increment)
@@ -214,7 +229,7 @@
                           (commit-to-file *complicated-settings*)
                           (none)))
 
-       ;; [2] FLY INCREMENT
+       ;; [3] FLY INCREMENT
        (new 'static 'game-option
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-fly-increment)
@@ -228,21 +243,6 @@
             :on-confirm (lambda ()
                           (commit-to-file *complicated-settings*)
                           (none)))
-
-      ;; [3] COUNTDOWN START TIME
-            (new 'static 'game-option
-                  :option-type (game-option-type slider)
-                  :name (text-id complicated-opts-countdown-start)
-                  :scale #t
-                  :param1 5.0
-                  :param2 300.0
-                  :slider-step-size 5.0
-                  :on-change (lambda ((val object))
-                              (countdown-start-seconds-changed! (the-as float val))
-                              (none))
-                  :on-confirm (lambda ()
-                                (commit-to-file *complicated-settings*)
-                                (none)))
 
        ;; [4] BACK
        (new 'static 'game-option
@@ -418,10 +418,10 @@
   (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* fish-assist?))
   
   ;; Increment options mappings
-  (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* cell-increment))
-  (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* orb-increment))
-  (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* fly-increment))
-  (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
+  (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
+  (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* cell-increment))
+  (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* orb-increment))
+  (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* fly-increment))
   (none))
 
 ;; add new options here (getter)

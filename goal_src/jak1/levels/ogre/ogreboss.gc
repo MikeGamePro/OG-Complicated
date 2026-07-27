@@ -876,7 +876,7 @@
     ((rand-vu-percent? (the-as float 0.4)) 
      (set! gp-0 (rand-vu-int-range 0 (+ (-> self target-count) -1)))
      ;; Skip middle-man platform (index 1 / isle-c) if active
-     (when (and (= gp-0 1) (mod-rule-active? 'rule-middle-man))
+     (when (and (= gp-0 1) (mod-rule-active? 'rule-side-to-side))
        (set! gp-0 0)))
     (else
      (set! gp-0 0)
@@ -884,7 +884,7 @@
            (s5-0 (target-pos 0)))
        (dotimes (s4-0 (-> self target-count))
          ;; Skip index 1 if the middle-man condition is met
-         (when (not (and (= s4-0 1) (mod-rule-active? 'rule-middle-man)))
+         (when (not (and (= s4-0 1) (mod-rule-active? 'rule-side-to-side)))
            (let* ((v1-6 (-> self target-actor-array s4-0))
                   (s3-0 (if v1-6 (-> v1-6 extra process))))
              (when s3-0

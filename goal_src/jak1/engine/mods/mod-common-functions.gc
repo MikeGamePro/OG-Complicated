@@ -568,7 +568,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-cooked) "COOKED")
     ((eq? id 'complication-joyride) "JOYRIDE")
     ((eq? id 'rule-sagging-sails) "SAGGING SAILS")
-    ((eq? id 'rule-middle-man) "MIDDLE MAN")
+    ((eq? id 'rule-side-to-side) "SIDE TO SIDE")
     ((eq? id 'rule-landlubber) "LANDLUBBER")
     (else "UNKNOWN")))
 
@@ -626,7 +626,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-cooked) "BURN JAK.")
     ((eq? id 'complication-joyride) "HEY! THERE\c12S THE FLUT-FLUT!")
     ((eq? id 'rule-sagging-sails) "MISS 3 5-POUND FISH.")
-    ((eq? id 'rule-middle-man) "DO NOT TOUCH THE MIDDLE PLATFORM.")
+    ((eq? id 'rule-side-to-side) "DO NOT TOUCH THE MIDDLE PLATFORM.")
     ((eq? id 'rule-landlubber) "STAY OUT OF THE WATER.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
@@ -683,7 +683,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-cooked) (seconds 30)) ;; 30
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
     ((eq? id 'rule-sagging-sails) (seconds 30)) ;; 30
-    ((eq? id 'rule-middle-man) (seconds 60)) ;; 60
+    ((eq? id 'rule-side-to-side) (seconds 60)) ;; 60
     ((eq? id 'rule-landlubber) (seconds 40)) ;; 40
     (else (seconds 30))))
 
@@ -750,7 +750,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (eq? id 'rule-loyal-customer)
           (eq? id 'rule-cooked)
           (eq? id 'rule-sagging-sails)
-          (eq? id 'rule-middle-man)
+          (eq? id 'rule-side-to-side)
           (eq? id 'rule-landlubber)
          )
      'rule)
@@ -1520,7 +1520,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 47) 'complication-joyride)
     ((= idx 48) 'complication-critical)
     ((= idx 49) 'rule-sagging-sails)
-    ((= idx 50) 'rule-middle-man)
+    ((= idx 50) 'rule-side-to-side)
     ((= idx 51) 'complication-cumbersome)
     ((= idx 52) 'rule-landlubber)
     ((= idx 53) 'rule-loyal-customer)
@@ -1745,7 +1745,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (money-left (- (max-money-current-level) (collected-money-current-level)))
         (buzzer-left (- 7 (collected-buzzer-current-level)))
         (is-minigame (or (target-fishing?) (target-billy-game?)))
-        (is-klaww (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution)))
+        (is-klaww (and (not (task-closed? (game-task ogre-boss) (task-status need-resolution)))
           (string= (current-checkpoint-name) "ogre-start")))
         (racer-lavatube (or (and (target-on-racer?) (string= (current-checkpoint-name) "lavatube-start"))
           (string= (current-checkpoint-name) "lavatube-middle")
@@ -1892,7 +1892,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (else 0)))
 
       ;; Special
-      ((eq? id 'rule-middle-man)
+      ((eq? id 'rule-side-to-side)
         (if is-klaww 50 0))
 
       ((eq? id 'rule-button-pusher)
