@@ -20,6 +20,7 @@
 ;; add new options here
   ((show-countup-timer? symbol)
   (one-frame-toggle? symbol)
+  (invert-controls-toggle? symbol)
   (crash-toggle? symbol)
   (math-quiz-toggle? symbol)
   (trivia-toggle? symbol)
@@ -41,6 +42,7 @@
   ;; default values for new settings
   (set! (-> obj show-countup-timer?) #f)
   (set! (-> obj one-frame-toggle?) #t)
+  (set! (-> obj invert-controls-toggle?) #t)
   (set! (-> obj crash-toggle?) #t)
   (set! (-> obj math-quiz-toggle?) #t)
   (set! (-> obj trivia-toggle?) #t)
@@ -67,6 +69,8 @@
               (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
              (("one-frame-toggle?")
               (set! (-> obj one-frame-toggle?) (file-stream-read-symbol file)))
+             (("invert-controls-toggle?")
+              (set! (-> obj invert-controls-toggle?) (file-stream-read-symbol file)))
              (("crash-toggle?")
               (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
              (("math-quiz-toggle?")
@@ -108,6 +112,7 @@
     ;; add new options here
     (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
     (format file "  (one-frame-toggle? ~A)~%" (-> obj one-frame-toggle?))
+    (format file "  (invert-controls-toggle? ~A)~%" (-> obj invert-controls-toggle?))
     (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
     (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
     (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
@@ -142,6 +147,10 @@
 
 (defun one-frame-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* one-frame-toggle?) new-val)
+  (none))
+
+(defun invert-controls-toggle-changed! ((new-val symbol))
+  (set! (-> *complicated-settings* invert-controls-toggle?) new-val)
   (none))
 
 (defun crash-toggle-changed! ((new-val symbol))
@@ -295,7 +304,18 @@
           :on-confirm (lambda ()
                         (commit-to-file *complicated-settings*)
                         (none)))
-      ;; [4] MATH QUIZ TOGGLE
+      ;; [4] INVERT CONTROLS TOGGLE
+      (new 'static 'game-option
+           :option-type (game-option-type on-off)
+           :name (text-id complicated-opts-invert-controls-toggle)
+           :scale #t
+           :on-change (lambda ((val object))
+                        (invert-controls-toggle-changed! (the-as symbol val))
+                        (none))
+           :on-confirm (lambda ()
+                         (commit-to-file *complicated-settings*)
+                         (none)))
+      ;; [5] MATH QUIZ TOGGLE
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-math-quiz-toggle)
@@ -306,7 +326,7 @@
            :on-confirm (lambda ()
                          (commit-to-file *complicated-settings*)
                          (none)))
-      ;; [5] TRIVIA TOGGLE
+      ;; [6] TRIVIA TOGGLE
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-trivia-toggle)
@@ -317,7 +337,7 @@
            :on-confirm (lambda ()
                          (commit-to-file *complicated-settings*)
                          (none)))
-      ;; [6] KLAWW ASSIST
+      ;; [7] KLAWW ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-klaww-assist)
@@ -328,7 +348,7 @@
            :on-confirm (lambda ()
                          (commit-to-file *complicated-settings*)
                          (none)))
-      ;; [7] FISH ASSIST
+      ;; [8] FISH ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-fish-assist)
@@ -340,7 +360,7 @@
                          (commit-to-file *complicated-settings*)
                          (none)))
 
-      ;; [8] BACK
+      ;; [9] BACK
       (new 'static 'game-option
            :option-type (game-option-type button)
            :name (text-id back)
@@ -412,10 +432,11 @@
   (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
   (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* crash-toggle?))
   (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* invert-controls-toggle?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
+  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 8 value-to-modify) (&-> *complicated-settings* fish-assist?))
   
   ;; Increment options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
@@ -430,6 +451,9 @@
 
 (defun one-frame-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* one-frame-toggle?))))
+
+(defun invert-controls-toggle-enabled? ()
+  (the symbol (and *complicated-settings* (-> *complicated-settings* invert-controls-toggle?))))
 
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))

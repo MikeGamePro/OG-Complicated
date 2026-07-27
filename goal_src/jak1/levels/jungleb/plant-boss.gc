@@ -844,11 +844,17 @@
       (set! (-> self body flex-blend) 0.0)
       (set! (-> self neck flex-blend) 1.0)
       (set! (-> self want-aphid-count)
-            (min (- 4 (the int (-> self health)))
-                 (cond
-                   ((>= (-> self try) 15) 1)
-                   ((>= (-> self try) 10) 2)
-                   (else 3)))))
+            (if (mod-rule-active? 'complication-double-aphids)
+                (min (* 2 (- 4 (the int (-> self health))))
+                    (cond
+                      ((>= (-> self try) 15) 2)
+                      ((>= (-> self try) 10) 4)
+                      (else 6)))
+                (min (- 4 (the int (-> self health)))
+                    (cond
+                      ((>= (-> self try) 15) 1)
+                      ((>= (-> self try) 10) 2)
+                      (else 3))))))
   :trans
     (behavior ()
       (let ((f0-0 (vector-vector-distance (target-pos 0) (-> self root trans))))
