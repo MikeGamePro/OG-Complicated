@@ -36,6 +36,7 @@
 
 (defmethod reset ((obj complicated-settings))
   ;; default values for new settings
+  (format 0 "reset: mod-rule-enabled? = ~A~%" *mod-rule-enabled?*)
   (dotimes (i 53) (set! (-> *mod-rule-enabled?* i) #t))
   (set! (-> obj show-countup-timer?) #f)
   (set! (-> obj crash-toggle?) #t)
@@ -80,6 +81,8 @@
               (set! (-> obj fly-increment) (file-stream-read-float file)))
              (("countdown-start-seconds")
               (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
+             (else
+              (file-stream-read-word file))
               )))))
     (file-stream-close file))
   #t)
