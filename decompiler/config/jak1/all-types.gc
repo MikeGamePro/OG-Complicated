@@ -15950,6 +15950,7 @@
   (speedrun-cat-ext-options)
   (complicated-options)
   (comp-timer-options)
+  (comp-rule-options)
   ;; the last one!
   (max)
   )

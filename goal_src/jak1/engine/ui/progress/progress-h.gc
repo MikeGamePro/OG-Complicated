@@ -135,7 +135,8 @@
      (memcard-data-exists-save-and-load)
      ;; complicated mod
      (complicated-options)
-      (comp-timer-options)
+    (comp-timer-options)
+    (comp-rule-options)
      ;; the last one!
      (max))
    (defenum game-option-type

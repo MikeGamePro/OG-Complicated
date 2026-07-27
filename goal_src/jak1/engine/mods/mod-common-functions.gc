@@ -126,9 +126,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-id-count* 53) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-enabled?* (new 'global 'boxed-array symbol 53))
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
+
+(dotimes (i 53) (set! (-> *mod-rule-enabled?* i) #t))
 
 (define *orb-weight-base-walk-speed*              40960.0)
 (define *orb-weight-base-double-jump-speed*       32768.0)
@@ -1960,8 +1963,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< idx *mod-rule-id-count*)
       (let ((candidate (mod-rule-id-from-index idx)))
         (when (and candidate
-                   (not (mod-rule-active? candidate))
-                   (not (mod-rule-pending? candidate)))
+                  (-> *mod-rule-enabled?* idx)
+                  (not (mod-rule-active? candidate))
+                  (not (mod-rule-pending? candidate)))
           (let ((priority (mod-rule-roll-priority candidate))
                 (recent-factor (mod-rule-recent-roll-factor candidate))
                 (weight 0))
@@ -1976,8 +1980,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (while (< debug-idx *mod-rule-id-count*)
           (let ((candidate (mod-rule-id-from-index debug-idx)))
             (when (and candidate
-                       (not (mod-rule-active? candidate))
-                       (not (mod-rule-pending? candidate)))
+                      (-> *mod-rule-enabled?* idx)
+                      (not (mod-rule-active? candidate))
+                      (not (mod-rule-pending? candidate)))
               (let* ((priority (mod-rule-roll-priority candidate))
                      (recent-factor (mod-rule-recent-roll-factor candidate))
                      (weight (if (> priority 0) (* priority recent-factor) 0)))
@@ -1994,8 +1999,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (while (and (< idx *mod-rule-id-count*) (not chosen))
             (let ((candidate (mod-rule-id-from-index idx)))
               (when (and candidate
-                         (not (mod-rule-active? candidate))
-                         (not (mod-rule-pending? candidate)))
+                        (-> *mod-rule-enabled?* idx)
+                        (not (mod-rule-active? candidate))
+                        (not (mod-rule-pending? candidate)))
                 (let ((priority (mod-rule-roll-priority candidate))
                       (recent-factor (mod-rule-recent-roll-factor candidate))
                       (weight 0))

@@ -19,10 +19,7 @@
 (deftype complicated-settings (basic)
 ;; add new options here
   ((show-countup-timer? symbol)
-  (one-frame-toggle? symbol)
   (crash-toggle? symbol)
-  (math-quiz-toggle? symbol)
-  (trivia-toggle? symbol)
   (klaww-assist? symbol)
   (fish-assist? symbol)
   (cell-increment float)
@@ -39,11 +36,9 @@
 
 (defmethod reset ((obj complicated-settings))
   ;; default values for new settings
+  (dotimes (i 53) (set! (-> *mod-rule-enabled?* i) #t))
   (set! (-> obj show-countup-timer?) #f)
-  (set! (-> obj one-frame-toggle?) #t)
   (set! (-> obj crash-toggle?) #t)
-  (set! (-> obj math-quiz-toggle?) #t)
-  (set! (-> obj trivia-toggle?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
   (set! (-> obj cell-increment) 20.0)
@@ -63,16 +58,16 @@
          (dosettings (file)
            (case-str *pc-temp-string*
            ;; add new options here
+             (("rule-enabled-flags")
+              (let ((saved-count (the int (file-stream-read-float file))))
+                (dotimes (i saved-count)
+                  (if (< i 53)
+                      (set! (-> *mod-rule-enabled?* i) (file-stream-read-symbol file))
+                      (file-stream-read-symbol file)))))
              (("show-countup-timer?")
               (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
-             (("one-frame-toggle?")
-              (set! (-> obj one-frame-toggle?) (file-stream-read-symbol file)))
              (("crash-toggle?")
               (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
-             (("math-quiz-toggle?")
-              (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
-             (("trivia-toggle?")
-              (set! (-> obj trivia-toggle?) (file-stream-read-symbol file)))
              (("klaww-assist?")
               (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
              (("fish-assist?")
@@ -107,18 +102,17 @@
     (format file "(complicated-settings~%")
     ;; add new options here
     (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
-    (format file "  (one-frame-toggle? ~A)~%" (-> obj one-frame-toggle?))
     (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
-    (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
-    (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
-
-    (format file "  )~%")
+    (format file "  (rule-enabled-flags ~f" (the float 53))
+    (dotimes (i 53)
+      (format file " ~A" (-> *mod-rule-enabled?* i)))
+    (format file ")~%")
     (file-stream-close file))
   #t)
 
@@ -140,20 +134,8 @@
   (set! (-> *complicated-settings* show-countup-timer?) new-val)
   (none))
 
-(defun one-frame-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* one-frame-toggle?) new-val)
-  (none))
-
 (defun crash-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* crash-toggle?) new-val)
-  (none))
-
-(defun math-quiz-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* math-quiz-toggle?) new-val)
-  (none))
-
-(defun trivia-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* trivia-toggle?) new-val)
   (none))
 
 (defun klaww-assist-changed! ((new-val symbol))
@@ -253,6 +235,494 @@
                           (commit-to-file *complicated-settings*)
                           (none)))))
 
+(define *comp-rule-toggle-options*
+  (new 'static 'boxed-array :type game-option
+       ;; [0] GROUNDED (rule-grounded)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-grounded)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [1] DIE (rule-die)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-die)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [2] BLOODLUST (rule-lurker-pressure)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-bloodlust)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [3] HITLIST (rule-hitlist)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-hitlist)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [4] BULL AND CHINA (rule-crate-break)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-crate-break)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [5] BRITTLE BONES (complication-brittle-bones)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-brittle-bones)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [6] ROTTEN EGGS (complication-rotten-eggs)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-rotten-eggs)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [7] KEEP IT LOW (rule-keep-it-low)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-keep-it-low)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [8] CASH GRAB (rule-money-pressure)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-money-pressure)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [9] CELL PRESSURE (rule-fuel-pressure)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-fuel-pressure)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [10] ECO ALLERGY (complication-eco-allergy)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-eco-allergy)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [11] SIZEABLE CONTRIBUTIONS (complication-sizeable)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-sizeable)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [12] OHKO (complication-ohko)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-ohko)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [13] GLARE (complication-glare)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-glare)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [14] HEATING BALLOONS (complication-heating-balloons)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-heating-balloons)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [15] FLOP THIS (rule-flop-this)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-flop-this)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [16] DISASSOCIATE (complication-disassociate)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-disassociate)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [17] BUS DRIVER (complication-bus-driver)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-bus-driver)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [18] BUZZER BEATER (rule-buzzer-pressure)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-buzzer-pressure)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [19] WINGS TIED (complication-wings-tied)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-wings-tied)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [20] SURVIVOR (rule-survivor)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-survivor)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [21] FUEL SHORTAGE (complication-fuel-shortage)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-fuel-shortage)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [22] DROUGHT (complication-drought)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-drought)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [23] ANGER MANAGEMENT (rule-management)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-management)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [24] JAK RABBIT (complication-jak-rabbit)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-jak-rabbit)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [25] HIDDEN TREASURE (complication-hidden-treasure)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-hidden-treasure)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [26] VENDETTA (rule-vendetta)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-vendetta)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [27] HANDS ON (rule-blue-crate)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-blue-crate)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [28] ECO RESERVE (complication-eco-reserve)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-eco-reserve)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [29] ONE FRAME (rule-one-frame)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-one-frame)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [30] SOCIAL DISTANCING (rule-distancing)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-distancing)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [31] RED STOP (complication-red-stop)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-red-stop)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [32] RED LIGHT (rule-dont-move)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-dont-move)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [33] RGYB (complication-rgyb)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-rgyb)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [34] BUTTER FINGERS (complication-butter-fingers)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-butter-fingers)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [35] FOR BILLY (rule-for-billy)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-for-billy)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [36] SNIPER (rule-sniper)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-sniper)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [37] COLD FEET (rule-cold-feet)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-cold-feet)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [38] OVERCLOCK (complication-overclock)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-overclock)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [39] SPEED (rule-speed)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-speed)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [40] QUICK MATHS (rule-math-quiz)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-math-quiz)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [41] DON'T KNOW JAK (rule-trivia)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-trivia)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [42] BAD PING (complication-bad-ping)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-bad-ping)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [43] GREEN-PILLED (rule-green-pilled)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-green-pilled)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [44] BUTTON PUSHER (rule-button-pusher)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-button-pusher)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [45] INVISIBLE MAN (complication-invisible-man)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-invisible-man)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [46] COOKED (rule-cooked)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-cooked)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [47] JOYRIDE (complication-joyride)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-joyride)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [48] CRITICAL CONDITION (complication-critical)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-critical)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [49] SAGGING SAILS (rule-sagging-sails)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-sagging-sails)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [50] MIDDLE MAN (rule-middle-man)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-middle-man)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [51] CUMBERSOME (complication-cumbersome)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-cumbersome)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [52] LANDLUBBER (rule-landlubber)
+       (new 'static 'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-rule-landlubber)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))
+
+       ;; [53] BACK
+       (new 'static 'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm (lambda ()
+                          (commit-to-file *complicated-settings*)
+                          (none)))))
+
 ;; ---- Main Complicated Options Submenu --------------------------------------
 (define *complicated-options*
   (new 'static 'boxed-array :type game-option
@@ -284,40 +754,7 @@
            :on-confirm (lambda ()
                          (commit-to-file *complicated-settings*)
                          (none)))  
-      ;; [3] ONE FRAME TOGGLE
-      (new 'static 'game-option
-          :option-type (game-option-type on-off)
-          :name (text-id complicated-opts-one-frame-toggle)
-          :scale #t
-          :on-change (lambda ((val object))
-                        (one-frame-toggle-changed! (the-as symbol val))
-                        (none))
-          :on-confirm (lambda ()
-                        (commit-to-file *complicated-settings*)
-                        (none)))
-      ;; [4] MATH QUIZ TOGGLE
-      (new 'static 'game-option
-           :option-type (game-option-type on-off)
-           :name (text-id complicated-opts-math-quiz-toggle)
-           :scale #t
-           :on-change (lambda ((val object))
-                        (math-quiz-toggle-changed! (the-as symbol val))
-                        (none))
-           :on-confirm (lambda ()
-                         (commit-to-file *complicated-settings*)
-                         (none)))
-      ;; [5] TRIVIA TOGGLE
-      (new 'static 'game-option
-           :option-type (game-option-type on-off)
-           :name (text-id complicated-opts-trivia-toggle)
-           :scale #t
-           :on-change (lambda ((val object))
-                        (trivia-toggle-changed! (the-as symbol val))
-                        (none))
-           :on-confirm (lambda ()
-                         (commit-to-file *complicated-settings*)
-                         (none)))
-      ;; [6] KLAWW ASSIST
+      ;; [3] KLAWW ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-klaww-assist)
@@ -328,7 +765,7 @@
            :on-confirm (lambda ()
                          (commit-to-file *complicated-settings*)
                          (none)))
-      ;; [7] FISH ASSIST
+      ;; [4] FISH ASSIST
       (new 'static 'game-option
            :option-type (game-option-type on-off)
            :name (text-id complicated-opts-fish-assist)
@@ -340,7 +777,14 @@
                          (commit-to-file *complicated-settings*)
                          (none)))
 
-      ;; [8] BACK
+      ;; [5] COMPLICATIONS SUBMENU (toggle every rule/complication)
+      (new 'static 'game-option
+           :option-type (game-option-type menu)
+           :name (text-id complicated-opts-rules-title)
+           :scale #t
+           :param3 (game-option-menu comp-rule-options))
+
+      ;; [6] BACK
       (new 'static 'game-option
            :option-type (game-option-type button)
            :name (text-id back)
@@ -400,6 +844,8 @@
   (set! (-> *options-remap* (progress-screen game-settings)) *game-options-complicated*)
   (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
   (set! (-> *options-remap* (progress-screen comp-timer-options)) *comp-timer-options*)
+  (set! (-> *options-remap* (progress-screen comp-rule-options)) *comp-rule-toggle-options*)
+  
   (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
   (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
   (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
@@ -411,34 +857,26 @@
   ;; Complicated options mappings
   (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
   (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* crash-toggle?))
-  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* fish-assist?))
   
   ;; Increment options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* cell-increment))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* orb-increment))
   (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* fly-increment))
   (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
+
+  (dotimes (i 53)
+  (set! (-> *comp-rule-toggle-options* i value-to-modify) (&-> *mod-rule-enabled?* i)))
+
   (none))
 
 ;; add new options here (getter)
 (defun show-countup-timer-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
 
-(defun one-frame-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* one-frame-toggle?))))
-
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
-
-(defun math-quiz-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* math-quiz-toggle?))))
-
-(defun trivia-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* trivia-toggle?))))
 
 (defun klaww-assist-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* klaww-assist?))))
