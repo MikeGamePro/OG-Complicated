@@ -545,7 +545,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-hidden-treasure) "HIDDEN TREASURE")
     ((eq? id 'complication-drought) "DROUGHT")
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
-    ((eq? id 'rule-survivor) "SURVIVOR")
+    ((eq? id 'rule-survivor) "STEP 1")
     ((eq? id 'rule-vendetta) "VENDETTA")
     ((eq? id 'rule-blue-crate) "HANDS ON")
     ((eq? id 'complication-eco-reserve) "ECO RESERVE")
@@ -648,7 +648,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
     ((eq? id 'rule-flop-this) (seconds 75)) ;; 75
     ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
-    ((eq? id 'complication-rotten-eggs) (seconds 60)) ;; 60
+    ((eq? id 'complication-rotten-eggs) (seconds 45)) ;; 45
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
     ((eq? id 'rule-keep-it-low) (seconds 90)) ;; 90
     ((eq? id 'complication-sizeable) (seconds 60)) ;; 60
@@ -684,7 +684,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-green-pilled) (seconds 90)) ;; 90
     ((eq? id 'rule-button-pusher) (seconds 45)) ;; 45
     ((eq? id 'rule-loyal-customer) (seconds 60)) ;; 60
-    ((eq? id 'complication-invisible-man) (seconds 60)) ;; 60
+    ((eq? id 'complication-invisible-man) (seconds 50)) ;; 50
     ((eq? id 'rule-cooked) (seconds 30)) ;; 30
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
     ((eq? id 'rule-sagging-sails) (seconds 30)) ;; 30
@@ -1678,7 +1678,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (or (eq? level 'swamp)
       (eq? level 'snowy)
       (eq? level 'citadel)
-      (eq? level 'ogre)
+      (and (eq? level 'ogre) (task-closed? (game-task snow-eggtop) (task-status need-resolution)))
       (eq? level 'finalboss)
       (eq? level 'lavatube)
       (eq? level 'maincave)
@@ -1713,6 +1713,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (string= (current-checkpoint-name) "ogre-race")
       (eq? level 'snow)
       (eq? level 'lavatube)
+      (string= (current-checkpoint-name) "firecanyon-start")
       (eq? level 'citadel)
       (eq? level 'finalboss)))
 
@@ -1779,7 +1780,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             0 10))
 
       ((eq? id 'rule-blue-crate)
-       (if (no-blue-eco-level? level-name) 0 9))
+       (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 9))
 
       ((eq? id 'rule-fuel-pressure)
         (cond
@@ -1818,7 +1819,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-sniper)
        (if (and (not (mod-rule-active? 'rule-flop-this))
                 (or (eq? level-name 'swamp) (eq? level-name 'beach) 
-                    (eq? level-name 'snow) (eq? level-name 'maincave) 
+                    (eq? level-name 'snow) (or (not (task-closed? (game-task cave-gnawers) (task-status need-resolution))) (eq? level-name 'maincave)) 
                     (eq? level-name 'robocave) (eq? level-name 'darkcave))) 
             7 0))
 
@@ -1837,7 +1838,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-eco-reserve)
         (cond
           ((or (eq? level-name 'finalboss) is-klaww) 16)
-          ((yellow-eco-level? level-name) 5)
+          ((or is-klaww (yellow-eco-level? level-name)) 5)
           (else 0)))
 
       ((eq? id 'complication-red-stop) ;; disabled
@@ -1846,7 +1847,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-ohko) 0) ;; disabled
 
       ((eq? id 'complication-invisible-man)
-        (if on-racer 0 10))
+        (if on-racer 0 8))
 
       ((eq? id 'complication-double-aphids) ;; disabled
         (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 0 0)) ;; 20
@@ -1868,11 +1869,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
         (cond
           ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
+          ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
           ((and (eq? id 'rule-grounded) is-klaww) 2)
           ((eq? id 'rule-grounded) 10)
           ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 3)
           (is-klaww 2)
-          ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
           (else 5)))
 
       ((eq? id 'rule-dont-move)
@@ -1904,7 +1905,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (cond
           ((mod-rule-active? 'complication-drought) 0)
           ((water-level? level-name) 10)
-          ((or (eq? level-name 'misty) (eq? level-name 'darkcave)) 6)
+          ((or (eq? level-name 'misty) (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave))) 6)
           (else 0)))
 
       ;; Special
@@ -1927,7 +1928,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (if (target-fishing?) 50 0))
       
       ((eq? id 'rule-cold-feet)
-        (if (eq? level-name 'snow) 35 0))
+        (if (eq? level-name 'snow) 40 0))
 
       ((eq? id 'rule-math-quiz)
         (if (or (mod-rule-active? 'rule-trivia) (not (math-quiz-toggle-enabled?)) (eq? level-name 'training)) 0 4))
@@ -1981,9 +1982,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-fuel-shortage)
         (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 6))
-
-      ((eq? id 'complication-brittle-bones)
-        (if (or (eq? level-name 'finalboss) is-klaww) 4 8))
 
       ((eq? id 'complication-brittle-bones)
         (cond
@@ -2850,22 +2848,37 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            0.8)
          ;; Draw countup timer
         (when (show-countup-timer-enabled?) (let* ((up-total-centis (max 0 (the int (/ (* *global-countup-timer* 100)
-                                                            (seconds 1)))))
-                        (up-total-seconds (the int (/ up-total-centis 100)))
-                        (up-minutes (the int (/ up-total-seconds 60)))
-                        (up-seconds-part (the int (mod up-total-seconds 60)))
-                        (up-centis (the int (mod up-total-centis 100))))
-                  (draw-string-xy-scaled
-                    (string-format "~1,'0D:~2,'0D.~2,'0D"
-                                    up-minutes
-                                    up-seconds-part
-                                    up-centis)
-                    global-buf
-                    430
-                    40
-                    (font-color white)
-                    (font-flags shadow kerning large)
-                    0.5)))
+                                                                                              (seconds 1)))))
+                                (up-total-seconds (the int (/ up-total-centis 100)))
+                                (up-hours (the int (/ up-total-seconds 3600)))
+                                (up-minutes-part (the int (mod (/ up-total-seconds 60) 60)))
+                                (up-seconds-part (the int (mod up-total-seconds 60)))
+                                (up-centis (the int (mod up-total-centis 100))))
+                          
+                          (if (> up-hours 0)
+                              (draw-string-xy-scaled
+                                (string-format "~1,'0D:~2,'0D:~2,'0D.~2,'0D"
+                                                up-hours
+                                                up-minutes-part
+                                                up-seconds-part
+                                                up-centis)
+                                global-buf
+                                430
+                                40
+                                (font-color white)
+                                (font-flags shadow kerning large)
+                                0.5)
+                              (draw-string-xy-scaled
+                                (string-format "~1,'0D:~2,'0D.~2,'0D"
+                                                up-minutes-part
+                                                up-seconds-part
+                                                up-centis)
+                                global-buf
+                                430
+                                40
+                                (font-color white)
+                                (font-flags shadow kerning large)
+                                0.5))))
          (mod-rule-draw-timed-punishments global-buf)
          (let ((reverted-y 72) 
                (primary (mod-rule-nth-active-slot 0)))
@@ -2895,7 +2908,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (draw-string-xy-scaled
               (string-format
 "Reverted: ~A"
-(game-task->string (the game-task *mod-rule-last-reverted-cell-task*)))
+(enum->string game-task (the game-task *mod-rule-last-reverted-cell-task*)))
                global-buf
                10
                reverted-y
