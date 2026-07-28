@@ -4,7 +4,7 @@
   ;; "flut-part.o"
   ;; "flutflut.o"
   ;; "target-flut.o" mod-base-change
-  "eichar-flut+0-ag.go"
+  ;; "eichar-flut+0-ag.go"
   "swamp-obs.o"
   "swamp-bat.o"
   "swamp-rat.o"
@@ -24,7 +24,7 @@
   "ecovalve-ag.go"
   "ef-plane-ag.go"
   "farthy-snack-ag.go"
-  "flut-saddle-ag.go"
+  ;; "flut-saddle-ag.go"
   "kermit-ag.go"
   "sharkey-ag.go"
   "swamp-bat-ag.go"
