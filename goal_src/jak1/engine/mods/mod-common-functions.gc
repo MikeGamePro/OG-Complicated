@@ -1819,7 +1819,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-sniper)
        (if (and (not (mod-rule-active? 'rule-flop-this))
                 (or (eq? level-name 'swamp) (eq? level-name 'beach) 
-                    (eq? level-name 'snow) (or (not (task-closed? (game-task cave-gnawers) (task-status need-resolution))) (eq? level-name 'maincave)) 
+                    (eq? level-name 'snow) (and (not (task-closed? (game-task cave-gnawers) (task-status need-resolution))) (eq? level-name 'maincave)) 
                     (eq? level-name 'robocave) (eq? level-name 'darkcave))) 
             7 0))
 
@@ -2865,7 +2865,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                                 up-seconds-part
                                                 up-centis)
                                 global-buf
-                                430
+                                410
                                 40
                                 (font-color white)
                                 (font-flags shadow kerning large)
