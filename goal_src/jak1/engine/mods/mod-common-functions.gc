@@ -1981,7 +1981,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (if on-flut 40 0))
 
       ((eq? id 'complication-fuel-shortage)
-        (if (or (eq? level-name 'training) (eq? level-name 'finalboss)) 0 6))
+        (if (or (eq? level-name 'training) (eq? level-name 'finalboss) 
+          (and (string= (current-checkpoint-name) "citadel-elevator") 
+            (task-closed? (game-task citadel-sage-green) (task-status need-resolution)))) 0 6))
 
       ((eq? id 'complication-brittle-bones)
         (cond
