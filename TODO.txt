@@ -1,8 +1,8 @@
-**why the hell do enemies randomly despawn**
-
 settings (in progress)
 at least 50 trivia (10 more)
-1 more rule for 50
+hide shadow for invisible man
+extend hands on to "only break crates directly by touching" (no eco, flut, explosion)
+break the rule N rules from now
 
 new zoomer rule
 add plunger-lurker as kill

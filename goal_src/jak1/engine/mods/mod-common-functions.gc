@@ -865,7 +865,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) (seconds 10))
     ((eq? punishment 'punishment-fall-damage) (seconds 120))
     ((eq? punishment 'punishment-trip) (seconds 120))
-    ((eq? punishment 'punishment-edge) (seconds 180))
+    ((eq? punishment 'punishment-edge) (seconds 240))
     ((eq? punishment 'punishment-delay) (seconds 60))
     (else 0)))
 
@@ -963,18 +963,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (set! found #t)))
       (+! slot 1))
     result))
-
-(defun mod-rule-format-time-left ((time-left time-frame))
-  (let* ((ticks (max 0 (the int time-left)))
-         (total-seconds (the int (/ ticks (seconds 1))))
-         (minutes (the int (/ total-seconds 60)))
-         (seconds-part (the int (mod total-seconds 60)))
-         (deciseconds (the int (/ (* (mod ticks (seconds 1)) 10)
-                                  (seconds 1)))))
-    (string-format "~D:~2,'0D.~1,'0D"
-                   minutes
-                   seconds-part
-                   deciseconds)))
 
 (defun mod-rule-task-has-fuel-cell-entity? ((task game-task))
   (let ((level-idx 0)
@@ -1543,6 +1531,37 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;;   (and *target*
 ;;     (-> *target* current-level)
 ;;     (-> *target* current-level name)))
+
+(defun mod-format-time-frame ((tf time-frame) (decimal-digits int) (hours-mode symbol))
+  (let* ((ticks (max 0 (the int tf)))
+         (total-seconds (the int (/ ticks (seconds 1))))
+         (hours (the int (/ total-seconds 3600)))
+         (minutes-full (the int (/ total-seconds 60)))
+         (minutes-part (the int (mod minutes-full 60)))
+         (seconds-part (the int (mod total-seconds 60)))
+         (show-hours? (or (eq? hours-mode 'always)
+                          (and (eq? hours-mode 'auto) (> hours 0))))
+         (minutes-out (if show-hours? minutes-part minutes-full))
+         (frac-tenths (the int (/ (* (mod ticks (seconds 1)) 10) (seconds 1))))
+         (frac-hundredths (the int (/ (* (mod ticks (seconds 1)) 100) (seconds 1))))
+         (frac-millis (the int (/ (* (mod ticks (seconds 1)) 1000) (seconds 1)))))
+    (cond
+      ((and show-hours? (= decimal-digits 3))
+       (string-format "~2,'0D:~2,'0D:~2,'0D.~3,'0D" hours minutes-out seconds-part frac-millis))
+      ((and show-hours? (= decimal-digits 2))
+       (string-format "~2,'0D:~2,'0D:~2,'0D.~2,'0D" hours minutes-out seconds-part frac-hundredths))
+      ((and show-hours? (= decimal-digits 1))
+       (string-format "~2,'0D:~2,'0D:~2,'0D.~1,'0D" hours minutes-out seconds-part frac-tenths))
+      (show-hours?
+       (string-format "~2,'0D:~2,'0D:~2,'0D" hours minutes-out seconds-part))
+      ((= decimal-digits 3)
+       (string-format "~D:~2,'0D.~3,'0D" minutes-out seconds-part frac-millis))
+      ((= decimal-digits 2)
+       (string-format "~D:~2,'0D.~2,'0D" minutes-out seconds-part frac-hundredths))
+      ((= decimal-digits 1)
+       (string-format "~D:~2,'0D.~1,'0D" minutes-out seconds-part frac-tenths))
+      (else
+       (string-format "~D:~2,'0D" minutes-out seconds-part)))))
 
 (defun collected-money-for-level ((lvl-idx int))
   (-> *game-info* money-per-level lvl-idx))
@@ -2183,7 +2202,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) "BLIND FOR 10 SECONDS")
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
-    ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 3 MINUTES")
+    ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 4 MINUTES")
     ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     (else "NONE")))
@@ -2704,7 +2723,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
       (draw-string-xy-scaled (string-format "~D/~D" progress goal) buf 80 row (font-color white) (font-flags shadow kerning large) 0.5)
       (+! row 7))
-    (draw-string-xy-scaled (mod-rule-format-time-left time-left) buf 10 row (font-color white) (font-flags shadow kerning large) 0.5)
+    (draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto) buf 10 row (font-color white) (font-flags shadow kerning large) 0.5)
     (+! row 12)
     (when (eq? id 'rule-distancing)
       (draw-string-xy-scaled "DISTANCE: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
@@ -2786,7 +2805,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (let ((time-left (max 0 (- (-> *mod-rule-timed-punishment-end-times* slot) (current-time))))
                 (row-y (+ 68 (* row-count 10))))
             (draw-string-xy-scaled (mod-rule-timed-punishment-name punishment) buf 395 row-y (font-color white) (font-flags shadow kerning large) 0.3)
-            (draw-string-xy-scaled (mod-rule-format-time-left time-left) buf 465 (- row-y 2) (font-color white) (font-flags shadow kerning large) 0.4)
+            (draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto) buf 465 (- row-y 2) (font-color white) (font-flags shadow kerning large) 0.4)
             (+! row-count 1))))))
   (none))
 
@@ -2822,7 +2841,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     (when rolling-id
       (draw-string-xy-scaled "NEW RULE IN " buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
-      (draw-string-xy-scaled (mod-rule-format-time-left rolling-left) buf 96 57 (font-color white) (font-flags shadow kerning large) 0.6)))
+      (draw-string-xy-scaled (mod-format-time-frame rolling-left 1 'auto) buf 96 57 (font-color white) (font-flags shadow kerning large) 0.6)))
   (none))
 
 (defun global-countdown-draw ()
@@ -2830,93 +2849,62 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (*global-countdown-active?*
      (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf))
                                   (bucket-id debug-no-zbuf))
-       (let* ((total-centis (max 0 (the int (/ (* *global-countdown-remaining-time* 100)
-                                               (seconds 1)))))
-              (total-seconds (the int (/ total-centis 100)))
-              (minutes (the int (/ total-seconds 60)))
-              (seconds-part (the int (mod total-seconds 60)))
-              (centis (the int (mod total-centis 100))))
-         ;; Draw main countdown timer
-         (draw-string-xy-scaled
-           (string-format "~1,'0D:~2,'0D.~2,'0D"
-                          minutes
-                          seconds-part
-                          centis)
-           global-buf
-           400
-           50
-           (font-color red)
-           (font-flags shadow kerning large)
-           0.8)
-         ;; Draw countup timer
-        (when (show-countup-timer-enabled?) (let* ((up-total-centis (max 0 (the int (/ (* *global-countup-timer* 100)
-                                                                                              (seconds 1)))))
-                                (up-total-seconds (the int (/ up-total-centis 100)))
-                                (up-hours (the int (/ up-total-seconds 3600)))
-                                (up-minutes-part (the int (mod (/ up-total-seconds 60) 60)))
-                                (up-seconds-part (the int (mod up-total-seconds 60)))
-                                (up-centis (the int (mod up-total-centis 100))))
-                          
-                          (if (> up-hours 0)
-                              (draw-string-xy-scaled
-                                (string-format "~1,'0D:~2,'0D:~2,'0D.~2,'0D"
-                                                up-hours
-                                                up-minutes-part
-                                                up-seconds-part
-                                                up-centis)
-                                global-buf
-                                410
-                                40
-                                (font-color white)
-                                (font-flags shadow kerning large)
-                                0.5)
-                              (draw-string-xy-scaled
-                                (string-format "~1,'0D:~2,'0D.~2,'0D"
-                                                up-minutes-part
-                                                up-seconds-part
-                                                up-centis)
-                                global-buf
-                                430
-                                40
-                                (font-color white)
-                                (font-flags shadow kerning large)
-                                0.5))))
-         (mod-rule-draw-timed-punishments global-buf)
-         (let ((reverted-y 72) 
-               (primary (mod-rule-nth-active-slot 0)))
-           (cond
-             ((>= primary 0)
-              (let ((end-row (mod-rule-draw-slot global-buf primary 40)))
-                (set! reverted-y (+ end-row 20)) 
-                (let ((secondary (mod-rule-nth-active-slot (+ primary 1))))
-                  (cond
-                    ((>= secondary 0)
-                    (mod-rule-draw-last-outcome
-                      global-buf
-                      (+ end-row 8))
-                    (mod-rule-draw-slot
-                      global-buf
-                      secondary
-                      (+ end-row 18)))
-                    (else
-                    (mod-rule-draw-last-outcome
-                      global-buf
-                      (+ end-row 8)))))))
-             (else
-              (mod-rule-draw-rolling-slot global-buf)
-              (mod-rule-draw-last-outcome global-buf 52)))
-           (when (and #t ;; *debug-segment*
-                      (> *mod-rule-last-reverted-cell-until* (current-time)))
-             (draw-string-xy-scaled
-              (string-format
+       ;; Draw main countdown timer
+       (draw-string-xy-scaled
+         (mod-format-time-frame *global-countdown-remaining-time* 2 'auto)
+         global-buf
+         380
+         50
+         (font-color red)
+         (font-flags shadow kerning large)
+         0.8)
+       ;; Draw countup timer
+       (when (show-countup-timer-enabled?)
+         (let ((show-hours? (> (the int (/ *global-countup-timer* (seconds 3600))) 0)))
+           (draw-string-xy-scaled
+             (mod-format-time-frame *global-countup-timer* 2 'auto)
+             global-buf
+             (if show-hours? 390 410)
+             40
+             (font-color white)
+             (font-flags shadow kerning large)
+             0.5)))
+       (mod-rule-draw-timed-punishments global-buf)
+       (let ((reverted-y 72) 
+             (primary (mod-rule-nth-active-slot 0)))
+         (cond
+           ((>= primary 0)
+            (let ((end-row (mod-rule-draw-slot global-buf primary 40)))
+              (set! reverted-y (+ end-row 20)) 
+              (let ((secondary (mod-rule-nth-active-slot (+ primary 1))))
+                (cond
+                  ((>= secondary 0)
+                  (mod-rule-draw-last-outcome
+                    global-buf
+                    (+ end-row 8))
+                  (mod-rule-draw-slot
+                    global-buf
+                    secondary
+                    (+ end-row 18)))
+                  (else
+                  (mod-rule-draw-last-outcome
+                    global-buf
+                    (+ end-row 8)))))))
+           (else
+            (mod-rule-draw-rolling-slot global-buf)
+            (mod-rule-draw-last-outcome global-buf 52)))
+         (when (and #t ;; *debug-segment*
+                    (> *mod-rule-last-reverted-cell-until* (current-time)))
+           (draw-string-xy-scaled
+            (string-format
 "Reverted: ~A"
 (enum->string game-task (the game-task *mod-rule-last-reverted-cell-task*)))
-               global-buf
-               10
-               reverted-y
-               (font-color red)
-               (font-flags shadow kerning)
-               1.0))))))
+             global-buf
+             10
+             reverted-y
+             (font-color red)
+             (font-flags shadow kerning)
+             1.0)))))
     (else
      (none)))
   (none))
