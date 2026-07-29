@@ -126,7 +126,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 56) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 57) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
@@ -573,6 +573,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-landlubber) "LANDLUBBER")
     ((eq? id 'complication-double-aphids) "DOUBLE APHIDS")
     ((eq? id 'complication-invert) "THIS ONE SUCKS")
+    ((eq? id 'complication-loose-pockets) "LOOSE POCKETS")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -633,6 +634,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-landlubber) "STAY OUT OF THE WATER.")
     ((eq? id 'complication-double-aphids) "DOUBLE THE APHIDS.")
     ((eq? id 'complication-invert) "CONTROLS ARE INVERTED.")
+    ((eq? id 'complication-loose-pockets) "BONKING OR TAKING DAMAGE DROPS 20 ORBS.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -692,6 +694,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-landlubber) (seconds 40)) ;; 40
     ((eq? id 'complication-double-aphids) (seconds 40)) ;; 40
     ((eq? id 'complication-invert) (seconds 20)) ;; 20
+    ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -787,6 +790,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (eq? id 'complication-invisible-man)
           (eq? id 'complication-joyride)
           (eq? id 'complication-double-aphids)
+          (eq? id 'complication-invert)
+          (eq? id 'complication-loose-pockets)
          )
          
      'complication)
@@ -865,7 +870,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) (seconds 10))
     ((eq? punishment 'punishment-fall-damage) (seconds 120))
     ((eq? punishment 'punishment-trip) (seconds 120))
-    ((eq? punishment 'punishment-edge) (seconds 240))
+    ((eq? punishment 'punishment-edge) (seconds 300))
     ((eq? punishment 'punishment-delay) (seconds 60))
     (else 0)))
 
@@ -1177,8 +1182,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (can-countdown (mod-rule-punishment-rollable? 'punishment-countdown))
          (can-fall-damage (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
          (can-trip (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip)))
-         (can-edge (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-edge)))
-         (can-money (and (>= (-> *game-info* money) 30.0) (mod-rule-punishment-rollable? 'punishment-money)))
+         (can-edge (and (not (eq? (current-level-name) 'finalboss)) (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-edge)))
+         (can-money (and (>= (current-orb-count) 30.0) (not (or (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss)
+                      (eq? (current-level-name) 'lavatube))) (mod-rule-punishment-rollable? 'punishment-money)))
          (can-warp (and (!= (-> (level-get-target-inside *level*) name) 'training) (mod-rule-punishment-rollable? 'punishment-warp)))
          (can-revert (and (mod-rule-can-revert-collected-cell?) (mod-rule-punishment-rollable? 'punishment-revert-cell)))
          (can-extra-rule (and (< (mod-rule-active-slot-count) 2) (mod-rule-punishment-rollable? 'punishment-extra-rule)))
@@ -1522,6 +1528,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 53) 'rule-loyal-customer)
     ((= idx 54) 'complication-double-aphids)
     ((= idx 55) 'complication-invert)
+    ((= idx 56) 'complication-loose-pockets)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -1798,9 +1805,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 (eq? level-name 'training) (eq? level-name 'jungleb) (eq? level-name 'finalboss))
             0 10))
 
-      ((eq? id 'rule-blue-crate)
-       (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 9))
-
       ((eq? id 'rule-fuel-pressure)
         (cond
           ((or (< fuel-left 1) is-minigame is-klaww (eq? level-name 'jungleb) racer-lavatube (eq? level-name 'finalboss)) 0)
@@ -1875,6 +1879,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-crate-break)
         (if (or is-klaww is-minigame (sparse-crate-level? level-name)) 0 10))
 
+      ((eq? id 'rule-blue-crate)
+       (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 9))
+
       ;; Movement
       ((eq? id 'complication-jak-rabbit)
         (if on-racer 0 6))
@@ -1912,6 +1919,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-bad-ping) ;; disable for zed
         (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 0)) ;; 8
+
+      ((eq? id 'complication-loose-pockets)
+        (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 8))
 
       ;; Water
       ((eq? id 'complication-drought)
@@ -1969,7 +1979,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
       ((eq? id 'complication-rgyb)
         (cond 
-          ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 0)
+          ((or (target-billy-game?) (eq? level-name 'training) (eq? level-name 'finalboss) is-klaww) 
+            (string= (current-checkpoint-name) "lavatube-middle") 0)
           (else 7)))
 
       ((eq? id 'rule-survivor)
@@ -2202,7 +2213,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-blind) "BLIND FOR 10 SECONDS")
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
-    ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 4 MINUTES")
+    ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 5 MINUTES")
     ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     (else "NONE")))
@@ -2228,7 +2239,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-apply-punishment ((punishment symbol))
   (cond
     ((eq? punishment 'punishment-money)
-     (set! (-> *game-info* money) (max 0.0 (- (-> *game-info* money) 60.0))))
+     (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0))))
     ((eq? punishment 'punishment-crash)
         (process-spawn-function process
           (lambda ()
@@ -2370,6 +2381,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (send-event *target* 'attack #t (new 'static 'attack-info)))))
   (none))
 
+(defun mod-rule-trigger-loose-pockets ()
+  (when (mod-rule-active? 'complication-loose-pockets)
+    (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 20.0))))
+  (none))
+
 (defun mod-rule-trigger-rotten-eggs ()
   (when (and (not (movie?)) (mod-rule-active? 'complication-rotten-eggs))
     (send-event
@@ -2390,9 +2406,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-sizeable ()
   (if (mod-rule-active? 'complication-sizeable)
-    (if (>= (-> *game-info* money) 3.0)
+     (if (>= (current-orb-count) 3.0)
       (begin
-        (set! (-> *game-info* money) (- (-> *game-info* money) 3.0))
+        (set! (-> *game-info* money) (- (current-orb-count) 3.0))
         #t)
       #f)
     #t))

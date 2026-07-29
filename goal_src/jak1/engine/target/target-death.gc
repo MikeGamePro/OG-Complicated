@@ -8,6 +8,7 @@
 
 ;; DECOMP BEGINS
 (define-extern runs-on-jak-spawn (function none))
+(define-extern mod-rule-trigger-loose-pockets (function none))
 
 (defskelgroup *deathcam-sg*
   deathcam
@@ -549,6 +550,7 @@
           (go target-stance))))
   :code
     (behavior ((arg0 symbol) (arg1 attack-info))
+    (mod-rule-trigger-loose-pockets)
       (logclear! (-> self water flag) (water-flag jump-out))
       (set-time! (-> self state-time))
       (let ((gp-0 (-> self attack-info)))
