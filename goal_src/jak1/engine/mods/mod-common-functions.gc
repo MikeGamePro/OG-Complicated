@@ -63,6 +63,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define-extern mod-rule-twist-check-and-mark! (function int symbol none))
 (define-extern mod-rule-twist-marked-slot? (function int symbol))
 (define-extern mod-rule-resolve! (function int symbol none))
+(define-extern complicated-get-seed (function uint))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -135,6 +136,68 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-game-beaten?* #f)
 (define *mod-rule-twist-pending-count* -1)
 (define *mod-rule-twist-marked-slot* -1)
+
+;; test seed
+(define *mod-rng-test-seed* (the uint 123456789))
+(define *mod-rng-use-fixed-seed?* #f)
+(define *mod-rng-content-state* (the uint 1))
+(define *mod-rng-punish-state*  (the uint 1))
+
+(defun mod-rng-random-seed ()
+  (the uint (current-time)))
+
+(defun mod-rng-active-seed ()
+  (let ((imgui-seed (the uint (complicated-get-seed))))
+    (if (!= imgui-seed 0)
+        imgui-seed
+        (mod-rng-random-seed))))
+
+(defun mod-rng-hash-u32 ((x uint))
+  (set! x (logxor x (shr x 16)))
+  (set! x (* x (the uint #x7feb352d)))
+  (set! x (logxor x (shr x 15)))
+  (set! x (* x (the uint #x846ca68b)))
+  (set! x (logxor x (shr x 16)))
+  x)
+
+(defun mod-rng-seed-all! ((master-seed uint))
+  (let ((content-hash (mod-rng-hash-u32 (+ master-seed (the uint 1))))
+        (punish-hash  (mod-rng-hash-u32 (+ master-seed (the uint 2)))))
+    (set! *mod-rng-content-state* (if (= content-hash 0) (the uint 1) content-hash))
+    (set! *mod-rng-punish-state*  (if (= punish-hash 0) (the uint 1) punish-hash)))
+  (none))
+
+(defun mod-rng-content-next-u32 ()
+  (let ((x *mod-rng-content-state*))
+    (set! x (logxor x (shl x 13)))
+    (set! x (logxor x (shr x 17)))
+    (set! x (logxor x (shl x 5)))
+    (set! *mod-rng-content-state* x)
+    x))
+
+(defun mod-rng-punish-next-u32 ()
+  (let ((x *mod-rng-punish-state*))
+    (set! x (logxor x (shl x 13)))
+    (set! x (logxor x (shr x 17)))
+    (set! x (logxor x (shl x 5)))
+    (set! *mod-rng-punish-state* x)
+    x))
+
+(defun mod-rand-int-range ((lo int) (hi int))
+  (let* ((bound (the uint (- hi lo)))
+         (threshold (mod (- (the uint 0) bound) bound))
+         (r (mod-rng-content-next-u32)))
+    (while (< r threshold)
+      (set! r (mod-rng-content-next-u32)))
+    (+ lo (the int (mod r bound)))))
+
+(defun mod-rand-punish-int-range ((lo int) (hi int))
+  (let* ((bound (the uint (- hi lo)))
+         (threshold (mod (- (the uint 0) bound) bound))
+         (r (mod-rng-punish-next-u32)))
+    (while (< r threshold)
+      (set! r (mod-rng-punish-next-u32)))
+    (+ lo (the int (mod r bound)))))
 
 (define *orb-weight-base-walk-speed* 40960.0)
 (define *orb-weight-base-double-jump-speed* 32768.0)
@@ -264,9 +327,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! i 1))
     (when all-used?
       (mod-rule-clear-trivia-used))
-    (let ((idx (knuth-rand-int-range 0 count)))
+    (let ((idx (mod-rand-int-range 0 count)))
       (while (-> *trivia-questions-used* idx)
-        (set! idx (knuth-rand-int-range 0 count)))
+        (set! idx (mod-rand-int-range 0 count)))
       (set! (-> *trivia-questions-used* idx) #t)
       idx)))
 
@@ -952,7 +1015,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                        (>= (current-time) (-> *mod-rule-timed-punishment-next-ticks* slot)))
               (set! (-> *mod-rule-timed-punishment-next-ticks* slot)
                     (+ (-> *mod-rule-timed-punishment-next-ticks* slot) (seconds 1)))
-              (when (= (knuth-rand-int-range 0 12) 0)
+              (when (= (mod-rand-punish-int-range 0 12) 0)
                 (send-event *target* 'loading))))))))
   (none))
 
@@ -1066,7 +1129,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-revert-random-collected-cell ()
   (let ((candidate-count (mod-rule-collected-cell-candidate-count)))
     (when (> candidate-count 0)
-      (let* ((pick (knuth-rand-int-range 0 candidate-count))
+      (let* ((pick (mod-rand-punish-int-range 0 candidate-count))
              (remaining pick)
              (idx 0)
              (chosen-task (game-task none)))
@@ -1241,7 +1304,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (<= total-weight 0)
       (return 'punishment-countdown))
 
-    (set! roll (knuth-rand-int-range 0 total-weight))
+    (set! roll (mod-rand-punish-int-range 0 total-weight))
     (set! total-weight 0)
 
     (when can-countdown
@@ -1308,7 +1371,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'complication-twisted)
-      (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (knuth-rand-int-range 1 4)))))
+      (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (mod-rand-int-range 1 4)))))
 
     ((eq? id 'rule-hitlist)
      (dotimes (slot 3)
@@ -1336,11 +1399,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! *trivia-current-guess* -1))
 
     ((eq? id 'rule-math-quiz)
-        (set! *math-quiz-op* (knuth-rand-int-range 0 3))
+      (set! *math-quiz-op* (mod-rand-int-range 0 3))
         (let ((min-val (if (= *math-quiz-op* 2) 2 10))
               (max-val (if (= *math-quiz-op* 2) 13 61)))
-          (set! *math-quiz-val1* (knuth-rand-int-range min-val max-val))
-          (set! *math-quiz-val2* (knuth-rand-int-range min-val max-val)))
+          (set! *math-quiz-val1* (mod-rand-int-range min-val max-val))
+          (set! *math-quiz-val2* (mod-rand-int-range min-val max-val)))
         (set! *math-quiz-current-guess* 0)
         (cond
           ((= *math-quiz-op* 0) (set! *math-quiz-answer* (+ *math-quiz-val1* *math-quiz-val2*)))
@@ -1553,8 +1616,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 57) 'complication-twisted)
     (else #f)))
 
-(defun mod-rule-random-id ()
-  (mod-rule-id-from-index (knuth-rand-int-range 0 *mod-rule-id-count*)))
+;; (defun mod-rule-random-id ()
+;;   (mod-rule-id-from-index (knuth-rand-int-range 0 *mod-rule-id-count*)))
 
 ;; (defun current-level-name ()
 ;;   (and *target*
@@ -2088,7 +2151,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
     ;; Selection
     (if (> total 0)
-        (let ((roll (knuth-rand-int-range 0 total))
+        (let ((roll (mod-rand-int-range 0 total))
               (idx 0)
               (chosen #f))
           (while (and (< idx *mod-rule-id-count*) (not chosen))
@@ -2428,7 +2491,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-brittle-bones ()
   (when (mod-rule-active? 'complication-brittle-bones)
-    (let ((roll (knuth-rand-int-range 0 100)))
+    (let ((roll (mod-rand-punish-int-range 0 100)))
       ;; (format #t "Brittle Bones roll: ~D~%" roll)
       (when (and *target* (< roll 10))
         (send-event *target* 'attack #t (new 'static 'attack-info)))))
@@ -2588,8 +2651,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (!= q-idx 34)
              (!= q-idx 35))
     (dotimes (i 4)
-      (let* ((j (rand-vu-int-range 0 3))
-             (temp (-> *trivia-shuffle-map* i)))
+      (let* ((j (mod-rand-int-range 0 3))
+            (temp (-> *trivia-shuffle-map* i)))
         (set! (-> *trivia-shuffle-map* i) (-> *trivia-shuffle-map* j))
         (set! (-> *trivia-shuffle-map* j) temp))))
   (none))
@@ -3075,6 +3138,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 
 (defun global-countdown-start ()
+  (let ((active-seed (mod-rng-active-seed)))
+    (mod-rng-seed-all! active-seed)
+    (format 0 "[mod-rng] seed: ~D~%" active-seed))
   (global-countdown-reset)
   (set! *global-countdown-active?* #t)
   (mod-rules-start)

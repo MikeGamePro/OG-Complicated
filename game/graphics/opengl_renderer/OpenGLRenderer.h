@@ -15,6 +15,7 @@
 #include "game/graphics/opengl_renderer/foreground/Merc2.h"
 #include "game/graphics/opengl_renderer/opengl_utils.h"
 #include "game/tools/filter_menu/filter_menu.h"
+#include "game/tools/complicated_seed/complicated_seed.h"
 #include "game/tools/subtitle_editor/subtitle_editor.h"
 
 struct RenderOptions {
@@ -24,6 +25,7 @@ struct RenderOptions {
   bool draw_small_profiler_window = false;
   bool draw_subtitle_editor_window = false;
   bool draw_filters_window = false;
+  bool draw_complicated_seed_window = false;
 
   // internal rendering settings - The OpenGLRenderer will internally use this resolution/format.
   int msaa_samples = 1;
@@ -117,6 +119,7 @@ class OpenGLRenderer {
   SmallProfiler m_small_profiler;
   SubtitleEditor* m_subtitle_editor = nullptr;
   FiltersMenu m_filters_menu;
+  ComplicatedSeedMenu m_complicated_seed_menu;
 
   std::shared_ptr<Merc2> m_merc2;
   std::shared_ptr<Generic2> m_generic2;

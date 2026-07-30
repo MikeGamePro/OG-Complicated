@@ -8,6 +8,7 @@
 #include "common/dma/dma.h"
 #include "common/util/Timer.h"
 #include "common/versions/versions.h"
+#include "game/tools/complicated_seed/complicated_seed.h"
 
 class FrameTimeRecorder {
  public:
@@ -49,6 +50,7 @@ class OpenGlDebugGui {
   bool should_draw_profiler() const { return master_enable && m_draw_profiler; }
   bool should_draw_subtitle_editor() const { return master_enable && m_subtitle_editor; }
   bool should_draw_filters_menu() const { return master_enable && m_filters_menu; }
+  bool should_draw_complicated_seed_menu() const { return master_enable && m_complicated_seed_menu; }
   bool should_draw_loader_menu() const { return master_enable && m_draw_loader; }
   bool should_draw_overlord_debug() const { return master_enable && m_draw_overlord; }
 
@@ -82,6 +84,7 @@ class OpenGlDebugGui {
   bool m_draw_overlord = false;
   bool m_subtitle_editor = false;
   bool m_filters_menu = false;
+  bool m_complicated_seed_menu = false;
   bool m_want_screenshot = false;
   float target_fps_input = 60.f;
 };
