@@ -644,7 +644,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted) 
      (let ((rolls-away (- *mod-rule-twist-pending-count* *rules-rolled*)))
        (if (> rolls-away 0)
-           (string-format "THE RULE ROLLED ~D RULES FROM NOW DECEIVES YOU." rolls-away)
+           (string-format "THE RULE ROLLED ~D RULES FROM NOW MUST BE BROKEN." rolls-away)
            "A LATER RULE MUST BE BROKEN.")))
     (else "NO DESCRIPTION AVAILABLE.")))
 
@@ -659,7 +659,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-money-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-fuel-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
-    ((eq? id 'rule-flop-this) (seconds 75)) ;; 75
+    ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
     ((eq? id 'complication-rotten-eggs) (seconds 45)) ;; 45
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
@@ -683,7 +683,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
-    ((eq? id 'rule-distancing) (seconds 75)) ;; 75
+    ((eq? id 'rule-distancing) (seconds 60)) ;; 60
     ((eq? id 'rule-dont-move) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
