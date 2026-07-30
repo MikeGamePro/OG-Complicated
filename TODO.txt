@@ -3,6 +3,7 @@ at least 50 trivia (10 more)
 hide shadow for invisible man
 extend hands on to "only break crates directly by touching" (no eco, flut, explosion)
 expand cumbersome moveset
+scale punishments to settings
 
 new zoomer rule
 add plunger-lurker as kill
