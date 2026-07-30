@@ -8,6 +8,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-rule-trigger-heating-balloons (function none))
+
 (deftype lavabase (process-drawable) ()
   (:states
    lavabase-idle))
@@ -927,6 +929,7 @@
       (ja-channel-set! 0)
       (clear-collide-with-as (-> self root))
       (ja-post)
+      (mod-rule-trigger-heating-balloons)
       (sound-play "cool-balloon")
       (process-spawn part-tracker
                      :init
