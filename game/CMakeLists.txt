@@ -347,6 +347,7 @@ set(RUNTIME_SOURCE
         system/iop_thread.cpp
         system/SystemThread.cpp
         tools/filter_menu/filter_menu.cpp
+        tools/complicated_seed/complicated_seed.cpp
         tools/subtitle_editor/subtitle_editor_db.cpp
         tools/subtitle_editor/subtitle_editor_repl_client.cpp
         tools/subtitle_editor/subtitle_editor.cpp

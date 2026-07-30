@@ -63,6 +63,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define-extern mod-rule-twist-check-and-mark! (function int symbol none))
 (define-extern mod-rule-twist-marked-slot? (function int symbol))
 (define-extern mod-rule-resolve! (function int symbol none))
+(define-extern complicated-get-seed (function uint))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -146,9 +147,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (the uint (current-time)))
 
 (defun mod-rng-active-seed ()
-  (if *mod-rng-use-fixed-seed?*
-      *mod-rng-test-seed*
-      (mod-rng-random-seed)))
+  (let ((imgui-seed (the uint (complicated-get-seed))))
+    (if (!= imgui-seed 0)
+        imgui-seed
+        (mod-rng-random-seed))))
 
 (defun mod-rng-hash-u32 ((x uint))
   (set! x (logxor x (shr x 16)))
@@ -3138,7 +3140,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun global-countdown-start ()
   (let ((active-seed (mod-rng-active-seed)))
     (mod-rng-seed-all! active-seed)
-    (format 0 "[mod-rng] seed: ~D (fixed: ~A)~%" active-seed *mod-rng-use-fixed-seed?*))
+    (format 0 "[mod-rng] seed: ~D~%" active-seed))
   (global-countdown-reset)
   (set! *global-countdown-active?* #t)
   (mod-rules-start)

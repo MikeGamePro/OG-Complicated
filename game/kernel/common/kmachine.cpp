@@ -55,6 +55,7 @@ namespace MiniAudioLib {
 #include "game/sce/libpad.h"
 #include "game/sce/libscf.h"
 #include "game/sce/sif_ee.h"
+#include "game/tools/complicated_seed/complicated_seed.h"
 
 /*!
  * Where does OVERLORD load its data from?
@@ -309,6 +310,17 @@ u64 playMP3_internal(u32 filePathu32, u32 volume, bool isMainMusic) {
 
 u64 playMP3(u32 filePathu32, u32 volume) {
   return playMP3_internal(filePathu32, volume, false);
+}
+
+u64 complicated_get_seed() {
+  if (g_complicated_seed_text.empty()) {
+    return 0;
+  }
+  try {
+    return std::stoull(g_complicated_seed_text);
+  } catch (const std::exception&) {
+    return 0;
+  }
 }
 
 // Function to stop the Main Music.
@@ -1391,6 +1403,7 @@ void init_common_pc_port_functions(
   make_func_symbol_func("pc-send-trigger-effect-vibrate!", (void*)pc_send_trigger_effect_vibrate);
   make_func_symbol_func("pc-send-trigger-effect-weapon!", (void*)pc_send_trigger_effect_weapon);
   make_func_symbol_func("pc-send-trigger-rumble!", (void*)pc_send_trigger_rumble);
+  make_func_symbol_func("complicated-get-seed", (void*)complicated_get_seed);
 
   // graphics things
   make_func_symbol_func("pc-set-vsync", (void*)pc_set_vsync);
