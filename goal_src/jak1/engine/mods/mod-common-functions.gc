@@ -60,6 +60,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define-extern fly-increment-value (function float))
 (define-extern cell-increment-value (function float))
 (define-extern countdown-start-seconds-value (function float))
+(define-extern mod-rule-twist-check-and-mark! (function int symbol none))
+(define-extern mod-rule-twist-marked-slot? (function int symbol))
+(define-extern mod-rule-twist-force-break! (function int none))
 
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
@@ -126,10 +129,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
-(define *mod-rule-id-count* 57) ;; ***DON'T FORGET TO UPDATE THIS WITH NEW RULES***
+(define *mod-rule-id-count* 58)
 (define *mean-look-clear-time* 0)
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 (define *mod-game-beaten?* #f)
+(define *mod-rule-twist-pending-count* -1)
+(define *mod-rule-twist-marked-slot* -1)
 
 (define *orb-weight-base-walk-speed* 40960.0)
 (define *orb-weight-base-double-jump-speed* 32768.0)
@@ -574,6 +579,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-double-aphids) "DOUBLE APHIDS")
     ((eq? id 'complication-invert) "THIS ONE SUCKS")
     ((eq? id 'complication-loose-pockets) "LOOSE POCKETS")
+    ((eq? id 'complication-twist-of-fate) "TWISTED")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -635,6 +641,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-double-aphids) "DOUBLE THE APHIDS.")
     ((eq? id 'complication-invert) "CONTROLS ARE INVERTED.")
     ((eq? id 'complication-loose-pockets) "BONKING OR TAKING DAMAGE DROPS 20 ORBS.")
+    ((eq? id 'complication-twist-of-fate) 
+     (let ((rolls-away (- *mod-rule-twist-pending-count* *rules-rolled*)))
+       (if (> rolls-away 0)
+           (string-format "THE RULE ROLLED ~D RULES FROM NOW DECEIVES YOU." rolls-away)
+           "A LATER RULE MUST BE BROKEN.")))
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -695,6 +706,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-double-aphids) (seconds 40)) ;; 40
     ((eq? id 'complication-invert) (seconds 20)) ;; 20
     ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
+    ((eq? id 'complication-twist-of-fate) (seconds 6)) ;; 6
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -792,6 +804,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (eq? id 'complication-double-aphids)
           (eq? id 'complication-invert)
           (eq? id 'complication-loose-pockets)
+          (eq? id 'complication-twist-of-fate)
          )
          
      'complication)
@@ -1294,6 +1307,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-on-activate ((id symbol))
   (cond
+    ((eq? id 'complication-twist-of-fate)
+      (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (knuth-rand-int-range 1 4)))))
+
     ((eq? id 'rule-hitlist)
      (dotimes (slot 3)
         (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
@@ -1359,6 +1375,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-deactivate-slot ((slot int))
   (when (and (>= slot 0) (< slot 3))
+    (when (= slot *mod-rule-twist-marked-slot*)
+      (set! *mod-rule-twist-marked-slot* -1))
     (let ((id (-> *mod-rule-active-slots* slot)))
       (when id
         (cond
@@ -1416,7 +1434,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (begin 
             (set! (-> *mod-rule-slot-punishments* slot)
             (mod-rule-random-available-punishment))
-            (+! *rules-rolled* 1))
+            (+! *rules-rolled* 1)
+            (mod-rule-twist-check-and-mark! slot id))
       (begin
         (set! (-> *mod-rule-slot-punishments* slot) #f)
         (+! *complications-rolled* 1)))
@@ -1455,6 +1474,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-clear-recent-rolls)
   (mod-rule-clear-trivia-used)
   (set! *mod-rule-current-slot* 0)
+  (set! *mod-rule-twist-pending-count* -1)
+  (set! *mod-rule-twist-marked-slot* -1)
   (none))
 
 (defun mod-rules-reset ()
@@ -1529,6 +1550,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 54) 'complication-double-aphids)
     ((= idx 55) 'complication-invert)
     ((= idx 56) 'complication-loose-pockets)
+    ((= idx 57) 'complication-twist-of-fate)
     (else #f)))
 
 (defun mod-rule-random-id ()
@@ -2021,6 +2043,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (is-minigame 0)
           (else 8)))
 
+      ((eq? id 'complication-twist-of-fate)
+        (if (or (>= *mod-rule-twist-pending-count* 0)
+                (>= *mod-rule-twist-marked-slot* 0))
+            0 6))
+
       (else 10))))
 
 (defun mod-rule-pick-weighted-id ()
@@ -2103,10 +2130,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 (set! new-progress (min goal (+ (-> *mod-rule-slot-progress* slot) amount)))
                 (set! (-> *mod-rule-slot-progress* slot) new-progress)
                 (when (>= new-progress goal)
-                (sound-play "buzzer-pickup") ;; or slider2001, buzzer-pickup, cursor-options, cursor-up-down, ecohit2
-                (set! *mod-rule-last-outcome* 'success)
-                (+! *rules-followed* 1)
-                  (mod-rule-finish-slot slot #t)))
+                  (if (mod-rule-twist-marked-slot? slot)
+                    (mod-rule-twist-force-break! slot)
+                    (begin
+                      (sound-play "buzzer-pickup")
+                      (set! *mod-rule-last-outcome* 'success)
+                      (+! *rules-followed* 1)
+                      (mod-rule-finish-slot slot #t)))))
               (set! (-> *mod-rule-slot-progress* slot)
                     (+ (-> *mod-rule-slot-progress* slot) amount)))))
         (+! slot 1))))
@@ -2284,6 +2314,30 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-slot-in-grace-period? ((slot int))
   (and (>= slot 0) (< slot 3) (< (current-time) (-> *mod-rule-slot-grace-periods* slot))))
 
+(defun mod-rule-twist-check-and-mark! ((slot int) (id symbol))
+  (when (and (>= *mod-rule-twist-pending-count* 0)
+             (= *rules-rolled* *mod-rule-twist-pending-count*)
+             (not (eq? id 'rule-twist-of-fate)))
+    (set! *mod-rule-twist-marked-slot* slot)
+    (set! *mod-rule-twist-pending-count* -1))
+  (none))
+
+(defun mod-rule-twist-marked-slot? ((slot int))
+  (and (>= *mod-rule-twist-marked-slot* 0) (= *mod-rule-twist-marked-slot* slot)))
+
+(defun mod-rule-twist-force-break! ((slot int))
+  (set! *mod-rule-twist-marked-slot* -1)
+  (sound-play "caught-eel")
+  (+! *rules-broken* 1)
+  (set! *mod-rule-last-outcome* 'failed)
+  (let ((punishment (or (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment))))
+    (if (eq? punishment 'punishment-extra-rule)
+      (mod-rule-apply-extra-rule-punishment slot)
+      (begin
+        (mod-rule-apply-punishment punishment)
+        (mod-rule-finish-slot slot #t))))
+  (none))
+
 (defun mod-rule-handle-slot-failure ((slot int) (punishment symbol))
   (when (not (mod-rule-slot-in-grace-period? slot))
     (sound-play "caught-eel")
@@ -2303,15 +2357,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let ((goal (-> *mod-rule-slot-goals* slot))
               (progress (-> *mod-rule-slot-progress* slot))
               (punishment (-> *mod-rule-slot-punishments* slot)))
-          (when (and (> goal 0) (< progress goal) punishment)
-            (unless (eq? id 'rule-math-quiz)
-              (mod-rule-handle-slot-failure slot punishment)))
-          (if (not (movie?)) (sound-play "cursor-options"))
-          (when (and (= id (-> *mod-rule-active-slots* slot))
-                     (or (<= goal 0) (>= progress goal) (not punishment)))
-            (set! *mod-rule-last-outcome* 'success)
-            (+! *rules-followed* 1)
-            (mod-rule-finish-slot slot #t))))))
+          (if (mod-rule-twist-marked-slot? slot)
+              (if (and (> goal 0) (< progress goal) punishment)
+                  (begin
+                    (set! *mod-rule-last-outcome* 'success)
+                    (+! *rules-followed* 1)
+                    (mod-rule-finish-slot slot #t))
+                  (mod-rule-twist-force-break! slot))
+              (begin
+                (when (and (> goal 0) (< progress goal) punishment)
+                  (unless (eq? id 'rule-math-quiz)
+                    (mod-rule-handle-slot-failure slot punishment)))
+                (if (not (movie?)) (sound-play "cursor-options"))
+                (when (and (= id (-> *mod-rule-active-slots* slot)) 
+                           (or (<= goal 0) (>= progress goal) (not punishment)))
+                  (set! *mod-rule-last-outcome* 'success)
+                  (+! *rules-followed* 1)
+                  (mod-rule-finish-slot slot #t))))))))
   (none))
 
 (defun mod-rule-punishment-for-id ((id symbol))
@@ -2329,10 +2391,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (when (>= slot 0)
         (let ((time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
           (when (<= time-left 0)
-            (if (= *math-quiz-current-guess* *math-quiz-answer*)
-              (mod-rule-counter-add-progress 'rule-math-quiz 1)
-              (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
-                (mod-rule-handle-slot-failure slot punishment)))
+            (let ((correct-guess? (= *math-quiz-current-guess* *math-quiz-answer*))
+                  (twisted? (mod-rule-twist-marked-slot? slot)))
+              (if (or (and correct-guess? (not twisted?))
+                      (and (not correct-guess?) twisted?))
+                (mod-rule-counter-add-progress 'rule-math-quiz 1)
+                (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
+                  (mod-rule-handle-slot-failure slot punishment))))
             (none))
           (when (cpad-pressed? 0 up)
             (+! *math-quiz-current-guess* 1)
@@ -2346,12 +2411,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (when (cpad-pressed? 0 left)
             (-! *math-quiz-current-guess* 5)
             (sound-play "cursor-up-down"))
-          ;; (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) ;; BROKEN
+          ;; (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
           ;;           (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
-          ;;   (if (= *math-quiz-current-guess* *math-quiz-answer*)
-          ;;     (mod-rule-counter-add-progress 'rule-math-quiz 1)
-          ;;     (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
-          ;;       (mod-rule-handle-slot-failure slot punishment))))
+          ;;   (let ((correct-guess? (= *math-quiz-current-guess* *math-quiz-answer*))
+          ;;         (twisted? (mod-rule-twist-marked-slot? slot)))
+          ;;     (if (or (and correct-guess? (not twisted?))
+          ;;             (and (not correct-guess?) twisted?))
+          ;;       (mod-rule-counter-add-progress 'rule-math-quiz 1)
+          ;;       (let ((punishment (mod-rule-punishment-for-id 'rule-math-quiz)))
+          ;;         (mod-rule-handle-slot-failure slot punishment)))))
                 ))))
   (none))
 
@@ -2370,7 +2438,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (when punishment
         (let ((slot (mod-rule-find-active-slot id)))
           (when (>= slot 0)
-            (mod-rule-handle-slot-failure slot punishment))))))
+            (if (mod-rule-twist-marked-slot? slot)
+              (begin
+                (set! *mod-rule-last-outcome* 'success)
+                (+! *rules-followed* 1)
+                (mod-rule-finish-slot slot #t))
+              (mod-rule-handle-slot-failure slot punishment)))))))
   (none))
 
 (defun mod-rule-trigger-brittle-bones ()
@@ -2435,7 +2508,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (when punishment
         (let ((slot (mod-rule-find-active-slot 'rule-flop-this)))
           (when (>= slot 0)
-            (mod-rule-handle-slot-failure slot punishment))))))
+            (if (mod-rule-twist-marked-slot? slot)
+              (begin
+                (set! *mod-rule-last-outcome* 'success)
+                (+! *rules-followed* 1)
+                (mod-rule-finish-slot slot #t))
+              (mod-rule-handle-slot-failure slot punishment)))))))
   (none))
 
 (defun mod-rule-trigger-hitlist ((enemy-type symbol))
@@ -2553,10 +2631,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (let* ((base-choice-idx (* q-idx 4))
                  (time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
             (when (<= time-left 0)
-              (if (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx))
-                (mod-rule-counter-add-progress 'rule-trivia 1)
-                (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
-                  (mod-rule-handle-slot-failure slot punishment)))
+              (let ((correct-guess? (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx)))
+                    (twisted? (mod-rule-twist-marked-slot? slot)))
+                (if (or (and correct-guess? (not twisted?))
+                        (and (not correct-guess?) twisted?))
+                  (mod-rule-counter-add-progress 'rule-trivia 1)
+                  (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
+                    (mod-rule-handle-slot-failure slot punishment))))
               (none))
             (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
               (cond
@@ -2574,13 +2655,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 (else
                  (-! *trivia-current-guess* 1)))
               (sound-play "cursor-up-down"))
-            ;; (when (and (>= *trivia-current-guess* 0) ;; BROKEN
-            ;;        (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
-            ;;          (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
-            ;;   (if (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx))
-            ;;     (mod-rule-counter-add-progress 'rule-trivia 1)
-            ;;     (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
-            ;;       (mod-rule-handle-slot-failure slot punishment))))
+            ;; (when (and (>= *trivia-current-guess* 0)
+            ;;            (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2))
+            ;;                (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
+            ;;   (let ((correct-guess? (= (-> *trivia-shuffle-map* *trivia-current-guess*) (get-trivia-answer q-idx)))
+            ;;         (twisted? (mod-rule-twist-marked-slot? slot)))
+            ;;     (if (or (and correct-guess? (not twisted?))
+            ;;             (and (not correct-guess?) twisted?))
+            ;;       (mod-rule-counter-add-progress 'rule-trivia 1)
+            ;;       (let ((punishment (mod-rule-punishment-for-id 'rule-trivia)))
+            ;;         (mod-rule-handle-slot-failure slot punishment)))))
                 ))))
   (none)))
 
