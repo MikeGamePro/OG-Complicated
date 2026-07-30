@@ -1061,6 +1061,7 @@
           (go target-flut-stance))))
   :code
     (behavior ((arg0 symbol) (arg1 attack-info))
+      (mod-rule-trigger-loose-pockets)
       (set-time! (-> self state-time))
       (let ((gp-0 (-> self attack-info)))
         (let ((s5-0 (new 'stack-no-clear 'vector)))
