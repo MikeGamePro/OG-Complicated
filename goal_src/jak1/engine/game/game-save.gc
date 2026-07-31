@@ -673,7 +673,7 @@
                                                                                                           (let ((a0-98 (the-as game-save-tag (&+ v1-113 144))))
                                                                                                             (set! (-> a0-98 elt-type) (game-save-elt mod-rng-seed-display))
                                                                                                             (set! (-> a0-98 elt-count) 0)
-                                                                                                            (format 0 "SAVING SEED TAG: ~D~%" (mod-rng-seed-display-save-value))
+                                                                                                            (format 0 "SAVING SEED: ~D~%" (mod-rng-seed-display-save-value))
                                                                                                             (set! (-> a0-98 user-uint64)
                                                                                                                   (the-as uint (mod-rng-seed-display-save-value))))
 

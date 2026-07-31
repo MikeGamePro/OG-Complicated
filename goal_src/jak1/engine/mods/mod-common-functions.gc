@@ -1503,7 +1503,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! (-> *mod-rule-slot-punishments* slot) #f)
         (+! *complications-rolled* 1)))
     (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (mod-rule-duration id)))
-    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1.25)))
+    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1)))
     (mod-rule-on-activate id))
   (none))
 
@@ -2988,7 +2988,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (draw-string-xy-scaled
          (string-format "SEED: ~D" *mod-rng-seed-display*)
          global-buf
-         110
+         4
          215
          (font-color white)
          (font-flags shadow kerning large)
@@ -3162,7 +3162,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rng-seed-display-save-value () (the int *mod-rng-seed-display*))
 (defun mod-rng-seed-display-resume-from-save ((val int))
-(format 0 "LOADING SEED TAG: ~D~%" val)
+(format 0 "LOADING SEED: ~D~%" val)
   (set! *mod-rng-seed-display* (the uint val)) (none))
 
 (defun global-countdown-start ()
