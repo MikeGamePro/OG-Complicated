@@ -2150,8 +2150,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (or (target-on-racer-or-flut?)
                is-minigame
                (eq? level-name 'finalboss)
-               (eq? level-name 'swamp)
-               (eq? level-name 'snow)
+              ;;  (eq? level-name 'swamp)
+              ;;  (eq? level-name 'snow)
                (string= (current-checkpoint-name) "firecanyon-start")
                (eq? level-name 'lavatube))
          0
