@@ -26,7 +26,6 @@
    sun-iris-door-open
    sun-iris-door-opening))
 
-
 (defskelgroup *sun-iris-door-sg*
   sun-iris-door
   sun-iris-door-lod0-jg

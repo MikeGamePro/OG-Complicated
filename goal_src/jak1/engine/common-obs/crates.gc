@@ -2,7 +2,6 @@
 (in-package goal)
 (bundles "ENGINE.CGO" "GAME.CGO")
 (require "engine/common-obs/collectables.gc")
-
 (define-extern runs-on-crate-break (function process-drawable symbol int none))
 
 (declare-type crate process-drawable)
@@ -12,6 +11,7 @@
 ;; DECOMP BEGINS
 
 (define-extern *buzzer-dist-tracker* (float))
+
 (define-extern *closest-buzzer-dist* (float))
 
 (defskelgroup *crate-barrel-sg*
@@ -67,7 +67,6 @@
    (COLLIDE_RADIUS         float)
    (DARKECO_EXPLODE_RADIUS float)))
 
-
 (define *CRATE-bank*
   (new 'static 'crate-bank :COLLIDE_YOFF 4096.0 :COLLIDE_RADIUS 4915.2 :DARKECO_EXPLODE_RADIUS 16384.0))
 
@@ -93,7 +92,6 @@
    (params-set! (_type_ symbol symbol) none)
    (check-dead (_type_) none)
    (smush-update! (_type_) none)))
-
 
 (method-set! crate 12 (method-of-type process run-logic?))
 
@@ -886,14 +884,12 @@
 
 (deftype barrel (crate) ())
 
-
 (defmethod params-init ((this barrel) (arg0 entity))
   (let ((t9-0 (method-of-type crate params-init))) (t9-0 this arg0))
   (set! (-> this look) 'barrel)
   (none))
 
 (deftype bucket (crate) ())
-
 
 (defmethod params-init ((this bucket) (arg0 entity))
   (let ((t9-0 (method-of-type crate params-init))) (t9-0 this arg0))
@@ -932,7 +928,6 @@
 
 (deftype crate-buzzer (crate) ())
 
-
 (defmethod art-init ((this crate-buzzer))
   (let ((t9-0 (method-of-type crate art-init))) (t9-0 this))
   (set! (-> this part) (create-launch-control group-buzzer-crate this))
@@ -953,9 +948,7 @@
           (let ((current-dist (vector-vector-distance (-> self root trans) (-> *target* control trans))))
             (when (< current-dist *closest-buzzer-dist*)
               (set! *closest-buzzer-dist* current-dist))
-            (when (and (>= 327680.0 current-dist)
-                       (time-elapsed? (-> self state-time) (seconds 1.5))
-                       (rand-vu-percent? 0.03))
+            (when (and (>= 327680.0 current-dist) (time-elapsed? (-> self state-time) (seconds 1.5)) (rand-vu-percent? 0.03))
               (spawn (-> self part) (-> self root trans))
               (activate! (-> self smush) 0.2 90 150 1.0 1.0)
               (logclear! (-> self mask) (process-mask sleep-code))))))
@@ -997,7 +990,6 @@
 
 (deftype pickup-spawner (crate)
   ((blocker entity-actor)))
-
 
 (defmethod params-init ((this pickup-spawner) (arg0 entity))
   (let ((t9-0 (method-of-type crate params-init))) (t9-0 this arg0))

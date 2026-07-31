@@ -9,7 +9,9 @@
 (declare-type ogreboss process-drawable)
 
 (define-extern *ogreboss* ogreboss)
+
 (define-extern klaww-assist-enabled? (function symbol))
+
 (define-extern global-countdown-add-seconds (function float none))
 
 ;; DECOMP BEGINS
@@ -107,7 +109,6 @@
    ogreboss-missile-idle
    ogreboss-missile-impact
    ogreboss-missile-seek))
-
 
 (defstate ogreboss-missile-idle (ogreboss-missile)
   :enter
@@ -275,7 +276,6 @@
    (blast-radius float)
    (pickup-type  pickup-type)))
 
-
 (defbehavior ogreboss-missile-init-by-other ogreboss-missile ((arg0 ogreboss-missile-init-data) (arg1 entity-actor))
   (set! (-> self entity) arg1)
   (let ((s5-0 (new 'process 'collide-shape-moving self (collide-list-enum hit-by-player))))
@@ -341,7 +341,6 @@
    ogreboss-super-boulder-land
    ogreboss-super-boulder-roll
    ogreboss-super-boulder-throw))
-
 
 (defbehavior ogreboss-super-boulder-event-handler ogreboss-super-boulder ((arg0 process) (arg1 int) (arg2 symbol) (arg3 event-message-block))
   (case arg2
@@ -599,7 +598,6 @@
   (:states
    ogreboss-bounce-boulder-idle))
 
-
 (defbehavior ogreboss-bounce-boulder-event-handler ogreboss-bounce-boulder ((arg0 process) (arg1 int) (arg2 symbol) (arg3 event-message-block))
   (case arg2
     (('touch)
@@ -727,7 +725,6 @@
    ogreboss-stage3-shuffle
    ogreboss-stage3-throw
    ogreboss-wait-for-player))
-
 
 (defbehavior ogreboss-inc-try-count ogreboss ()
   (when (not (-> self try-counted))
@@ -873,7 +870,7 @@
 (defbehavior ogreboss-pick-target ogreboss ()
   (local-vars (gp-0 int))
   (cond
-    ((rand-vu-percent? (the-as float 0.4)) 
+    ((rand-vu-percent? (the-as float 0.4))
      (set! gp-0 (rand-vu-int-range 0 (+ (-> self target-count) -1)))
      ;; Skip middle-man platform (index 1 / isle-c) if active
      (when (and (= gp-0 1) (mod-rule-active? 'rule-side-to-side))
@@ -1308,7 +1305,7 @@
 (defstate ogreboss-stage3-hit (ogreboss)
   :code
     (behavior ()
-    (if (klaww-assist-enabled?) (global-countdown-add-seconds 30.0))
+      (if (klaww-assist-enabled?) (global-countdown-add-seconds 30.0))
       (+! (-> self level) 1.0)
       (if (< 2.0 (-> self level)) (go ogreboss-die))
       (send-event (handle->process (-> self boulder)) 'go-hit)
@@ -1341,7 +1338,7 @@
 (defstate ogreboss-die (ogreboss)
   :code
     (behavior ()
-    (notify-enemy-death self)
+      (notify-enemy-death self)
       (ogreboss-reset-camera)
       (send-event (handle->process (-> self boulder)) 'go-die)
       (ja-channel-push! 1 (seconds 0.2))

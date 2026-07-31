@@ -17,40 +17,71 @@
 ;; Having two state machines, one in C++ and one in GOAL is kind of a questionable and confusing design.
 
 (define-extern mark-speedrun-started (function none))
+
 (define-extern mod-game-beaten-resume-from-save (function int none))
+
 (define-extern *mod-game-beaten?* (symbol))
 
 ;; mod: hooks for persisting the global countdown timer in the save file.
 ;; implemented in mod-common-functions.gc
 (define-extern global-countdown-save-value (function int))
+
 (define-extern global-countdown-resume-from-save (function int none))
+
 (define-extern global-countup-save-value (function int))
+
 (define-extern global-countup-resume-from-save (function int none))
+
 (define-extern mod-game-beaten-save-value (function int))
+
 (define-extern mod-stats-rules-rolled-save-value (function int))
+
 (define-extern mod-stats-rules-rolled-resume-from-save (function int none))
+
 (define-extern mod-stats-rules-broken-save-value (function int))
+
 (define-extern mod-stats-rules-broken-resume-from-save (function int none))
+
 (define-extern mod-stats-rules-followed-save-value (function int))
+
 (define-extern mod-stats-rules-followed-resume-from-save (function int none))
+
 (define-extern mod-stats-complications-rolled-save-value (function int))
+
 (define-extern mod-stats-complications-rolled-resume-from-save (function int none))
+
 (define-extern mod-rng-content-state-save-value (function int))
+
 (define-extern mod-rng-content-state-resume-from-save (function int none))
+
 (define-extern mod-rng-punish-state-save-value (function int))
+
 (define-extern mod-rng-punish-state-resume-from-save (function int none))
+
 (define-extern mod-rng-seed-display-save-value (function int))
+
 (define-extern mod-rng-seed-display-resume-from-save (function int none))
+
 (define-extern mod-rng-reset-state! (function none))
+
 (define-extern mod-rule-context-reset! (function none))
+
 (define-extern mod-rng-reset-seed-display! (function none))
+
 (define-extern mod-rule-twist-pending-count-save-value (function int))
+
 (define-extern mod-rule-twist-pending-count-resume-from-save (function int none))
+
 (define-extern mod-rule-recent-rolls-save-value (function int))
+
 (define-extern mod-rule-recent-rolls-resume-from-save (function int none))
+
 (define-extern mod-trivia-used-word0-save-value (function int))
+
 (define-extern mod-trivia-used-word0-resume-from-save (function int none))
+
 (define-extern mod-trivia-used-word1-save-value (function int))
+
 (define-extern mod-trivia-used-word1-resume-from-save (function int none))
 
 ;; version identifier
@@ -632,94 +663,64 @@
                                                                                                           (let ((a0-89 (the-as game-save-tag (&+ v1-113 0))))
                                                                                                             (set! (-> a0-89 elt-type) (game-save-elt mod-game-beaten))
                                                                                                             (set! (-> a0-89 elt-count) 0)
-                                                                                                            (set! (-> a0-89 user-uint64)
-                                                                                                                  (the-as uint (mod-game-beaten-save-value))))
-
+                                                                                                            (set! (-> a0-89 user-uint64) (the-as uint (mod-game-beaten-save-value))))
                                                                                                           ;; Countdown tag
                                                                                                           (let ((a0-90 (the-as game-save-tag (&+ v1-113 16))))
                                                                                                             (set! (-> a0-90 elt-type) (game-save-elt mod-global-timer))
                                                                                                             (set! (-> a0-90 elt-count) 0)
-                                                                                                            (set! (-> a0-90 user-uint64)
-                                                                                                                  (the-as uint (global-countdown-save-value))))
-
+                                                                                                            (set! (-> a0-90 user-uint64) (the-as uint (global-countdown-save-value))))
                                                                                                           (let ((a0-91 (the-as game-save-tag (&+ v1-113 32))))
                                                                                                             (set! (-> a0-91 elt-type) (game-save-elt mod-global-countup))
                                                                                                             (set! (-> a0-91 elt-count) 0)
-                                                                                                            (set! (-> a0-91 user-uint64)
-                                                                                                                  (the-as uint (global-countup-save-value))))
-
+                                                                                                            (set! (-> a0-91 user-uint64) (the-as uint (global-countup-save-value))))
                                                                                                           (let ((a0-92 (the-as game-save-tag (&+ v1-113 48))))
                                                                                                             (set! (-> a0-92 elt-type) (game-save-elt mod-stats-rules-rolled))
                                                                                                             (set! (-> a0-92 elt-count) 0)
-                                                                                                            (set! (-> a0-92 user-uint64)
-                                                                                                                  (the-as uint (mod-stats-rules-rolled-save-value))))
-
+                                                                                                            (set! (-> a0-92 user-uint64) (the-as uint (mod-stats-rules-rolled-save-value))))
                                                                                                           (let ((a0-93 (the-as game-save-tag (&+ v1-113 64))))
                                                                                                             (set! (-> a0-93 elt-type) (game-save-elt mod-stats-rules-broken))
                                                                                                             (set! (-> a0-93 elt-count) 0)
-                                                                                                            (set! (-> a0-93 user-uint64)
-                                                                                                                  (the-as uint (mod-stats-rules-broken-save-value))))
-
+                                                                                                            (set! (-> a0-93 user-uint64) (the-as uint (mod-stats-rules-broken-save-value))))
                                                                                                           (let ((a0-94 (the-as game-save-tag (&+ v1-113 80))))
                                                                                                             (set! (-> a0-94 elt-type) (game-save-elt mod-stats-rules-followed))
                                                                                                             (set! (-> a0-94 elt-count) 0)
-                                                                                                            (set! (-> a0-94 user-uint64)
-                                                                                                                  (the-as uint (mod-stats-rules-followed-save-value))))
-
+                                                                                                            (set! (-> a0-94 user-uint64) (the-as uint (mod-stats-rules-followed-save-value))))
                                                                                                           (let ((a0-95 (the-as game-save-tag (&+ v1-113 96))))
                                                                                                             (set! (-> a0-95 elt-type) (game-save-elt mod-stats-complications-rolled))
                                                                                                             (set! (-> a0-95 elt-count) 0)
-                                                                                                            (set! (-> a0-95 user-uint64)
-                                                                                                                  (the-as uint (mod-stats-complications-rolled-save-value))))
-
+                                                                                                            (set! (-> a0-95 user-uint64) (the-as uint (mod-stats-complications-rolled-save-value))))
                                                                                                           (let ((a0-96 (the-as game-save-tag (&+ v1-113 112))))
                                                                                                             (set! (-> a0-96 elt-type) (game-save-elt mod-rng-content-state))
                                                                                                             (set! (-> a0-96 elt-count) 0)
-                                                                                                            (set! (-> a0-96 user-uint64)
-                                                                                                                  (the-as uint (mod-rng-content-state-save-value))))
-
+                                                                                                            (set! (-> a0-96 user-uint64) (the-as uint (mod-rng-content-state-save-value))))
                                                                                                           (let ((a0-97 (the-as game-save-tag (&+ v1-113 128))))
                                                                                                             (set! (-> a0-97 elt-type) (game-save-elt mod-rng-punish-state))
                                                                                                             (set! (-> a0-97 elt-count) 0)
-                                                                                                            (set! (-> a0-97 user-uint64)
-                                                                                                                  (the-as uint (mod-rng-punish-state-save-value))))
-
+                                                                                                            (set! (-> a0-97 user-uint64) (the-as uint (mod-rng-punish-state-save-value))))
                                                                                                           (let ((a0-98 (the-as game-save-tag (&+ v1-113 144))))
                                                                                                             (set! (-> a0-98 elt-type) (game-save-elt mod-rng-seed-display))
                                                                                                             (set! (-> a0-98 elt-count) 0)
                                                                                                             (format 0 "SAVING SEED: ~D~%" (mod-rng-seed-display-save-value))
-                                                                                                            (set! (-> a0-98 user-uint64)
-                                                                                                                  (the-as uint (mod-rng-seed-display-save-value))))
-
+                                                                                                            (set! (-> a0-98 user-uint64) (the-as uint (mod-rng-seed-display-save-value))))
                                                                                                           (let ((a0-99 (the-as game-save-tag (&+ v1-113 160))))
                                                                                                             (set! (-> a0-99 elt-type) (game-save-elt mod-rule-twist-pending-count))
                                                                                                             (set! (-> a0-99 elt-count) 0)
-                                                                                                            (set! (-> a0-99 user-uint64)
-                                                                                                                  (the-as uint (mod-rule-twist-pending-count-save-value))))
-
+                                                                                                            (set! (-> a0-99 user-uint64) (the-as uint (mod-rule-twist-pending-count-save-value))))
                                                                                                           (let ((a0-100 (the-as game-save-tag (&+ v1-113 176))))
                                                                                                             (set! (-> a0-100 elt-type) (game-save-elt mod-rule-recent-rolls))
                                                                                                             (set! (-> a0-100 elt-count) 0)
-                                                                                                            (set! (-> a0-100 user-uint64)
-                                                                                                                  (the-as uint (mod-rule-recent-rolls-save-value))))
-
+                                                                                                            (set! (-> a0-100 user-uint64) (the-as uint (mod-rule-recent-rolls-save-value))))
                                                                                                           (let ((a0-101 (the-as game-save-tag (&+ v1-113 192))))
                                                                                                             (set! (-> a0-101 elt-type) (game-save-elt mod-trivia-used-word0))
                                                                                                             (set! (-> a0-101 elt-count) 0)
-                                                                                                            (set! (-> a0-101 user-uint64)
-                                                                                                                  (the-as uint (mod-trivia-used-word0-save-value))))
-
+                                                                                                            (set! (-> a0-101 user-uint64) (the-as uint (mod-trivia-used-word0-save-value))))
                                                                                                           (let ((a0-102 (the-as game-save-tag (&+ v1-113 208))))
                                                                                                             (set! (-> a0-102 elt-type) (game-save-elt mod-trivia-used-word1))
                                                                                                             (set! (-> a0-102 elt-count) 0)
-                                                                                                            (set! (-> a0-102 user-uint64)
-                                                                                                                  (the-as uint (mod-trivia-used-word1-save-value))))
-
-                                                                                                          (set! (-> arg0 length)
-                                                                                                                (&- (&+ v1-113 224)
-                                                                                                                    (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-                                                                                                          (if (< (-> arg0 allocated-length) (-> arg0 length))
-                                                                                                            (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
+                                                                                                            (set! (-> a0-102 user-uint64) (the-as uint (mod-trivia-used-word1-save-value))))
+                                                                                                          (set! (-> arg0 length) (&- (&+ v1-113 224) (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  (if (< (-> arg0 allocated-length) (-> arg0 length))
+    (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
   (none))
 
 (defmethod load-game! ((this game-info) (save game-save))
@@ -740,12 +741,9 @@
            (set! (-> *setting-control* default language) (the-as language-enum (-> save-data user-uint64))))
           ;; ((= a0-1 (game-save-elt vibration)) (set! (-> *setting-control* default vibration) (= (-> save-data user-uint64) 1)))
           ;; ((= a0-1 (game-save-elt play-hints)) (set! (-> *setting-control* default play-hints) (= (-> save-data user-uint64) 1)))
-          ((= a0-1 (game-save-elt mod-game-beaten))
-           (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
-          ((= a0-1 (game-save-elt mod-global-timer))
-           (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
-          ((= a0-1 (game-save-elt mod-global-countup))
-          (global-countup-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-game-beaten)) (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-global-timer)) (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-global-countup)) (global-countup-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-stats-rules-rolled))
            (mod-stats-rules-rolled-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-stats-rules-broken))

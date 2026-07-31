@@ -47,7 +47,6 @@
    (speed      float)
    (touch-time time-frame)))
 
-
 (defmethod get-unlit-skel ((this plat-eco-finalboss))
   *plat-eco-finalboss-unlit-sg*)
 
@@ -114,7 +113,6 @@
   ((part   sparticle-launch-control)
    (active symbol))
   :allow-misaligned)
-
 
 (deftype sage-finalboss (process-taskable)
   ((redsage           handle)

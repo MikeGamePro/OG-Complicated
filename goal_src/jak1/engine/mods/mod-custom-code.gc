@@ -24,54 +24,32 @@
 ;; (define-extern *water-enable?* (function (none)))
 
 (defun runs-every-frame ()
-  
   ;;(increase-power-cell-by-one) This is a call to increase-power-cell-by-one defined in mod-common-functions.gc
-
-;; (draw-complicated-mod-title)
-
+  ;; (draw-complicated-mod-title)
   (if *show-input-display* (input-display-on) (input-display-off))
-  
   (if (!= (current-level-name) 'swamp) (mod-rule-trigger-failure 'rule-for-billy))
-
-  (if (= (-> *target* control ground-pat material) (pat-material ice))
-      (mod-rule-trigger-failure 'rule-cold-feet)
-      (none))
-
+  (if (= (-> *target* control ground-pat material) (pat-material ice)) (mod-rule-trigger-failure 'rule-cold-feet) (none))
   (when (mod-rule-active? 'complication-drought)
-      (set! *ocean-off* #t))
-
+    (set! *ocean-off* #t))
   (when *debug-segment*
-    (when (and (cpad-pressed? 0 circle)
-              (cpad-hold? 0 right))
+    (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 right))
       (mod-rule-reroll-slot 0 #f))
-
-    (when (and (cpad-pressed? 0 circle)
-              (cpad-hold? 0 left))
+    (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 left))
       (mod-rule-reroll-slot 1 #f))
-
-    (when (and (cpad-pressed? 0 circle)
-              (cpad-hold? 0 l1) (cpad-hold? 0 r1))
+    (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 l1) (cpad-hold? 0 r1))
       (global-countdown-start))
-
-    (when (and (cpad-pressed? 0 triangle)
-              (cpad-hold? 0 l1) (cpad-hold? 0 r1))
+    (when (and (cpad-pressed? 0 triangle) (cpad-hold? 0 l1) (cpad-hold? 0 r1))
       (global-countdown-reset)
       (kill-by-name 'mod-rule-manager *active-pool*))
-
-    (when (and (cpad-pressed? 0 circle)
-              (cpad-hold? 0 up))
+    (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 up))
       (global-countdown-add-seconds 20.0))
-
-    (when (and (cpad-pressed? 0 circle)
-              (cpad-hold? 0 down))
+    (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 down))
       (global-countdown-add-seconds -20.0)))
-
   ;; ensure orb-placer is spawned/killed as requested, debug menu is updated
   (when *debug-segment*
     (orb-placer-maintenance))
   (mod-rule-trigger-ohko)
-  (if (<= *closest-buzzer-dist* (meters 8))
-      (mod-rule-trigger-failure 'rule-distancing))
+  (if (<= *closest-buzzer-dist* (meters 8)) (mod-rule-trigger-failure 'rule-distancing))
   (mod-rule-trigger-speed)
   (none))
 
@@ -99,12 +77,10 @@
   (case cell-event
     (('pickup)
      ;; Code here runs as soon as you pickup a powercell
-      (global-countdown-add-seconds (cell-increment-value))
-      (mod-rule-on-cell-pickup 1)
-     )
+     (global-countdown-add-seconds (cell-increment-value))
+     (mod-rule-on-cell-pickup 1))
     (('cutscene-end)
      ;; Code here runs at the end of any powercell cutscene
-
      ))
   (none))
 
@@ -134,7 +110,7 @@
   (none))
 
 (defun runs-on-jak-spawn ()
-(when (mod-rule-active? 'complication-invisible-man)
+  (when (mod-rule-active? 'complication-invisible-man)
     (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 0.0)
     (send-event *target* 'sidekick #f)
     (none))
@@ -147,8 +123,7 @@
   (case death-event
     (('dying)
      ;; Code here runs immediately every time jak dies, before any death animation or death cutscene
-     (mod-rule-on-jak-death)
-     )
+     (mod-rule-on-jak-death))
     (('blackout)
      ;; Code here runs after jak dies (and any death cutscene finishes), during the blackout before he spawns
      ))
@@ -158,11 +133,10 @@
   (format #t "distance: ~f~%" (vector-vector-distance (-> enemy root trans) (target-pos 0)))
   (when *target*
     (format #t "kill mode (target state): ~a~%" (-> *target* state name)))
-
-  (let* ((enemy-type   (the-as symbol (-> enemy type)))
-         (was-flop?    (mod-rule-enemy-killed-by-flop? enemy))
-         (was-red?     (mod-rule-enemy-killed-by-red-eco? enemy))
-        ;;  (was-yellow?  (mod-rule-enemy-killed-by-yellow-eco? enemy))
+  (let* ((enemy-type (the-as symbol (-> enemy type)))
+         (was-flop? (mod-rule-enemy-killed-by-flop? enemy))
+         (was-red? (mod-rule-enemy-killed-by-red-eco? enemy))
+         ;;  (was-yellow?  (mod-rule-enemy-killed-by-yellow-eco? enemy))
          )
     (when (and enemy (-> enemy root))
       (let ((distance (vector-vector-distance (-> enemy root trans) (target-pos 0))))

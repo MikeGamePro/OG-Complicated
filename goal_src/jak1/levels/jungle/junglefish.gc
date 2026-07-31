@@ -8,7 +8,6 @@
 
 (deftype junglefish (nav-enemy) ())
 
-
 (defskelgroup *junglefish-sg*
   junglefish
   junglefish-lod0-jg

@@ -33,7 +33,6 @@
   (:states
    sunkenfisha-idle))
 
-
 (defskelgroup *sunkenfisha-red-yellow-sg*
   sunkenfisha
   sunkenfisha-red-yellow-lod0-jg

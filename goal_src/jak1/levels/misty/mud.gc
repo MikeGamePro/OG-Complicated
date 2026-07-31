@@ -7,7 +7,6 @@
 
 (deftype mud (water-anim) ())
 
-
 (define ripple-for-mud
   (new 'static
        'ripple-wave-set

@@ -125,7 +125,6 @@
    (water-control-method-15 (_type_) none)
    (water-control-method-16 (_type_) none)))
 
-
 (defmethod display-water-marks? ((this water-control))
   (and *display-water-marks* (logtest? (-> this flag) (water-flag water-marks))))
 

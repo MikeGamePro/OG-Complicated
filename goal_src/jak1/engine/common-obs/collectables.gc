@@ -47,11 +47,11 @@
 
 (defun rgyb-swap-eco-type ((arg0 pickup-type))
   (if (mod-rule-active? 'complication-rgyb)
-      (cond
-        ((= arg0 (pickup-type eco-yellow)) (pickup-type eco-blue))
-        ((= arg0 (pickup-type eco-blue)) (pickup-type eco-yellow))
-        (else arg0))
-      arg0))
+    (cond
+      ((= arg0 (pickup-type eco-yellow)) (pickup-type eco-blue))
+      ((= arg0 (pickup-type eco-blue)) (pickup-type eco-yellow))
+      (else arg0))
+    arg0))
 
 (deftype collectable (process-drawable)
   ((root            collide-shape-moving :override)
@@ -374,17 +374,15 @@
          v0-3)))
   :enter
     (behavior ()
-(if (and (logtest? (-> self fact options) (fact-options instant-collect can-collect))
-         (logtest? (-> self flags) (collectable-flags can-collect))
-         (!= (-> self next-state name) 'pickup)
-         (not (and (= (-> self type) fuel-cell)
-                   (or (mod-rule-active? 'complication-fuel-shortage)
-                       (and (target-on-flut?)
-                            (mod-rule-active? 'complication-wings-tied))
-                       (and (mod-rule-active? 'complication-critical)
-                            (> (-> (the-as fact-info-target (-> *target* fact)) health) 1)))))
-         (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
-    (go-virtual pickup #f (process->handle *target*))))
+      (if (and (logtest? (-> self fact options) (fact-options instant-collect can-collect))
+               (logtest? (-> self flags) (collectable-flags can-collect))
+               (!= (-> self next-state name) 'pickup)
+               (not (and (= (-> self type) fuel-cell)
+                         (or (mod-rule-active? 'complication-fuel-shortage)
+                             (and (target-on-flut?) (mod-rule-active? 'complication-wings-tied))
+                             (and (mod-rule-active? 'complication-critical) (> (-> (the-as fact-info-target (-> *target* fact)) health) 1)))))
+               (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
+        (go-virtual pickup #f (process->handle *target*))))
   :trans
     (behavior ()
       (cond
@@ -506,7 +504,7 @@
   :code
     (behavior ((arg0 object) (arg1 handle))
       (clear-collide-with-as (-> self root))
-(if (not (or (= (-> self fact pickup-type) (pickup-type eco-pill)) (logtest? (-> self fact options) (fact-options powerup))))
+      (if (not (or (= (-> self fact pickup-type) (pickup-type eco-pill)) (logtest? (-> self fact options) (fact-options powerup))))
         (send-event (handle->process arg1) 'powerup (-> self fact pickup-type) (-> self fact pickup-amount)))
       (if (nonzero? (-> self sound)) (stop! (-> self sound)))
       (case (-> self fact pickup-type)
@@ -518,7 +516,9 @@
            (('training)
             (level-hint-spawn (text-id training-eco-reminder) "sagevb23" (the-as entity #f) *entity-pool* (game-task none)))))
         (((pickup-type eco-green)) (sound-play "g-eco-pickup"))
-        (((pickup-type eco-green) (pickup-type eco-pill)) (sound-play "pill-pickup") (mod-rule-counter-add-progress 'rule-green-pilled 1))) ;; single pill?
+        (((pickup-type eco-green) (pickup-type eco-pill))
+         (sound-play "pill-pickup")
+         (mod-rule-counter-add-progress 'rule-green-pilled 1))) ;; single pill?
       (runs-on-eco-pickup (-> self fact pickup-type) (ppointer->process (-> self parent))) ;; trigger hook for mod base
       (if (nonzero? (-> self part)) (kill-and-free-particles (-> self part)))
       (let ((gp-6 (handle->process (-> self pickup-handle))))
@@ -719,9 +719,8 @@
     (behavior ()
       (loop
         (if (mod-rule-active? 'complication-hidden-treasure)
-            (logior! (-> self draw status) (draw-status hidden))
-            (logclear! (-> self draw status) (draw-status hidden)))
-
+          (logior! (-> self draw status) (draw-status hidden))
+          (logclear! (-> self draw status) (draw-status hidden)))
         (quaternion-rotate-y! (-> self root quat) (-> self root quat) (* 40049.777 (seconds-per-frame)))
         (let ((f30-0 (-> self bob-amount)))
           (when (< 0.0 f30-0)
@@ -730,12 +729,10 @@
                      (-> self suck-y-offset)
                      (* f30-0 (sin (* 109.22667 (the float (mod (+ (- (current-time) (-> self birth-time)) (-> self bob-offset)) 600)))))))
             (update-transforms! (-> self root))))
-        
         (when (!= (-> self draw status) (draw-status hidden))
           (ja-post)
           (with-pc
             (if (-> *pc-settings* money-starburst?) (spawn (-> self part) (-> self root root-prim world-sphere)))))
-            
         (suspend))))
 
 (defstate notice-blue (money)
@@ -919,23 +916,21 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (local-vars (v0-3 object))
-(when (and (not (mod-rule-active? 'complication-fuel-shortage))
-           (or (= message 'touch) (= message 'attack))
-           (and (logtest? (-> self flags) (collectable-flags can-collect))
-                (time-elapsed? (-> self birth-time) (-> self collect-timeout))
-                (and (not (handle->process (-> *game-info* other-camera-handle)))
-                     (not *progress-process*)
-                     (!= (-> self next-state name) 'pickup)
-                     *target*
-                     (not (logtest? (-> *target* state-flags) (state-flags grabbed dying))))))
+      (when (and (not (mod-rule-active? 'complication-fuel-shortage))
+                 (or (= message 'touch) (= message 'attack))
+                 (and (logtest? (-> self flags) (collectable-flags can-collect))
+                      (time-elapsed? (-> self birth-time) (-> self collect-timeout))
+                      (and (not (handle->process (-> *game-info* other-camera-handle)))
+                           (not *progress-process*)
+                           (!= (-> self next-state name) 'pickup)
+                           *target*
+                           (not (logtest? (-> *target* state-flags) (state-flags grabbed dying))))))
         (add-setting! 'allow-progress #f 0.0 0)
         (apply-settings *setting-control*)
         (logclear! (-> self mask) (process-mask actor-pause))
-        (if (not (or (and (target-on-flut?) 
-                 (mod-rule-active? 'complication-wings-tied))
-            (and (mod-rule-active? 'complication-critical)
-                 (!= (-> (the-as fact-info-target (-> *target* fact)) health) 1))))
-    (go-virtual pickup #f (process->handle proc))))
+        (if (not (or (and (target-on-flut?) (mod-rule-active? 'complication-wings-tied))
+                     (and (mod-rule-active? 'complication-critical) (!= (-> (the-as fact-info-target (-> *target* fact)) health) 1))))
+          (go-virtual pickup #f (process->handle proc))))
       (cond
         ((= message 'trans)
          (set! (-> self root trans quad) (-> (the-as vector (-> block param 0)) quad))
@@ -964,7 +959,7 @@
       (let ((f28-0 0.0))
         (ja :group! fuel-cell-idle-ja)
         (loop
-        (if (not (mod-rule-active? 'complication-fuel-shortage))
+          (if (not (mod-rule-active? 'complication-fuel-shortage))
             (begin
               (logclear! (-> self draw status) (draw-status hidden))
               (restore-collide-with-as (-> self root)))
@@ -1767,10 +1762,9 @@
                  (set! (-> a1-1 from) self)
                  (set! (-> a1-1 num-params) 2)
                  (set! (-> a1-1 message) 'get-pickup)
-                (let ((pickup (-> self fact pickup-type)))
-                  (set! (-> a1-1 param 0)
-                        (the-as uint (rgyb-swap-eco-type pickup)))
-                  (runs-on-eco-pickup (rgyb-swap-eco-type pickup) self))
+                 (let ((pickup (-> self fact pickup-type)))
+                   (set! (-> a1-1 param 0) (the-as uint (rgyb-swap-eco-type pickup)))
+                   (runs-on-eco-pickup (rgyb-swap-eco-type pickup) self))
                  (set! (-> a1-1 param 1) (the-as uint (-> self fact pickup-amount)))
                  (runs-on-eco-pickup (-> self fact pickup-type) self)
                  (and (= (send-event-function proc a1-1) #t)

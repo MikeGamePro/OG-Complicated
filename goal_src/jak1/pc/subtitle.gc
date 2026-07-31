@@ -456,8 +456,7 @@
                       ;;         "movie spool detected:~%~3L~A~0L~%current spool frame is ~3L~D~0L~%"
                       ;;         (-> *art-control* active-stream)
                       ;;         (the int (ja-aframe-num 0)))
-                      (none)
-                              )))
+                      (none))))
         (*hint-semaphore*
          ;; there's a hint playing
          (set! (-> self spool-name) (-> *hint-semaphore* 0 sound-to-play))
@@ -466,14 +465,13 @@
          (set! (-> self text-id) (-> *hint-semaphore* 0 text-id-to-display))
          (set! (-> self cur-channel) (if (-> self spool-name) (pc-subtitle-channel hint-named) (pc-subtitle-channel hint)))
          (if *debug-segment*
-          ;;  (format *stdcon*
-          ;;          "hint detected!~%~3L~A~0L/~3L#x~X~0L~%current str pos is ~D (~3L~D~0L)~%"
-          ;;          (-> self spool-name)
-          ;;          (-> self text-id)
-          ;;          (current-str-pos (-> *hint-semaphore* 0 sound-id))
-          ;;          (subtitle-str-adjust (current-str-pos (-> *hint-semaphore* 0 sound-id))))
-          (none)
-                   )))
+           ;;  (format *stdcon*
+           ;;          "hint detected!~%~3L~A~0L/~3L#x~X~0L~%current str pos is ~D (~3L~D~0L)~%"
+           ;;          (-> self spool-name)
+           ;;          (-> self text-id)
+           ;;          (current-str-pos (-> *hint-semaphore* 0 sound-id))
+           ;;          (subtitle-str-adjust (current-str-pos (-> *hint-semaphore* 0 sound-id))))
+           (none))))
       ;; do subtitles
       ;; intro first time notice (if subtitles are disabled)
       (when (and (= (pc-subtitle-channel movie) (-> self cur-channel))
@@ -489,21 +487,21 @@
              ;; cutscenes. get our cutscene.
              (set! (-> self hint-subtitle?) #f)
              (awhen (get-scene-by-name *subtitle-text* (-> self cur-channel) (-> self spool-name))
-                    ;; during a cutscene, check if user toggled subtitles
-                    (when (and (= 'game *master-mode*) (cpad-pressed? 0 square))
-                      (not! (-> *pc-settings* subtitles?))
-                      (set-state-time)
-                      (if (-> *pc-settings* subtitles?)
-                        (set! (-> self notice-id) (text-id subtitle-enabled))
-                        (set! (-> self notice-id) (text-id subtitle-disabled))))
-                    ;; find out position in the scene.
-                    (let ((pos 0))
-                      ;; get frame num
-                      (with-proc ((handle->process (-> *art-control* spool-lock))) (set! pos (the int (ja-aframe-num 0))))
-                      ;; find closest keyframe
-                      (dotimes (i (-> it length))
-                        (when (>= pos (-> it keyframes i frame))
-                          (set! keyframe (-> it keyframes i)))))))
+               ;; during a cutscene, check if user toggled subtitles
+               (when (and (= 'game *master-mode*) (cpad-pressed? 0 square))
+                 (not! (-> *pc-settings* subtitles?))
+                 (set-state-time)
+                 (if (-> *pc-settings* subtitles?)
+                   (set! (-> self notice-id) (text-id subtitle-enabled))
+                   (set! (-> self notice-id) (text-id subtitle-disabled))))
+               ;; find out position in the scene.
+               (let ((pos 0))
+                 ;; get frame num
+                 (with-proc ((handle->process (-> *art-control* spool-lock))) (set! pos (the int (ja-aframe-num 0))))
+                 ;; find closest keyframe
+                 (dotimes (i (-> it length))
+                   (when (>= pos (-> it keyframes i frame))
+                     (set! keyframe (-> it keyframes i)))))))
             (((pc-subtitle-channel hint) (pc-subtitle-channel hint-named))
              ;; hint! find it. or else.
              (set! (-> self hint-subtitle?) #t)

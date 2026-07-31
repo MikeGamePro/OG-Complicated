@@ -8,7 +8,6 @@
 (deftype snowball-info (basic)
   ((entity basic)))
 
-
 (deftype snowball-bank (basic) ())
 
 (define *SNOWBALL-bank* (new 'static 'snowball-bank))

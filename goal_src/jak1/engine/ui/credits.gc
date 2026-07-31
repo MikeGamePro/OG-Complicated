@@ -5,11 +5,17 @@
 
 ;; DECOMP BEGINS
 (define-extern *rules-broken* int)
+
 (define-extern *rules-rolled* int)
+
 (define-extern *rules-followed* int)
+
 (define-extern *complications-rolled* int)
+
 (define-extern *final-remaining-time* int)
+
 (define-extern *final-time* int)
+
 (define-extern mod-format-time-frame (function time-frame int symbol string))
 
 (defun set-credits-font-color ((arg0 float))
@@ -66,13 +72,14 @@
   (none))
 
 (define *tmp-cred-str* (new 'global 'string 256 (the string #f)))
+
 (define *custom-credits-line-count* 22)
+
 (defun get-custom-credits-line ((line-num int))
   (clear *tmp-cred-str*)
-  (case line-num  
+  (case line-num
     ((0) (format *tmp-cred-str* "~33LFINAL TIME"))
-    ((1)
-     (format *tmp-cred-str* "~S" (mod-format-time-frame *final-time* 3 'always)))
+    ((1) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-time* 3 'always)))
     ((3) (format *tmp-cred-str* "~33LA COMPLICATED MOD"))
     ((4) (format *tmp-cred-str* "~33LBY"))
     ((5) (format *tmp-cred-str* "MIKEGAMEPRO"))
@@ -83,13 +90,11 @@
     ((13) (format *tmp-cred-str* "~33LCOMPLICATIONS ENDURED"))
     ((14) (format *tmp-cred-str* "~D" *complications-rolled*))
     ((16) (format *tmp-cred-str* "~33LTIME REMAINING"))
-    ((17)
-     (format *tmp-cred-str* "~S" (mod-format-time-frame *final-remaining-time* 3 'always)))
+    ((17) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-remaining-time* 3 'always)))
     ((19) (format *tmp-cred-str* "JAK AND DAXTER:"))
     ((20) (format *tmp-cred-str* "THE PRECURSOR LEGACY"))
     (else (return (the-as string #f))))
-  *tmp-cred-str*
-  )
+  *tmp-cred-str*)
 
 (defun draw-end-credits ((credits-pos int))
   (local-vars (line-height2 int))
@@ -119,10 +124,10 @@
       (+! cur-line-id 1)
       (if (= cur-line-id *custom-credits-line-count*) (set! cur-line-id 2816)) ;; skip ahead to real credits start index
       (let ((cur-line (cond
-          ;; custom credits lines
-          ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
-          ;; vanilla credits
-          (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
+                        ;; custom credits lines
+                        ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
+                        ;; vanilla credits
+                        (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
         (if cur-line (set! line-height (the int (+ 5.0 (print-game-text cur-line s5-0 #t 128 20)))) (set! line-height 25)))
       (set! first-line? #f))
     ;; actually print the on-screen stuff
@@ -135,11 +140,11 @@
       (else
        (set! (-> s5-0 origin y) (the float cur-line-y))
        (while (< (-> s5-0 origin y) (the float (-> *video-parms* screen-sy)))
-        (let ((cur-line2 (cond
-            ;; custom credits lines
-            ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
-            ;; vanilla credits
-            (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
+         (let ((cur-line2 (cond
+                            ;; custom credits lines
+                            ((< cur-line-id *custom-credits-line-count*) (get-custom-credits-line cur-line-id))
+                            ;; vanilla credits
+                            (else (lookup-text! *common-text* (the-as text-id cur-line-id) #t)))))
            (if cur-line2 (set! line-height2 (the int (+ 5.0 (print-game-text cur-line2 s5-0 #f 128 20)))) (set! line-height2 25)))
          (+! (-> s5-0 origin y) (the float line-height2))
          (+! cur-line-id 1)

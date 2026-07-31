@@ -19,7 +19,6 @@
    (post-spit-wait-time seconds)
    (run-away-time       seconds)))
 
-
 (define *PELICAN-bank*
   (new 'static
        'pelican-bank
@@ -69,7 +68,6 @@
    (pelican-to-nest path-control int)
    (pelican-wait-at-end symbol)
    (pelican-wait-at-nest symbol)))
-
 
 (defmethod relocate ((this pelican) (offset int))
   (countdown (v1-0 8)

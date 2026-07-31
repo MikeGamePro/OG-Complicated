@@ -1,18 +1,16 @@
 ;;-*-Lisp-*-
 (in-package goal)
-
 (defenum on-off-group
   :type uint32
   (red 0)
   (blue 1)
   (green 2)
   (yellow 3)
-  (max 4)
-  )
+  (max 4))
 
 (deftype on-off-manager (structure)
   ((group-states symbol 4) ;; length should be (on-off-group max)
-    )
+   )
   (:methods
    (toggle (_type_ on-off-group symbol) none)))
 
@@ -21,19 +19,18 @@
   (none))
 
 (define *on-off-manager* (new 'global 'on-off-manager))
+
 (dotimes (i (on-off-group max))
   (false! (-> *on-off-manager* group-states i)))
 
 ;; ===== on/off single-colored button =====
 
 (deftype on-off-button (basebutton)
-  ((group on-off-group))
-  )
+  ((group on-off-group)))
 
 (defmethod basebutton-method-29 ((this on-off-button) (arg0 symbol) (arg1 entity))
   (when arg0
-    (toggle *on-off-manager* (-> this group) (not (-> *on-off-manager* group-states (-> this group))))
-    )
+    (toggle *on-off-manager* (-> this group) (not (-> *on-off-manager* group-states (-> this group)))))
   (none))
 
 (defstate basebutton-down-idle (on-off-button)
@@ -71,63 +68,38 @@
   (if (not (-> this spawned-by-other?)) (nav-mesh-connect this (-> this root) (the-as nav-control #f)))
   (arm-trigger-event! this)
   (basebutton-method-26 this)
-
   (let ((g (res-lump-value (-> this entity) 'on-off-group uint128 :default (the-as uint128 0))))
-    (when (>= g 0) 
+    (when (>= g 0)
       (set! (-> this group) (the-as on-off-group g))))
   (case (-> this group)
-    (((on-off-group red))
-      (set-vector! (-> this draw color-mult) 5.0 1.0 1.0 1.0)
-      )
-    (((on-off-group blue))
-      (set-vector! (-> this draw color-mult) 1.0 1.0 5.0 1.0)
-      )
-    (((on-off-group green))
-      (set-vector! (-> this draw color-mult) 1.0 5.0 1.0 1.0)
-      )
-    (((on-off-group yellow))
-      (set-vector! (-> this draw color-mult) 5.0 5.0 1.0 1.0)
-      )
-    )
-
+    (((on-off-group red)) (set-vector! (-> this draw color-mult) 5.0 1.0 1.0 1.0))
+    (((on-off-group blue)) (set-vector! (-> this draw color-mult) 1.0 1.0 5.0 1.0))
+    (((on-off-group green)) (set-vector! (-> this draw color-mult) 1.0 5.0 1.0 1.0))
+    (((on-off-group yellow)) (set-vector! (-> this draw color-mult) 5.0 5.0 1.0 1.0)))
   (go (method-of-object this basebutton-startup))
-  (none)
-)
+  (none))
 
 ;; ===== on/off eco-based button =====
 
-(deftype eco-on-off-button (basebutton)
-  ())
+(deftype eco-on-off-button (basebutton) ())
 
 (defmethod basebutton-method-29 ((this eco-on-off-button) (arg0 symbol) (arg1 entity))
   (when arg0
     (when *target*
       (let ((g (on-off-group max)))
         ;; count 4HP as channeling green eco
-        (if (and *target* (= (-> *target* fact health) (-> *target* fact health-max)) (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
-          (set! g (on-off-group green))
-          )
+        (if (and *target*
+                 (= (-> *target* fact health) (-> *target* fact health-max))
+                 (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
+          (set! g (on-off-group green)))
         (when (< 0.0 (-> *target* fact eco-level))
           (case (-> *target* fact eco-type)
-            (((pickup-type eco-red))
-              (set! g (on-off-group red))
-              )
-            (((pickup-type eco-blue))
-              (set! g (on-off-group blue))
-              )
-            (((pickup-type eco-green))
-              (set! g (on-off-group green))
-              )
-            (((pickup-type eco-yellow))
-              (set! g (on-off-group yellow))
-              )
-            )
-          )
+            (((pickup-type eco-red)) (set! g (on-off-group red)))
+            (((pickup-type eco-blue)) (set! g (on-off-group blue)))
+            (((pickup-type eco-green)) (set! g (on-off-group green)))
+            (((pickup-type eco-yellow)) (set! g (on-off-group yellow)))))
         (when (!= g (on-off-group max))
-          (toggle *on-off-manager* g (not (-> *on-off-manager* group-states g))))
-        )
-      )
-    )
+          (toggle *on-off-manager* g (not (-> *on-off-manager* group-states g)))))))
   (none))
 
 (defstate basebutton-down-idle (eco-on-off-button)
@@ -141,8 +113,7 @@
         (suspend))
       (basebutton-method-29 self (-> self event-going-up) (-> self notify-actor))
       (sound-play "silo-button")
-      (go-virtual basebutton-going-up)
-      )
+      (go-virtual basebutton-going-up))
   :post
     (behavior ()
       (when (-> self move-to?)
@@ -156,19 +127,19 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       ;; only respond when player has eco / full HP
-      (when (and *target* (or (and (= (-> *target* fact health) (-> *target* fact health-max)) 
-                                   (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
-                              (< 0.0 (-> *target* fact eco-level))))
+      (when (and *target*
+                 (or (and (= (-> *target* fact health) (-> *target* fact health-max))
+                          (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
+                     (< 0.0 (-> *target* fact eco-level))))
         (case message
           (('touch)
-            ;; push button just by touching, since you can't ground pound with yellow eco
-            (basebutton-method-29 self (-> self event-going-down) (-> self notify-actor))
-            (sound-play "silo-button")
-            (go-virtual basebutton-going-down)
-            )
+           ;; push button just by touching, since you can't ground pound with yellow eco
+           (basebutton-method-29 self (-> self event-going-down) (-> self notify-actor))
+           (sound-play "silo-button")
+           (go-virtual basebutton-going-down))
           (('attack)
-          (case (-> block param 1)
-            (('flop)
+           (case (-> block param 1)
+             (('flop)
               (basebutton-method-29 self (-> self event-going-down) (-> self notify-actor))
               (sound-play "silo-button")
               (go-virtual basebutton-going-down))))
@@ -182,25 +153,16 @@
       ;; darker button when no eco match
       (set-vector! (-> self draw color-mult) 0.25 0.25 0.25 1.0)
       ;; count 4HP as channeling green eco
-      (if (and *target* (= (-> *target* fact health) (-> *target* fact health-max)) (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
-        (set-vector! (-> self draw color-mult) 1.0 5.0 1.0 1.0)
-        )
+      (if (and *target*
+               (= (-> *target* fact health) (-> *target* fact health-max))
+               (= (-> *target* fact eco-pill) (-> *target* fact eco-pill-max)))
+        (set-vector! (-> self draw color-mult) 1.0 5.0 1.0 1.0))
       (when (and *target* (< 0.0 (-> *target* fact eco-level)))
         (case (-> *target* fact eco-type)
-          (((pickup-type eco-red))
-            (set-vector! (-> self draw color-mult) 5.0 1.0 1.0 1.0)
-            )
-          (((pickup-type eco-blue))
-            (set-vector! (-> self draw color-mult) 1.0 1.0 5.0 1.0)
-            )
-          (((pickup-type eco-green))
-            (set-vector! (-> self draw color-mult) 1.0 5.0 1.0 1.0)
-            )
-          (((pickup-type eco-yellow))
-            (set-vector! (-> self draw color-mult) 5.0 5.0 1.0 1.0)
-            )
-          )
-        )
+          (((pickup-type eco-red)) (set-vector! (-> self draw color-mult) 5.0 1.0 1.0 1.0))
+          (((pickup-type eco-blue)) (set-vector! (-> self draw color-mult) 1.0 1.0 5.0 1.0))
+          (((pickup-type eco-green)) (set-vector! (-> self draw color-mult) 1.0 5.0 1.0 1.0))
+          (((pickup-type eco-yellow)) (set-vector! (-> self draw color-mult) 5.0 5.0 1.0 1.0))))
       (if (-> self move-to?) (rider-trans)))
   :code anim-loop
   :post
@@ -215,7 +177,7 @@
 
 (deftype cycling-on-off-button (basebutton)
   ((period uint32) ;; cycles between the 4 colors once per period
-    ))
+   ))
 
 (defstate basebutton-up-idle (cycling-on-off-button)
   :virtual #t
@@ -223,11 +185,10 @@
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
         (('touch)
-          ;; push button just by touching, since you can't ground pound with yellow eco
-          (basebutton-method-29 self (-> self event-going-down) (-> self notify-actor))
-          (sound-play "silo-button")
-          (go-virtual basebutton-going-down)
-          )
+         ;; push button just by touching, since you can't ground pound with yellow eco
+         (basebutton-method-29 self (-> self event-going-down) (-> self notify-actor))
+         (sound-play "silo-button")
+         (go-virtual basebutton-going-down))
         (('attack)
          (case (-> block param 1)
            (('flop)
@@ -248,8 +209,7 @@
           ((1) (set-vector! (-> self draw color-mult) 1.0 1.0 5.0 1.0)) ;; blue
           ((2) (set-vector! (-> self draw color-mult) 1.0 5.0 1.0 1.0)) ;; green
           ((3) (set-vector! (-> self draw color-mult) 5.0 5.0 1.0 1.0)) ;; yellow
-          )
-        ) 
+          ))
       (if (-> self move-to?) (rider-trans)))
   :code anim-loop
   :post
@@ -260,12 +220,10 @@
         (quaternion-copy! (-> self root quat) (-> self move-to-quat))
         (rider-post))))
 
-
 (defmethod basebutton-method-29 ((this cycling-on-off-button) (arg0 symbol) (arg1 entity))
   (when arg0
     (let ((i (the int (mod (/ (current-time) (-> this period)) 4))))
-      (toggle *on-off-manager* (the on-off-group i) (not (-> *on-off-manager* group-states i))))
-    )
+      (toggle *on-off-manager* (the on-off-group i) (not (-> *on-off-manager* group-states i)))))
   (none))
 
 (defstate basebutton-down-idle (cycling-on-off-button)
@@ -307,13 +265,10 @@
   (if (not (-> this spawned-by-other?)) (nav-mesh-connect this (-> this root) (the-as nav-control #f)))
   (arm-trigger-event! this)
   (basebutton-method-26 this)
-
   (let ((s (res-lump-float (-> this entity) 'period :default (the-as float 1.0))))
     (set! (-> this period) (the int (fsec s))))
-
   (go (method-of-object this basebutton-startup))
-  (none)
-)
+  (none))
 
 ;; ===== on/off colored blocks =====
 
@@ -371,26 +326,17 @@
     (if (and (>= g 0) (< g (on-off-group max))) (set! (-> this group) (the-as on-off-group g))))
   (false! (-> this inverted?))
   (let ((i (res-lump-value (-> this entity) 'inverted? uint128 :default (the-as uint128 0))))
-    (when (> i 0) 
+    (when (> i 0)
       (true! (-> this inverted?))))
   (set-time! (-> this birth-time))
   (initialize-skeleton this *on-off-block-sg* '())
   (logclear! (-> this mask) (process-mask actor-pause))
   (transform-post)
   (case (-> this group)
-    (((on-off-group red))
-      (set-vector! (-> this draw color-mult) 5.0 1.0 1.0 1.0)
-      )
-    (((on-off-group blue))
-      (set-vector! (-> this draw color-mult) 1.0 1.0 5.0 1.0)
-      )
-    (((on-off-group green))
-      (set-vector! (-> this draw color-mult) 1.0 5.0 1.0 1.0)
-      )
-    (((on-off-group yellow))
-      (set-vector! (-> this draw color-mult) 5.0 5.0 1.0 1.0)
-      )
-    )
+    (((on-off-group red)) (set-vector! (-> this draw color-mult) 5.0 1.0 1.0 1.0))
+    (((on-off-group blue)) (set-vector! (-> this draw color-mult) 1.0 1.0 5.0 1.0))
+    (((on-off-group green)) (set-vector! (-> this draw color-mult) 1.0 5.0 1.0 1.0))
+    (((on-off-group yellow)) (set-vector! (-> this draw color-mult) 5.0 5.0 1.0 1.0)))
   (go-virtual idle :proc this)
   (none))
 
@@ -422,15 +368,14 @@
       (loop
         (case (= (-> *on-off-manager* group-states (-> self group)) (-> self inverted?))
           ((#f)
-            ;; block on
-            (restore-collide-with-as (-> self root))
-            (set! (-> self draw force-fade-int) 255) ;; 127 after -128
-            )
+           ;; block on
+           (restore-collide-with-as (-> self root))
+           (set! (-> self draw force-fade-int) 255) ;; 127 after -128
+           )
           (else
-            ;; block off
-            (clear-collide-with-as (-> self root))
-            (set! (-> self draw force-fade-int) 160) ;; 64 after -128
-            )
-          )
+           ;; block off
+           (clear-collide-with-as (-> self root))
+           (set! (-> self draw force-fade-int) 160) ;; 64 after -128
+           ))
         (suspend)))
   :post transform-post)

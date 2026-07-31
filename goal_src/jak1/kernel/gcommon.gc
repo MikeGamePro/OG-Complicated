@@ -50,6 +50,7 @@
 
 ;; The distance tracker
 (define *closest-buzzer-dist* 1000000000.0)
+
 (define *last-kill-dist* 0.0)
 
 ;; Tracks the last frame a crate updated the distance (using int instead of time-frame)

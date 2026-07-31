@@ -2025,21 +2025,20 @@
   (none))
 
 (define-extern go-sage-finalboss-credits (function none))
+
 (defun dm-task-play-credits ((arg0 int) (arg1 debug-menu-msg))
   (when (= arg1 (debug-menu-msg press))
-    (process-spawn-function process (lambda ()
-      (set-continue! *game-info* "finalboss-start")
-      (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f))
-      (suspend)
-      ;; loop until target spawned and sage-finalboss-1 spawned
-      (until (and *target* (not (name= (-> *target* state name) 'target-continue))
-                  (process-by-ename "sage-finalboss-1"))
+    (process-spawn-function process
+      (lambda ()
+        (set-continue! *game-info* "finalboss-start")
+        (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f))
         (suspend)
-        )
-      (go-sage-finalboss-credits)
-      )
-      :to *active-pool*)
-    )
+        ;; loop until target spawned and sage-finalboss-1 spawned
+        (until (and *target* (not (name= (-> *target* state name) 'target-continue)) (process-by-ename "sage-finalboss-1"))
+          (suspend))
+        (go-sage-finalboss-credits))
+      :to
+      *active-pool*))
   #f)
 
 (defun dm-task-get-money ((arg0 int) (arg1 debug-menu-msg))

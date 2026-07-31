@@ -9,10 +9,15 @@
 ;; DECOMP BEGINS
 
 (define-extern mod-game-beaten-resume-from-save (function int none))
+
 (define-extern *mod-game-beaten?* (symbol))
+
 (define-extern global-countdown-reset (function none))
+
 (define-extern global-countdown-freeze-for-game-beaten (function none))
+
 (define-extern *global-countdown-remaining-time* int)
+
 (define-extern *global-countup-timer* int)
 
 (defmethod ease-loc-t ((this robotboss))
@@ -306,11 +311,11 @@
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
         (('white-eco-picked-up)
-        (set! *mod-game-beaten?* #t)
-        (set! *final-remaining-time* *global-countdown-remaining-time*)
-        (set! *final-time* *global-countup-timer*)
-        ;; mod: game is beaten, stop the countdown/rules for this file right now.
-        (global-countdown-freeze-for-game-beaten)
+         (set! *mod-game-beaten?* #t)
+         (set! *final-remaining-time* *global-countdown-remaining-time*)
+         (set! *final-time* *global-countup-timer*)
+         ;; mod: game is beaten, stop the countdown/rules for this file right now.
+         (global-countdown-freeze-for-game-beaten)
          (close-specific-task! (game-task finalboss-movies) (task-status unknown))
          (entity-birth-no-kill (-> self alts 5))
          (let ((a1-2 (new 'stack-no-clear 'event-message-block)))
@@ -888,10 +893,8 @@
    (flight-time time-frame)
    (stall-time  time-frame)))
 
-
 (deftype redshot-launch-array (structure)
   ((info redshot-launch-info 6 :inline)))
-
 
 (defbehavior robotboss-redshot-fill-array robotboss ((arg0 redshot-launch-array))
   (let ((s2-0 0)

@@ -23,7 +23,6 @@
    (init! (_type_ symbol symbol symbol symbol int int symbol) none)
    (set-delay! (_type_ time-frame) none)))
 
-
 (deftype baby-spider (nav-enemy)
   ((die-if-not-visible?               symbol)
    (hack-move-above-ground?           symbol)
@@ -45,7 +44,6 @@
    baby-spider-die-fast
    baby-spider-hatching
    baby-spider-resume))
-
 
 (defskelgroup *baby-spider-sg*
   baby-spider
@@ -259,7 +257,7 @@ baby-spider-default-event-handler
   :event baby-spider-default-event-handler
   :code
     (behavior ()
-    (mod-rule-trigger-glare)
+      (mod-rule-trigger-glare)
       (cond
         ((not *target*) (go-virtual nav-enemy-idle))
         ((target-in-range? self (-> self nav-info notice-distance)) (go-virtual nav-enemy-chase))

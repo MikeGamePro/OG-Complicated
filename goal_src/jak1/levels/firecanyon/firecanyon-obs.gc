@@ -13,7 +13,6 @@
    balloon-idle
    balloon-popping))
 
-
 (defpartgroup group-balloon
   :id 227
   :duration (seconds 0.017)
@@ -93,7 +92,7 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
-        (('attack) (send-event proc 'heat -10.0) (mod-rule-trigger-heating-balloons)(go balloon-popping))))
+        (('attack) (send-event proc 'heat -10.0) (mod-rule-trigger-heating-balloons) (go balloon-popping))))
   :code
     (behavior ()
       (transform-post)
@@ -128,7 +127,6 @@
    spike-down
    spike-idle
    spike-up))
-
 
 (defskelgroup *spike-sg*
   spike
@@ -271,7 +269,6 @@
   (:state-methods
    idle
    die))
-
 
 (defpartgroup group-dark-cluster-explosion
   :id 228

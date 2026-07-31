@@ -36,7 +36,6 @@
    (move-to-vec-or-quat! (_type_ vector quaternion) quaternion)
    (press! (_type_ symbol) int)))
 
-
 (defskelgroup *generic-button-sg*
   generic-button
   generic-button-lod0-jg
@@ -92,7 +91,7 @@
         (('move-to) (move-to-vec-or-quat! self (the-as vector (-> block param 0)) (the-as quaternion (-> block param 1))))))
   :enter
     (behavior ()
-    (mod-rule-counter-add-progress 'rule-button-pusher 1)
+      (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (press! self #t))
   :trans rider-trans
   :code
@@ -307,7 +306,6 @@
    active
    (use int level)
    hidden))
-
 
 (defstate use (warp-gate)
   :virtual #t

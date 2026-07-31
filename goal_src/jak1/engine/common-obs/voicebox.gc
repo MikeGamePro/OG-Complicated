@@ -11,7 +11,6 @@
   (:states
    cam-voicebox))
 
-
 (deftype voicebox (process-drawable)
   ((parent-override (pointer camera-voicebox) :overlay-at parent)
    (base-trans      vector :inline)
@@ -23,7 +22,6 @@
    enter
    idle
    exit))
-
 
 (defstate empty-state (process)
   :code nothing)

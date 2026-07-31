@@ -990,18 +990,13 @@
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
-        (('update)
-         (if (not (mod-rule-active? 'complication-drought))
-           (update! self)
-           (on-exit-water self)))))
+        (('update) (if (not (mod-rule-active? 'complication-drought)) (update! self) (on-exit-water self)))))
   :exit
     (behavior ()
       (on-exit-water self))
   :trans
     (behavior ()
-      (if (not (mod-rule-active? 'complication-drought))
-        (update! self)
-        (on-exit-water self)))
+      (if (not (mod-rule-active? 'complication-drought)) (update! self) (on-exit-water self)))
   :code anim-loop)
 
 (defmethod set-stack-size! ((this water-vol))

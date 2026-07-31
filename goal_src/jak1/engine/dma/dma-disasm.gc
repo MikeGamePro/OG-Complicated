@@ -18,7 +18,6 @@
    (string1 string)
    (string2 string)))
 
-
 (define *vif-disasm-table*
   (new 'static
        'boxed-array

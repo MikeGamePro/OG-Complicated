@@ -20,7 +20,6 @@
   (:states
    plat-flip-idle))
 
-
 (defskelgroup *plat-flip-sg*
   plat-flip
   plat-flip-geo-jg

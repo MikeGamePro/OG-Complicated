@@ -58,7 +58,6 @@
    puffer-idle
    puffer-patrol))
 
-
 (defskelgroup *puffer-sg*
   puffer
   puffer-main-lod0-jg
@@ -87,7 +86,8 @@
            (let ((f0-4 (atan (- (-> (the-as process-drawable v1-7) root trans x) (-> self root trans x))
                              (- (-> (the-as process-drawable v1-7) root trans z) (-> self root trans z)))))
              (quaternion-axis-angle! (-> self root quat) 0.0 1.0 0.0 f0-4))))
-       (notify-enemy-death self) (go puffer-die)
+       (notify-enemy-death self)
+       (go puffer-die)
        (return #t))
      (when (= (-> arg0 type) target)
        (when (send-event arg0 'attack (-> arg3 param 0) (static-attack-info ((shove-up (meters 1.5)) (shove-back (meters 2.5)))))
@@ -170,7 +170,6 @@
    (pt-dir          vector :inline)
    (buddy-dir       vector :inline)
    (dest            vector :inline)))
-
 
 (defmethod puffer-method-23 ((this puffer) (arg0 symbol))
   (local-vars (v1-0 process))

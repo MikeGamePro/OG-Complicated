@@ -290,24 +290,25 @@
 ;; ring buffer size. must be a power of two (mask below is size-1).
 ;; 512 frames covers >1.7s at 300fps and >8.5s at 60fps of input history.
 (defconstant INPUT-DELAY-MAX-FRAMES 512)
+
 (defconstant INPUT-DELAY-FRAME-MASK 511)
 
 ;; one recorded snapshot of raw controller input, tagged with capture time.
 (deftype input-delay-frame (structure)
   ((time    time-frame) ;; when this frame was captured (get-current-time units)
-   (button0 uint16)     ;; raw digital button bitmask
-   (rightx  uint8)      ;; raw analog sticks
+   (button0 uint16) ;; raw digital button bitmask
+   (rightx  uint8) ;; raw analog sticks
    (righty  uint8)
    (leftx   uint8)
    (lefty   uint8)
-   (abutton uint8 12)   ;; raw pressure-sensitive button values
+   (abutton uint8 12) ;; raw pressure-sensitive button values
    ))
 
 ;; per-controller ring buffer of recorded input frames.
 (deftype input-delay-buffer (basic)
   ((frames input-delay-frame 512 :inline) ;; INPUT-DELAY-MAX-FRAMES
-   (head   int32)  ;; index the next frame is written to
-   (count  int32)  ;; number of valid frames stored (saturates at max)
+   (head   int32) ;; index the next frame is written to
+   (count  int32) ;; number of valid frames stored (saturates at max)
    )
   (:methods
    (new (symbol type) _type_)))
@@ -320,10 +321,9 @@
 
 ;; global config + storage for all four controllers.
 (deftype input-delay-info (basic)
-  ((enabled? symbol)     ;; is the delay complication currently active?
+  ((enabled? symbol) ;; is the delay complication currently active?
    (delay    time-frame) ;; how far back to play input from
-   (buffers  input-delay-buffer 4)
-   )
+   (buffers  input-delay-buffer 4))
   (:methods
    (new (symbol type) _type_)))
 
@@ -394,8 +394,7 @@
         (when (and (= pick -1) (>= target (-> buf frames idx time)))
           (set! pick idx))))
     (cond
-      ((>= pick 0)
-       (input-delay-apply pad (-> buf frames pick)))
+      ((>= pick 0) (input-delay-apply pad (-> buf frames pick)))
       ((> (-> buf count) 0)
        ;; target predates everything we've recorded: use the oldest real
        ;; frame we've got instead of snapping to neutral.
@@ -453,9 +452,7 @@
         ;; complication is off. Everything computed below (button0-abs/rel,
         ;; stick dir, cheat codes) is then built from the delayed input
         ;; automatically.
-        (if (and (-> *input-delay* enabled?)
-                 (= *master-mode* 'game)
-                 (zero? (logand (-> pad valid) 128)))
+        (if (and (-> *input-delay* enabled?) (= *master-mode* 'game) (zero? (logand (-> pad valid) 128)))
           (service-input-delay pad (-> *input-delay* buffers pad-idx))
           (input-delay-reset (-> *input-delay* buffers pad-idx) pad))
         (cond
@@ -536,15 +533,14 @@
              ((= (shr (-> pad status) 4) 7)
               ;; invert analogs if mirrored mode. trust me, you'll need this.
               (#when PC_PORT
-                              (let ((invert-comp? (mod-rule-active? 'complication-invert))
-                                    (mirror-cheat? (pc-cheats? (-> *pc-settings* cheats) mirror)))
-                                (when (or (and invert-comp? (not mirror-cheat?))
-                                          (and (not invert-comp?) mirror-cheat?))
-                                  (set! (-> pad leftx) (- 255 (-> pad leftx)))
-                                  (set! (-> pad rightx) (- 255 (-> pad rightx))))
-                                (when invert-comp?
-                                  (set! (-> pad lefty) (- 255 (-> pad lefty)))
-                                  (set! (-> pad righty) (- 255 (-> pad righty))))))
+                (let ((invert-comp? (mod-rule-active? 'complication-invert))
+                      (mirror-cheat? (pc-cheats? (-> *pc-settings* cheats) mirror)))
+                  (when (or (and invert-comp? (not mirror-cheat?)) (and (not invert-comp?) mirror-cheat?))
+                    (set! (-> pad leftx) (- 255 (-> pad leftx)))
+                    (set! (-> pad rightx) (- 255 (-> pad rightx))))
+                  (when invert-comp?
+                    (set! (-> pad lefty) (- 255 (-> pad lefty)))
+                    (set! (-> pad righty) (- 255 (-> pad righty))))))
               ;; compute speed and direction, with deadband.
               (let ((f30-0 (* 0.0078125 (the float (+ (-> pad leftx) -128))))
                     (f28-0 (* 0.0078125 (the float (- 127 (the-as int (-> pad lefty)))))))

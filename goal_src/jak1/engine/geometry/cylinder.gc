@@ -31,7 +31,6 @@
 (deftype cylinder-verts (structure)
   ((vert vector 24 :inline)))
 
-
 (defmethod debug-draw ((this cylinder) (arg0 vector4w))
   "Debug draw a cylinder. This is slow and ugly"
   (rlet ((vf0 :class vf)
@@ -120,7 +119,6 @@
 ;; debug draw for cylinder flat.
 (deftype cylinder-flat-verts (structure)
   ((vert vector 10 :inline)))
-
 
 (defmethod debug-draw ((this cylinder-flat) (arg0 vector4w))
   (rlet ((vf0 :class vf)

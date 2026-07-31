@@ -211,7 +211,6 @@
    (explosion-force             float)
    (mine-weight                 float)))
 
-
 (define *BALLOONLURKER-bank*
   (new 'static
        'balloonlurker-bank
@@ -282,7 +281,6 @@
    (balloonlurker-mine-explode int)
    balloonlurker-patrol))
 
-
 (deftype balloonlurker-pilot (process-drawable)
   ((root            collide-shape-moving :override)
    (parent-override (pointer balloonlurker) :overlay-at parent))
@@ -292,7 +290,6 @@
   (:states
    balloonlurker-pilot-die
    balloonlurker-pilot-idle))
-
 
 (defskelgroup *balloonlurker-sg*
   balloonlurker
@@ -577,7 +574,7 @@
       (set! (-> self dead) #t))
   :code
     (behavior ()
-    (notify-enemy-death self)
+      (notify-enemy-death self)
       (local-vars (v1-27 symbol))
       (process-entity-status! self (entity-perm-status bit-4) #t)
       (process-entity-status! self (entity-perm-status dead) #t)

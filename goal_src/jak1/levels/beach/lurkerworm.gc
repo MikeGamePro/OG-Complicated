@@ -26,7 +26,6 @@
    lurkerworm-spot
    lurkerworm-strike))
 
-
 (defmethod relocate ((this lurkerworm) (offset int))
   (if (nonzero? (-> this part2)) (&+! (-> this part2) offset))
   (if (nonzero? (-> this twister)) (&+! (-> this twister) offset))
@@ -245,8 +244,8 @@ lurkerworm-default-post-behavior
     (behavior ()
       (loop
         (when (and (time-elapsed? (-> self state-time) (seconds 1))
-                 *target*
-                 (>= 81920.0 (vector-vector-distance (-> self root trans) (-> *target* control trans))))
+                   *target*
+                   (>= 81920.0 (vector-vector-distance (-> self root trans) (-> *target* control trans))))
           (mod-rule-trigger-glare)
           (go lurkerworm-spot))
         (suspend)))

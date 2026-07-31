@@ -278,7 +278,6 @@
    quicksandlurker-missile-idle
    quicksandlurker-missile-impact))
 
-
 (defstate quicksandlurker-missile-idle (quicksandlurker-missile)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
@@ -346,7 +345,6 @@
   ((position vector)
    (velocity vector)))
 
-
 (defbehavior quicksandlurker-missile-init-by-other quicksandlurker-missile ((arg0 quicksandlurker-missile-init-data) (arg1 entity-actor))
   (set! (-> self entity) arg1)
   (let ((s5-0 (new 'process 'collide-shape-moving self (collide-list-enum hit-by-player))))
@@ -399,7 +397,6 @@
    quicksandlurker-victory
    quicksandlurker-wait
    quicksandlurker-yawn))
-
 
 (defskelgroup *quicksandlurker-sg*
   quicksandlurker
@@ -656,7 +653,7 @@
   :trans quicksandlurker-check-hide-transition
   :code
     (behavior ()
-    (mod-rule-trigger-glare)
+      (mod-rule-trigger-glare)
       (process-spawn part-tracker
                      :init
                      part-tracker-init
@@ -680,7 +677,7 @@
   :event process-drawable-death-event-handler
   :code
     (behavior ()
-    (notify-enemy-death self)
+      (notify-enemy-death self)
       (logclear! (-> self mask) (process-mask actor-pause))
       (ja-channel-push! 1 (seconds 0.2))
       (ja-no-eval :group! quicksandlurker-die-ja :num! (seek!) :frame-num 0.0)

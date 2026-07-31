@@ -672,36 +672,35 @@
 
 (defstate target-pole-flip-up-jump (target)
   :event target-standard-event-handler
-  :enter
-    ;; (behavior ()
-    ;;   (mod-rule-trigger-failure 'rule-dont-move)
-    ;;   (mod-rule-trigger-brittle-bones)
-    ;;   (mod-rule-trigger-failure 'rule-grounded)
-      (-> target-jump-forward
-          enter)
-          ;; )
+  :enter ;; (behavior ()
+  ;;   (mod-rule-trigger-failure 'rule-dont-move)
+  ;;   (mod-rule-trigger-brittle-bones)
+  ;;   (mod-rule-trigger-failure 'rule-grounded)
+    (-> target-jump-forward
+        enter)
+  ;; )
   :exit target-exit
   :trans
-    (behavior ()
-      ((-> target-jump-forward trans))
-      (vector-flatten! (-> self control transv) (-> self control transv) (-> self control edge-grab-edge-dir)))
+  (behavior ()
+    ((-> target-jump-forward trans))
+    (vector-flatten! (-> self control transv) (-> self control transv) (-> self control edge-grab-edge-dir)))
   :code
-    (behavior ((arg0 float) (arg1 float))
-      (sound-play "jump")
-      (send-event *camera* 'damp-up)
-      (ja :group! eichar-pole-jump-loop-ja :num! min)
-      (let ((f0-1 (target-height-above-ground))
-            (f1-1 (vector-dot (-> self control dynam gravity-normal) (-> self control transv))))
-        (while (not (and (< (fabs (/ f0-1 (/ f1-1 300))) 40.0) (and (< f1-1 0.0) (ja-min? 0))))
-          (suspend)
-          (ja :num! (loop!))
-          (set! f0-1 (target-height-above-ground))
-          (set! f1-1 (vector-dot (-> self control dynam gravity-normal) (-> self control transv)))))
-      (ja-channel-push! 1 (seconds 0.25))
-      (ja-no-eval :group! eichar-jump-loop-ja :num! (loop!) :frame-num 0.0)
-      (loop
+  (behavior ((arg0 float) (arg1 float))
+    (sound-play "jump")
+    (send-event *camera* 'damp-up)
+    (ja :group! eichar-pole-jump-loop-ja :num! min)
+    (let ((f0-1 (target-height-above-ground))
+          (f1-1 (vector-dot (-> self control dynam gravity-normal) (-> self control transv))))
+      (while (not (and (< (fabs (/ f0-1 (/ f1-1 300))) 40.0) (and (< f1-1 0.0) (ja-min? 0))))
         (suspend)
-        (ja :group! eichar-jump-loop-ja :num! (loop!))))
+        (ja :num! (loop!))
+        (set! f0-1 (target-height-above-ground))
+        (set! f1-1 (vector-dot (-> self control dynam gravity-normal) (-> self control transv)))))
+    (ja-channel-push! 1 (seconds 0.25))
+    (ja-no-eval :group! eichar-jump-loop-ja :num! (loop!) :frame-num 0.0)
+    (loop
+      (suspend)
+      (ja :group! eichar-jump-loop-ja :num! (loop!))))
   :post target-post)
 
 (defstate target-pole-flip-forward (target)
@@ -1091,7 +1090,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-failure 'rule-landlubber)
+      (mod-rule-trigger-failure 'rule-landlubber)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *wade-mods*)
       (set-zero! (-> self water bob)))
@@ -1125,10 +1124,9 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-    (mod-rule-trigger-failure 'rule-landlubber)
+      (mod-rule-trigger-failure 'rule-landlubber)
       (mod-rule-trigger-failure 'rule-dont-move)
-      (-> target-wade-stance
-          enter))
+      (-> target-wade-stance enter))
   :exit
     (-> target-wade-stance
         exit)
@@ -1569,63 +1567,59 @@
   :event
     (-> target-jump
         event)
-  :enter
-    ;; (behavior ()
-    ;;   (mod-rule-trigger-failure 'rule-dont-move)
-      (-> target-jump
-          enter)
-          ;; )
+  :enter ;; (behavior ()
+  ;;   (mod-rule-trigger-failure 'rule-dont-move)
+    (-> target-jump
+        enter)
+  ;; )
   :exit target-exit
   :trans
-    (behavior ()
-      (cond
-        ((not (time-elapsed? (-> self state-time) (seconds 0.5)))
-         (logior! (-> self water flag) (water-flag jump-out))
-         (logclear! (-> self control status) (cshape-moving-flags onsurf onground tsurf)))
-        (else (set! (-> self trans-hook) (-> target-jump trans))))
-      ((-> target-jump trans)))
-  :code
-    (-> target-jump
-        code)
+  (behavior ()
+    (cond
+      ((not (time-elapsed? (-> self state-time) (seconds 0.5)))
+       (logior! (-> self water flag) (water-flag jump-out))
+       (logclear! (-> self control status) (cshape-moving-flags onsurf onground tsurf)))
+      (else (set! (-> self trans-hook) (-> target-jump trans))))
+    ((-> target-jump trans)))
+  :code (-> target-jump code)
   :post target-post)
 
 (defstate target-swim-jump (target)
   :event target-standard-event-handler
-  :enter
-;; (behavior ()
-;;     (mod-rule-trigger-failure 'rule-dont-move)  
+  :enter ;; (behavior ()
+  ;;     (mod-rule-trigger-failure 'rule-dont-move)  
     (-> target-swim-stance
         enter)
-        ;; )
+  ;; )
   :exit
-    (behavior ()
-      ((-> target-swim-stance exit))
-      (die-on-next-update! (-> self water bob))
-      (set! (-> self water align-offset) 0.0)
-      (logior! (-> self water flag) (water-flag jump-out)))
+  (behavior ()
+    ((-> target-swim-stance exit))
+    (die-on-next-update! (-> self water bob))
+    (set! (-> self water align-offset) 0.0)
+    (logior! (-> self water flag) (water-flag jump-out)))
   :code
-    (behavior ((arg0 float) (arg1 float))
-      (die-on-next-update! (-> self water bob))
-      (ja-channel-push! 1 (seconds 0.05))
-      (ja :group! eichar-swim-jump-ja :num! min)
-      (until (and (ja-done? 0) (= (-> self skel root-channel 0) (-> self skel channel)))
-        (compute-alignment! (-> self align))
-        (if (not (logtest? (-> self align flags) (align-flags disabled)))
-          (+! (-> self water align-offset) (* 0.6 (-> self align delta trans y))))
-        (suspend)
-        (if (= (-> self skel root-channel 0) (-> self skel channel)) (ja :num! (seek! max 2.0))))
-      (let ((f30-0 (fmax 0.0 (- (-> self water bob-offset)))))
-        (let ((s4-1 (new-stack-vector0)))
-          (let ((f0-8 (vector-dot (-> self control dynam gravity-normal) (-> self control transv))))
-            0.0
-            (vector-! s4-1 (-> self control transv) (vector-float*! s4-1 (-> self control dynam gravity-normal) f0-8)))
-          (let* ((f0-9 (vector-length s4-1))
-                 (f1-5 f0-9)
-                 (f2-1 0.4096))
-            (vector+! (-> self control transv)
-                      (vector-float*! (-> self control transv) (-> self control dynam gravity-normal) f2-1)
-                      (vector-float*! s4-1 s4-1 (/ f0-9 f1-5)))))
-        (go target-swim-jump-jump (+ f30-0 arg0) (+ f30-0 arg1) (the-as surface #f))))
+  (behavior ((arg0 float) (arg1 float))
+    (die-on-next-update! (-> self water bob))
+    (ja-channel-push! 1 (seconds 0.05))
+    (ja :group! eichar-swim-jump-ja :num! min)
+    (until (and (ja-done? 0) (= (-> self skel root-channel 0) (-> self skel channel)))
+      (compute-alignment! (-> self align))
+      (if (not (logtest? (-> self align flags) (align-flags disabled)))
+        (+! (-> self water align-offset) (* 0.6 (-> self align delta trans y))))
+      (suspend)
+      (if (= (-> self skel root-channel 0) (-> self skel channel)) (ja :num! (seek! max 2.0))))
+    (let ((f30-0 (fmax 0.0 (- (-> self water bob-offset)))))
+      (let ((s4-1 (new-stack-vector0)))
+        (let ((f0-8 (vector-dot (-> self control dynam gravity-normal) (-> self control transv))))
+          0.0
+          (vector-! s4-1 (-> self control transv) (vector-float*! s4-1 (-> self control dynam gravity-normal) f0-8)))
+        (let* ((f0-9 (vector-length s4-1))
+               (f1-5 f0-9)
+               (f2-1 0.4096))
+          (vector+! (-> self control transv)
+                    (vector-float*! (-> self control transv) (-> self control dynam gravity-normal) f2-1)
+                    (vector-float*! s4-1 s4-1 (/ f0-9 f1-5)))))
+      (go target-swim-jump-jump (+ f30-0 arg0) (+ f30-0 arg1) (the-as surface #f))))
   :post target-swim-post)
 
 (defstate target-hit-ground-hard (target)
@@ -1672,7 +1666,7 @@
         (target-standard-event-handler proc argc message block)))
   :code
     (behavior ((arg0 float) (arg1 symbol) (arg2 vector) (arg3 int))
-    (set! *last-launch-time* (current-time))
+      (set! *last-launch-time* (current-time))
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *turn-around-mods*)
       (ja-channel-push! 1 (seconds 0.15))

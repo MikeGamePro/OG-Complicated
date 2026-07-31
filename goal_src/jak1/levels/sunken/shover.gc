@@ -15,7 +15,6 @@
   (:states
    shover-idle))
 
-
 (defskelgroup *shover-sg*
   shover
   shover-lod0-jg

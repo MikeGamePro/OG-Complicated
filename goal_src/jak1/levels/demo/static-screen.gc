@@ -12,7 +12,6 @@
    (state-time time-frame))
   (:state-methods (idle int time-frame symbol)))
 
-
 (defmethod relocate ((this static-screen) (offset int))
   (let ((v1-0 *kernel-context*))
     (set! (-> v1-0 relocating-process) this)

@@ -12,7 +12,6 @@
 
 (deftype qbert-plat-on (process-drawable) ())
 
-
 (defskelgroup *qbert-plat-on-sg*
   qbert-plat-on
   qbert-plat-on-lod0-jg
@@ -30,7 +29,6 @@
    qbert-plat-on-die
    qbert-plat-on-mimic
    qbert-plat-wait-for-master))
-
 
 (defskelgroup *qbert-plat-sg*
   qbert-plat
@@ -82,7 +80,6 @@
   (:states (qbert-plat-master-do-door symbol)
    qbert-plat-master-idle
    qbert-plat-master-wait-for-door))
-
 
 (defstate qbert-plat-on-mimic (qbert-plat)
   :event

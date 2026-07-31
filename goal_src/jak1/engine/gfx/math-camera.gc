@@ -40,7 +40,6 @@
   ((fog-end   float)
    (fog-start float)))
 
-
 (defun fog-corrector-setup ((corrector fog-corrector) (math-cam math-camera))
   "Set the fog corrector based on the supplied math-camera"
   (set! (-> corrector fog-end) (* (-> math-cam fog-end) (-> math-cam fov-correction-factor)))

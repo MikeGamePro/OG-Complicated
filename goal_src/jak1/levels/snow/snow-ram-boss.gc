@@ -19,7 +19,6 @@
    ram-boss-proj-growing
    ram-boss-proj-launch))
 
-
 (deftype ram-boss (nav-enemy)
   ((parent-override          (pointer ram) :overlay-at parent)
    (facing-y                 float)
@@ -52,7 +51,6 @@
    ram-boss-throw
    ram-boss-tracking
    ram-boss-up-defend-block))
-
 
 (defskelgroup *ram-boss-sg*
   ram-boss
@@ -1143,7 +1141,9 @@
     (behavior ()
       (when *target*
         (let ((f0-0 (vector-vector-distance (target-pos 0) (-> self collide-info trans))))
-          (when (>= 18432.0 f0-0) (mod-rule-trigger-glare) (go ram-boss-tracking))))
+          (when (>= 18432.0 f0-0)
+            (mod-rule-trigger-glare)
+            (go ram-boss-tracking))))
       ((-> (method-of-type nav-enemy nav-enemy-patrol) trans))))
 
 (defstate nav-enemy-chase (ram-boss)

@@ -15,7 +15,6 @@
   (:states (launcherdoor-closed symbol)
    (launcherdoor-open symbol)))
 
-
 (defskelgroup *launcherdoor-sg*
   launcherdoor
   launcherdoor-geo-jg
