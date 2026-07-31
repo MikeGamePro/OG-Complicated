@@ -138,8 +138,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-twist-marked-slot* -1)
 
 ;; test seed
-(define *mod-rng-test-seed* (the uint 123456789))
-(define *mod-rng-use-fixed-seed?* #f)
 (define *mod-rng-content-state* (the uint 1))
 (define *mod-rng-punish-state*  (the uint 1))
 
@@ -769,7 +767,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-double-aphids) (seconds 40)) ;; 40
     ((eq? id 'complication-invert) (seconds 20)) ;; 20
     ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
-    ((eq? id 'complication-twisted) (seconds 8)) ;; 8
+    ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1503,7 +1501,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! (-> *mod-rule-slot-punishments* slot) #f)
         (+! *complications-rolled* 1)))
     (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (mod-rule-duration id)))
-    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1)))
+    (set! (-> *mod-rule-slot-grace-periods* slot) (+ (current-time) (seconds 1.25)))
     (mod-rule-on-activate id))
   (none))
 
@@ -3152,6 +3150,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! *mod-rng-seed-display* (the uint 0))
   (none))
 
+(defun mod-rule-context-reset! ()
+  (set! *mod-rule-twist-pending-count* -1)
+  (let ((i 0))
+    (while (< i 8)
+      (set! (-> *mod-rule-recent-rolls* i) #f)
+      (+! i 1)))
+  (let ((i 0))
+    (while (< i (length *trivia-questions-used*))
+      (set! (-> *trivia-questions-used* i) #f)
+      (+! i 1)))
+  (none))
+
 (defun mod-rng-content-state-save-value () (the int *mod-rng-content-state*))
 (defun mod-rng-content-state-resume-from-save ((val int))
   (set! *mod-rng-content-state* (the uint val)) (none))
@@ -3164,6 +3174,67 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rng-seed-display-resume-from-save ((val int))
 (format 0 "LOADING SEED: ~D~%" val)
   (set! *mod-rng-seed-display* (the uint val)) (none))
+
+(defun mod-rule-index-from-id ((id symbol))
+  (let ((i 0))
+    (while (< i *mod-rule-id-count*)
+      (when (= (mod-rule-id-from-index i) id)
+        (return i))
+      (+! i 1))
+    -1))
+
+(defun mod-rule-recent-rolls-save-value ()
+  (let ((result (the uint 0))
+        (i 0))
+    (while (< i 8)
+      (let* ((sym (-> *mod-rule-recent-rolls* i))
+             (idx (if sym (mod-rule-index-from-id sym) -1))
+             (byte-val (if (>= idx 0) (the uint idx) (the uint #xff))))
+        (set! result (logior result (shl byte-val (* i 8)))))
+      (+! i 1))
+    (the int result)))
+
+(defun mod-rule-recent-rolls-resume-from-save ((val int))
+  (let ((bits (the uint val))
+        (i 0))
+    (while (< i 8)
+      (let ((byte-val (logand (shr bits (* i 8)) (the uint #xff))))
+        (set! (-> *mod-rule-recent-rolls* i)
+              (if (= byte-val (the uint #xff)) #f (mod-rule-id-from-index (the int byte-val)))))
+      (+! i 1)))
+  (none))
+
+(defun mod-rule-twist-pending-count-save-value () *mod-rule-twist-pending-count*)
+(defun mod-rule-twist-pending-count-resume-from-save ((val int))
+  (set! *mod-rule-twist-pending-count* val) (none))
+
+(defun mod-trivia-used-word-save-value ((word int))
+  (let ((result (the uint 0))
+        (start (* word 64))
+        (end (min (length *trivia-questions-used*) (+ (* word 64) 64)))
+        (i 0))
+    (set! i start)
+    (while (< i end)
+      (when (-> *trivia-questions-used* i)
+        (set! result (logior result (shl (the uint 1) (- i start)))))
+      (+! i 1))
+    (the int result)))
+
+(defun mod-trivia-used-word-resume-from-save ((word int) (val int))
+  (let ((bits (the uint val))
+        (start (* word 64))
+        (end (min (length *trivia-questions-used*) (+ (* word 64) 64)))
+        (i 0))
+    (set! i start)
+    (while (< i end)
+      (set! (-> *trivia-questions-used* i) (= (logand (shr bits (- i start)) (the uint 1)) (the uint 1)))
+      (+! i 1)))
+  (none))
+
+(defun mod-trivia-used-word0-save-value () (mod-trivia-used-word-save-value 0))
+(defun mod-trivia-used-word0-resume-from-save ((val int)) (mod-trivia-used-word-resume-from-save 0 val))
+(defun mod-trivia-used-word1-save-value () (mod-trivia-used-word-save-value 1))
+(defun mod-trivia-used-word1-resume-from-save ((val int)) (mod-trivia-used-word-resume-from-save 1 val))
 
 (defun global-countdown-start ()
   (let ((active-seed (mod-rng-active-seed)))

@@ -42,6 +42,16 @@
 (define-extern mod-rng-seed-display-save-value (function int))
 (define-extern mod-rng-seed-display-resume-from-save (function int none))
 (define-extern mod-rng-reset-state! (function none))
+(define-extern mod-rule-context-reset! (function none))
+(define-extern mod-rng-reset-seed-display! (function none))
+(define-extern mod-rule-twist-pending-count-save-value (function int))
+(define-extern mod-rule-twist-pending-count-resume-from-save (function int none))
+(define-extern mod-rule-recent-rolls-save-value (function int))
+(define-extern mod-rule-recent-rolls-resume-from-save (function int none))
+(define-extern mod-trivia-used-word0-save-value (function int))
+(define-extern mod-trivia-used-word0-resume-from-save (function int none))
+(define-extern mod-trivia-used-word1-save-value (function int))
+(define-extern mod-trivia-used-word1-resume-from-save (function int none))
 
 ;; version identifier
 (defconstant SAVE_VERSION 1)
@@ -127,7 +137,11 @@
   (mod-stats-complications-rolled 516)
   (mod-rng-content-state 517)
   (mod-rng-punish-state 518)
-  (mod-rng-seed-display 519))
+  (mod-rng-seed-display 519)
+  (mod-rule-twist-pending-count 520)
+  (mod-rule-recent-rolls 521)
+  (mod-trivia-used-word0 522)
+  (mod-trivia-used-word1 523))
 
 ;; DECOMP BEGINS
 
@@ -677,8 +691,32 @@
                                                                                                             (set! (-> a0-98 user-uint64)
                                                                                                                   (the-as uint (mod-rng-seed-display-save-value))))
 
+                                                                                                          (let ((a0-99 (the-as game-save-tag (&+ v1-113 160))))
+                                                                                                            (set! (-> a0-99 elt-type) (game-save-elt mod-rule-twist-pending-count))
+                                                                                                            (set! (-> a0-99 elt-count) 0)
+                                                                                                            (set! (-> a0-99 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-twist-pending-count-save-value))))
+
+                                                                                                          (let ((a0-100 (the-as game-save-tag (&+ v1-113 176))))
+                                                                                                            (set! (-> a0-100 elt-type) (game-save-elt mod-rule-recent-rolls))
+                                                                                                            (set! (-> a0-100 elt-count) 0)
+                                                                                                            (set! (-> a0-100 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-recent-rolls-save-value))))
+
+                                                                                                          (let ((a0-101 (the-as game-save-tag (&+ v1-113 192))))
+                                                                                                            (set! (-> a0-101 elt-type) (game-save-elt mod-trivia-used-word0))
+                                                                                                            (set! (-> a0-101 elt-count) 0)
+                                                                                                            (set! (-> a0-101 user-uint64)
+                                                                                                                  (the-as uint (mod-trivia-used-word0-save-value))))
+
+                                                                                                          (let ((a0-102 (the-as game-save-tag (&+ v1-113 208))))
+                                                                                                            (set! (-> a0-102 elt-type) (game-save-elt mod-trivia-used-word1))
+                                                                                                            (set! (-> a0-102 elt-count) 0)
+                                                                                                            (set! (-> a0-102 user-uint64)
+                                                                                                                  (the-as uint (mod-trivia-used-word1-save-value))))
+
                                                                                                           (set! (-> arg0 length)
-                                                                                                                (&- (&+ v1-113 160)
+                                                                                                                (&- (&+ v1-113 224)
                                                                                                                     (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
                                                                                                           (if (< (-> arg0 allocated-length) (-> arg0 length))
                                                                                                             (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
@@ -688,6 +726,7 @@
   "Copy save data from a game-save to a game-info"
   (set! *mod-game-beaten?* #f)
   (mod-rng-reset-state!)
+  (mod-rule-context-reset!)
   (let ((save-data (the-as game-save-tag (-> save tag))))
     ;; loop over all tags
     (while (< (the-as int save-data) (the-as int (+ (+ (-> save length) 76) (the-as int save))))
@@ -721,6 +760,14 @@
            (mod-rng-punish-state-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rng-seed-display))
            (mod-rng-seed-display-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-twist-pending-count))
+           (mod-rule-twist-pending-count-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-recent-rolls))
+           (mod-rule-recent-rolls-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-trivia-used-word0))
+           (mod-trivia-used-word0-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-trivia-used-word1))
+           (mod-trivia-used-word1-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
