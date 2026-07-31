@@ -713,7 +713,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task citadel-sage-blue)
        (game-task citadel-sage-red)
        (game-task citadel-sage-yellow)
-       (game-task citadel-sage-green)))
+       (game-task citadel-sage-green)
+       (game-task village1-oracle-money1)
+       (game-task village1-oracle-money2)
+       (game-task village2-oracle-money1)
+       (game-task village2-oracle-money2)
+       (game-task village3-oracle-money1)
+       (game-task village3-oracle-money2)
+       ))
 
 (define *rules-rolled* 0)
 
@@ -803,7 +810,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
     ((eq? id 'rule-survivor) "STEP 1")
     ((eq? id 'rule-vendetta) "VENDETTA")
-    ((eq? id 'rule-blue-crate) "HANDS ON")
+    ((eq? id 'rule-hands-on) "HANDS ON")
     ((eq? id 'complication-eco-reserve) "ECO RESERVE")
     ((eq? id 'complication-red-stop) "RED STOP")
     ((eq? id 'rule-one-frame) "ONE FRAME")
@@ -865,7 +872,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-wings-tied) "YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT.")
     ((eq? id 'complication-jak-rabbit) "JUMP HEIGHTS ARE DOUBLED.")
     ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
-    ((eq? id 'rule-blue-crate) "DO NOT BREAK ANY CRATES WITH BLUE ECO.")
+    ((eq? id 'rule-hands-on) "CRATES MAY ONLY BE BROKEN VIA DIRECT CONTACT FROM JAK.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
     ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES TIMER.")
     ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
@@ -932,7 +939,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-drought) (seconds 45)) ;; 45
     ((eq? id 'complication-jak-rabbit) (seconds 45)) ;; 45
     ((eq? id 'rule-vendetta) (seconds 35)) ;; 35
-    ((eq? id 'rule-blue-crate) (seconds 60)) ;; 60
+    ((eq? id 'rule-hands-on) (seconds 60)) ;; 60
     ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
@@ -1012,7 +1019,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-survivor)
          (eq? id 'rule-management)
          (eq? id 'rule-vendetta)
-         (eq? id 'rule-blue-crate)
+         (eq? id 'rule-hands-on)
          (eq? id 'rule-one-frame)
          (eq? id 'rule-distancing)
          (eq? id 'rule-dont-move)
@@ -1711,7 +1718,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 24) 'complication-jak-rabbit)
     ((= idx 25) 'complication-hidden-treasure)
     ((= idx 26) 'rule-vendetta)
-    ((= idx 27) 'rule-blue-crate)
+    ((= idx 27) 'rule-hands-on)
     ((= idx 28) 'complication-eco-reserve)
     ((= idx 29) 'rule-one-frame)
     ((= idx 30) 'rule-distancing)
@@ -2025,7 +2032,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-hidden-treasure)
        (if (or is-klaww (eq? level-name 'finalboss) (string= (current-checkpoint-name) "firecanyon-start") deep-lavatube) 0 9))
       ((eq? id 'rule-loyal-customer)
-       (if (and (oracle-level? level-name) (>= (+ (current-orb-count) money-left) 120) (<= (- 120 (current-orb-count)) 35)) 20 0))
+            (let ((oracles-closed?
+                    (cond
+                      ((eq? level-name 'village1)
+                        (and (task-closed? (game-task village1-oracle-money1) (task-status need-resolution))
+                             (task-closed? (game-task village1-oracle-money2) (task-status need-resolution))))
+                      ((eq? level-name 'village2)
+                        (and (task-closed? (game-task village2-oracle-money1) (task-status need-resolution))
+                             (task-closed? (game-task village2-oracle-money2) (task-status need-resolution))))
+                      ((eq? level-name 'village3)
+                        (and (task-closed? (game-task village3-oracle-money1) (task-status need-resolution))
+                             (task-closed? (game-task village3-oracle-money2) (task-status need-resolution))))
+                      (else #f))))
+              (if (and (oracle-level? level-name) 
+                        (not oracles-closed?)
+                        (>= (+ (current-orb-count) money-left) 120) 
+                        (<= (- 120 (current-orb-count)) 35)) 
+                20 
+                0)))
       ;; Enemies
       ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
        (cond
@@ -2071,7 +2095,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 0 0)) ;; 20
       ;; Crates
       ((eq? id 'rule-crate-break) (if (or is-klaww is-minigame (sparse-crate-level? level-name)) 0 10))
-      ((eq? id 'rule-blue-crate) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 9))
+      ((eq? id 'rule-hands-on) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 9))
       ;; Movement
       ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
       ((eq? id 'complication-invert) (if (invert-controls-toggle-enabled?) 5 0))
