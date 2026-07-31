@@ -3004,7 +3004,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                               global-buf
                               4
                               215
-                              (font-color white)
+                              (font-color flat-yellow)
                               (font-flags shadow kerning large)
                               0.4)
        ;; Draw main countdown timer
