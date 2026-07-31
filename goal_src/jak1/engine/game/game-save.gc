@@ -35,6 +35,13 @@
 (define-extern mod-stats-rules-followed-resume-from-save (function int none))
 (define-extern mod-stats-complications-rolled-save-value (function int))
 (define-extern mod-stats-complications-rolled-resume-from-save (function int none))
+(define-extern mod-rng-content-state-save-value (function int))
+(define-extern mod-rng-content-state-resume-from-save (function int none))
+(define-extern mod-rng-punish-state-save-value (function int))
+(define-extern mod-rng-punish-state-resume-from-save (function int none))
+(define-extern mod-rng-seed-display-save-value (function int))
+(define-extern mod-rng-seed-display-resume-from-save (function int none))
+(define-extern mod-rng-reset-state! (function none))
 
 ;; version identifier
 (defconstant SAVE_VERSION 1)
@@ -117,7 +124,10 @@
   (mod-stats-rules-rolled 513)
   (mod-stats-rules-broken 514)
   (mod-stats-rules-followed 515)
-  (mod-stats-complications-rolled 516))
+  (mod-stats-complications-rolled 516)
+  (mod-rng-content-state 517)
+  (mod-rng-punish-state 518)
+  (mod-rng-seed-display 519))
 
 ;; DECOMP BEGINS
 
@@ -648,8 +658,27 @@
                                                                                                             (set! (-> a0-95 user-uint64)
                                                                                                                   (the-as uint (mod-stats-complications-rolled-save-value))))
 
+                                                                                                          (let ((a0-96 (the-as game-save-tag (&+ v1-113 112))))
+                                                                                                            (set! (-> a0-96 elt-type) (game-save-elt mod-rng-content-state))
+                                                                                                            (set! (-> a0-96 elt-count) 0)
+                                                                                                            (set! (-> a0-96 user-uint64)
+                                                                                                                  (the-as uint (mod-rng-content-state-save-value))))
+
+                                                                                                          (let ((a0-97 (the-as game-save-tag (&+ v1-113 128))))
+                                                                                                            (set! (-> a0-97 elt-type) (game-save-elt mod-rng-punish-state))
+                                                                                                            (set! (-> a0-97 elt-count) 0)
+                                                                                                            (set! (-> a0-97 user-uint64)
+                                                                                                                  (the-as uint (mod-rng-punish-state-save-value))))
+
+                                                                                                          (let ((a0-98 (the-as game-save-tag (&+ v1-113 144))))
+                                                                                                            (set! (-> a0-98 elt-type) (game-save-elt mod-rng-seed-display))
+                                                                                                            (set! (-> a0-98 elt-count) 0)
+                                                                                                            (format 0 "SAVING SEED TAG: ~D~%" (mod-rng-seed-display-save-value))
+                                                                                                            (set! (-> a0-98 user-uint64)
+                                                                                                                  (the-as uint (mod-rng-seed-display-save-value))))
+
                                                                                                           (set! (-> arg0 length)
-                                                                                                                (&- (&+ v1-113 112)
+                                                                                                                (&- (&+ v1-113 160)
                                                                                                                     (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
                                                                                                           (if (< (-> arg0 allocated-length) (-> arg0 length))
                                                                                                             (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
@@ -657,8 +686,8 @@
 
 (defmethod load-game! ((this game-info) (save game-save))
   "Copy save data from a game-save to a game-info"
-  ;; mod: default to "not beaten" BEFORE reading any tags.
   (set! *mod-game-beaten?* #f)
+  (mod-rng-reset-state!)
   (let ((save-data (the-as game-save-tag (-> save tag))))
     ;; loop over all tags
     (while (< (the-as int save-data) (the-as int (+ (+ (-> save length) 76) (the-as int save))))
@@ -674,7 +703,7 @@
           ;; ((= a0-1 (game-save-elt play-hints)) (set! (-> *setting-control* default play-hints) (= (-> save-data user-uint64) 1)))
           ((= a0-1 (game-save-elt mod-game-beaten))
            (mod-game-beaten-resume-from-save (the-as int (-> save-data user-uint64))))
-((= a0-1 (game-save-elt mod-global-timer))
+          ((= a0-1 (game-save-elt mod-global-timer))
            (global-countdown-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-global-countup))
           (global-countup-resume-from-save (the-as int (-> save-data user-uint64))))
@@ -686,6 +715,12 @@
            (mod-stats-rules-followed-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-stats-complications-rolled))
            (mod-stats-complications-rolled-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rng-content-state))
+           (mod-rng-content-state-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rng-punish-state))
+           (mod-rng-punish-state-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rng-seed-display))
+           (mod-rng-seed-display-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
