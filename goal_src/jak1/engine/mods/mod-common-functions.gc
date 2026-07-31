@@ -176,7 +176,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 
-(define *mod-rule-id-count* 58)
+(define *mod-rule-id-count* 59)
 
 (define *mean-look-clear-time* 0)
 
@@ -831,6 +831,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-invert) "THIS ONE SUCKS")
     ((eq? id 'complication-loose-pockets) "LOOSE POCKETS")
     ((eq? id 'complication-twisted) "TWISTED")
+    ((eq? id 'complication-ya-cut) "I LIKE YA CUT, G")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -897,6 +898,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (> rolls-away 0)
          (string-format "THE RULE ROLLED ~D RULES FROM NOW MUST BE BROKEN." rolls-away)
          "A LATER RULE MUST BE BROKEN.")))
+    ((eq? id 'complication-ya-cut) "")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -958,6 +960,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-invert) (seconds 20)) ;; 20
     ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
+    ((eq? id 'complication-ya-cut) (seconds 4)) ;; 4
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1053,7 +1056,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-double-aphids)
          (eq? id 'complication-invert)
          (eq? id 'complication-loose-pockets)
-         (eq? id 'complication-twisted))
+         (eq? id 'complication-twisted)
+         (eq? id 'complication-ya-cut))
      'complication)
     (else 'unknown)))
 
@@ -1507,6 +1511,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! total-weight next-weight)))
     #f))
 
+(defun play-custom-sfx ((filename string) (base-volume float))
+  (let* ((sfx-vol (-> *setting-control* current sfx-volume))
+         (scaled-vol (the int (* base-volume (/ sfx-vol 100.0)))))
+    (play-sound-file filename scaled-vol)))
+
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'complication-twisted) (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (mod-rand-int-range 1 4)))))
@@ -1514,6 +1523,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hidden-treasure) (refresh-money-actors))
     ((eq? id 'complication-cumbersome) (orb-weight-apply!))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
+    ((eq? id 'complication-ya-cut)
+    (play-custom-sfx "I like ya cut g.mp3" 30.0)
+     (process-spawn-function process 
+       (lambda ()
+         (let ((start-time (current-time))) 
+           (until (>= (- (current-time) start-time) (seconds 1.35)) 
+             (suspend)))
+         (if (and (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) (target-on-racer?))
+             (target-attack-up *target* 'attack 'explode)
+             (send-event *target* 'attack #f (static-attack-info ((shove-back (meters 999)) (shove-up (meters 20)))))))))
     ((eq? id 'complication-invisible-man)
      (target-mesh-invis-set! #t)
      (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 0.0)
@@ -1723,6 +1742,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 55) 'complication-invert)
     ((= idx 56) 'complication-loose-pockets)
     ((= idx 57) 'complication-twisted)
+    ((= idx 58) 'complication-ya-cut)
     (else #f)))
 
 ;; (defun mod-rule-random-id ()
@@ -2096,6 +2116,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           6)
          (else 0)))
       ;; Special
+      ((eq? id 'complication-ya-cut)
+       (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 6 3))
       ((eq? id 'rule-side-to-side) (if is-klaww 50 0))
       ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
       ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 12))
