@@ -5,7 +5,6 @@ extend hands on to "only break crates directly by touching" (no eco, flut, explo
 expand cumbersome moveset
 scale punishments to settings
 block npc cells on fuel shortage
-lower/remove green eco pill limit
 
 new zoomer rule
 add plunger-lurker as kill

@@ -611,6 +611,7 @@
          (if (logtest? (-> (the-as collide-shape-moving (-> this process root)) status) (cshape-moving-flags on-water))
            (set-time! (-> this on-water-time)))
          (set! (-> this drip-wetness) 1.0)
+         (mod-rule-trigger-failure 'rule-landlubber)
          (set! (-> this drip-height) (fmax (- (-> this surface-height) (-> this bottom 0 y)) (-> this drip-height)))
          (set! (-> this drip-speed) 15.0)
          (if (not (logtest? (-> this flag) (water-flag touch-water))) (water-control-method-15 this))
