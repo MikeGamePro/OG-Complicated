@@ -20,6 +20,8 @@
 
 (define-extern *global-countup-timer* int)
 
+(define-extern mod-calc-run-score (function float))
+
 (defmethod ease-loc-t ((this robotboss))
   (parameter-ease-sin-clamp (-> this loc-t)))
 
@@ -314,6 +316,7 @@
          (set! *mod-game-beaten?* #t)
          (set! *final-remaining-time* *global-countdown-remaining-time*)
          (set! *final-time* *global-countup-timer*)
+         (set! *final-score* (the int (mod-calc-run-score)))
          ;; mod: game is beaten, stop the countdown/rules for this file right now.
          (global-countdown-freeze-for-game-beaten)
          (close-specific-task! (game-task finalboss-movies) (task-status unknown))

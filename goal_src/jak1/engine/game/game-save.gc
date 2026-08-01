@@ -84,6 +84,18 @@
 
 (define-extern mod-trivia-used-word1-resume-from-save (function int none))
 
+(define-extern final-time-resume-from-save (function int none))
+
+(define-extern final-time-save-value (function int))
+
+(define-extern final-remaining-time-resume-from-save (function int none))
+
+(define-extern final-remaining-time-save-value (function int))
+
+(define-extern final-score-resume-from-save (function int none))
+
+(define-extern final-score-save-value (function int))
+
 ;; version identifier
 (defconstant SAVE_VERSION 1)
 
@@ -172,7 +184,10 @@
   (mod-rule-twist-pending-count 520)
   (mod-rule-recent-rolls 521)
   (mod-trivia-used-word0 522)
-  (mod-trivia-used-word1 523))
+  (mod-trivia-used-word1 523)
+  (final-time 524)
+  (final-remaining-time 525)
+  (final-score 526))
 
 ;; DECOMP BEGINS
 
@@ -718,7 +733,19 @@
                                                                                                             (set! (-> a0-102 elt-type) (game-save-elt mod-trivia-used-word1))
                                                                                                             (set! (-> a0-102 elt-count) 0)
                                                                                                             (set! (-> a0-102 user-uint64) (the-as uint (mod-trivia-used-word1-save-value))))
-                                                                                                          (set! (-> arg0 length) (&- (&+ v1-113 224) (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+                                                                                                          (let ((a0-103 (the-as game-save-tag (&+ v1-113 224))))
+                                                                                                            (set! (-> a0-103 elt-type) (game-save-elt final-time))
+                                                                                                            (set! (-> a0-103 elt-count) 0)
+                                                                                                            (set! (-> a0-103 user-uint64) (the-as uint (final-time-save-value))))
+                                                                                                          (let ((a0-104 (the-as game-save-tag (&+ v1-113 240))))
+                                                                                                            (set! (-> a0-104 elt-type) (game-save-elt final-remaining-time))
+                                                                                                            (set! (-> a0-104 elt-count) 0)
+                                                                                                            (set! (-> a0-104 user-uint64) (the-as uint (final-remaining-time-save-value))))
+                                                                                                          (let ((a0-105 (the-as game-save-tag (&+ v1-113 256))))
+                                                                                                            (set! (-> a0-105 elt-type) (game-save-elt final-score))
+                                                                                                            (set! (-> a0-105 elt-count) 0)
+                                                                                                            (set! (-> a0-105 user-uint64) (the-as uint (final-score-save-value))))
+                                                                                                          (set! (-> arg0 length) (&- (&+ v1-113 272) (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   (if (< (-> arg0 allocated-length) (-> arg0 length))
     (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
   (none))
@@ -766,6 +793,12 @@
            (mod-trivia-used-word0-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-trivia-used-word1))
            (mod-trivia-used-word1-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt final-time))
+           (final-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt final-remaining-time))
+           (final-remaining-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt final-score))
+           (final-score-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag

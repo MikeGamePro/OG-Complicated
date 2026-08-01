@@ -16,6 +16,8 @@
 
 (define-extern *final-time* int)
 
+(define-extern *final-score* int)
+
 (define-extern mod-format-time-frame (function time-frame int symbol string))
 
 (defun set-credits-font-color ((arg0 float))
@@ -73,26 +75,28 @@
 
 (define *tmp-cred-str* (new 'global 'string 256 (the string #f)))
 
-(define *custom-credits-line-count* 22)
+(define *custom-credits-line-count* 25)
 
 (defun get-custom-credits-line ((line-num int))
   (clear *tmp-cred-str*)
   (case line-num
     ((0) (format *tmp-cred-str* "~33LFINAL TIME"))
     ((1) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-time* 3 'always)))
-    ((3) (format *tmp-cred-str* "~33LA COMPLICATED MOD"))
-    ((4) (format *tmp-cred-str* "~33LBY"))
-    ((5) (format *tmp-cred-str* "MIKEGAMEPRO"))
-    ((7) (format *tmp-cred-str* "~33LRULES BROKEN"))
-    ((8) (format *tmp-cred-str* "~D" *rules-broken*))
-    ((10) (format *tmp-cred-str* "~33LRULES FOLLOWED"))
-    ((11) (format *tmp-cred-str* "~D" *rules-followed*))
-    ((13) (format *tmp-cred-str* "~33LCOMPLICATIONS ENDURED"))
-    ((14) (format *tmp-cred-str* "~D" *complications-rolled*))
-    ((16) (format *tmp-cred-str* "~33LTIME REMAINING"))
-    ((17) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-remaining-time* 3 'always)))
-    ((19) (format *tmp-cred-str* "JAK AND DAXTER:"))
-    ((20) (format *tmp-cred-str* "THE PRECURSOR LEGACY"))
+    ((3) (format *tmp-cred-str* "~33LFINAL SCORE"))
+    ((4) (format *tmp-cred-str* "~D" *final-score*))
+    ((6) (format *tmp-cred-str* "~33LA COMPLICATED MOD"))
+    ((7) (format *tmp-cred-str* "~33LBY"))
+    ((8) (format *tmp-cred-str* "MIKEGAMEPRO"))
+    ((10) (format *tmp-cred-str* "~33LRULES BROKEN"))
+    ((11) (format *tmp-cred-str* "~D" *rules-broken*))
+    ((13) (format *tmp-cred-str* "~33LRULES FOLLOWED"))
+    ((14) (format *tmp-cred-str* "~D" *rules-followed*))
+    ((16) (format *tmp-cred-str* "~33LCOMPLICATIONS ENDURED"))
+    ((17) (format *tmp-cred-str* "~D" *complications-rolled*))
+    ((19) (format *tmp-cred-str* "~33LTIME REMAINING"))
+    ((20) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-remaining-time* 3 'always)))
+    ((22) (format *tmp-cred-str* "JAK AND DAXTER:"))
+    ((23) (format *tmp-cred-str* "THE PRECURSOR LEGACY"))
     (else (return (the-as string #f))))
   *tmp-cred-str*)
 

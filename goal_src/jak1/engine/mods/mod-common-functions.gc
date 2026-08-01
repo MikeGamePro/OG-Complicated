@@ -734,6 +734,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *final-time* 0)
 
+(define *final-score* 0)
+
 (define *show-countup?* #f)
 
 (defun mod-game-beaten-resume-from-save ((value int))
@@ -743,11 +745,36 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-game-beaten-save-value ()
   (if *mod-game-beaten?* 1 0))
 
+(defun final-time-save-value ()
+  *final-time*)
+
+(defun final-time-resume-from-save ((value int))
+  (set! *final-time* value)
+  (none))
+
+(defun final-remaining-time-save-value ()
+  *final-remaining-time*)
+
+(defun final-remaining-time-resume-from-save ((value int))
+  (set! *final-remaining-time* value)
+  (none))
+
+(defun final-score-save-value ()
+  *final-score*)
+
+(defun final-score-resume-from-save ((value int))
+  (set! *final-score* value)
+  (none))
+
 (defun mod-stats-reset! ()
   (set! *rules-rolled* 0)
   (set! *rules-broken* 0)
   (set! *rules-followed* 0)
   (set! *complications-rolled* 0)
+  (set! *final-time* 0)
+  (set! *final-remaining-time* 0)
+  (set! *final-score* 0)
+  (set! *mod-game-beaten?* #f)
   (none))
 
 (defun mod-stats-rules-rolled-save-value ()
@@ -777,6 +804,29 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-stats-complications-rolled-resume-from-save ((value int))
   (set! *complications-rolled* value)
   (none))
+
+(define SCORE-MAX-INC 35780.0)
+(define SCORE-TIME-SCALE 6300.0)
+(define SCORE-MAX-SCORE 100000.0)
+(define SCORE-W-TIME 0.25)
+(define SCORE-W-INC 0.75)
+
+(defun mod-calc-run-score ()
+  (let* ((inc-total (+ (* 101.0 (cell-increment-value))
+                        (* 2000.0 (orb-increment-value))
+                        (* 112.0 (fly-increment-value))
+                        (countdown-start-seconds-value)))
+         (inc-norm (/ inc-total SCORE-MAX-INC))
+         (final-time-seconds (/ (the float *final-time*) (the float TICKS_PER_SECOND)))
+         (time-factor (/ SCORE-TIME-SCALE (+ SCORE-TIME-SCALE final-time-seconds)))
+         (score 0.0))
+    (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
+    (set! score (* SCORE-MAX-SCORE
+                   (+ (* SCORE-W-TIME time-factor)
+                      (* SCORE-W-INC (- 1.0 inc-norm)))))
+    (format #t "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f score ~f~%"
+            inc-total inc-norm final-time-seconds time-factor score)
+    score))
 
 (defun mod-rule-name ((id symbol))
   (cond
@@ -1774,12 +1824,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (frac-millis (the int (/ (* (mod ticks (seconds 1)) 1000) (seconds 1)))))
     (cond
       ((and show-hours? (= decimal-digits 3))
-       (string-format "~2,'0D:~2,'0D:~2,'0D.~3,'0D" hours minutes-out seconds-part frac-millis))
+       (string-format "~D:~2,'0D:~2,'0D.~3,'0D" hours minutes-out seconds-part frac-millis))
       ((and show-hours? (= decimal-digits 2))
-       (string-format "~2,'0D:~2,'0D:~2,'0D.~2,'0D" hours minutes-out seconds-part frac-hundredths))
+       (string-format "~D:~2,'0D:~2,'0D.~2,'0D" hours minutes-out seconds-part frac-hundredths))
       ((and show-hours? (= decimal-digits 1))
-       (string-format "~2,'0D:~2,'0D:~2,'0D.~1,'0D" hours minutes-out seconds-part frac-tenths))
-      (show-hours? (string-format "~2,'0D:~2,'0D:~2,'0D" hours minutes-out seconds-part))
+       (string-format "~D:~2,'0D:~2,'0D.~1,'0D" hours minutes-out seconds-part frac-tenths))
+      (show-hours? (string-format "~D:~2,'0D:~2,'0D" hours minutes-out seconds-part))
       ((= decimal-digits 3) (string-format "~D:~2,'0D.~3,'0D" minutes-out seconds-part frac-millis))
       ((= decimal-digits 2) (string-format "~D:~2,'0D.~2,'0D" minutes-out seconds-part frac-hundredths))
       ((= decimal-digits 1) (string-format "~D:~2,'0D.~1,'0D" minutes-out seconds-part frac-tenths))
