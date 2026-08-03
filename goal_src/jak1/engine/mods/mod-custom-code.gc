@@ -149,6 +149,7 @@
     (format #t "enemy type: ~a~%" enemy-type)
     (mod-rule-trigger-disassociate)
     (mod-rule-trigger-lurker-pressure)
+    (mod-rule-trigger-double-kill)
     (mod-rule-trigger-hitlist enemy-type)
     (mod-rule-trigger-flop-this was-flop?)
     (mod-rule-trigger-red-eco was-red?))

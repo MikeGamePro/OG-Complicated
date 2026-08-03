@@ -170,13 +170,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-player-hit-write-idx* 0)
 
+(define *mod-rule-last-kill-time* 0)
+
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
 
 (define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
 
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 
-(define *mod-rule-id-count* 59)
+(define *mod-rule-id-count* 61) ;; DON'T FORGET TO UPDATE WITH NEW RULES
 
 (define *mean-look-clear-time* 0)
 
@@ -835,6 +837,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) "DIE")
     ((eq? id 'rule-lurker-pressure) "BLOODLUST")
     ((eq? id 'rule-hitlist) "HITLIST")
+    ((eq? id 'rule-double-kill) "DOUBLE KILL")
     ((eq? id 'rule-sniper) "SNIPER")
     ((eq? id 'rule-crate-break) "BULL AND CHINA")
     ((eq? id 'rule-money-pressure) "CASH GRAB")
@@ -889,6 +892,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-loose-pockets) "LOOSE POCKETS")
     ((eq? id 'complication-twisted) "TWISTED")
     ((eq? id 'complication-ya-cut) "I LIKE YA CUT, G")
+    ((eq? id 'complication-income-tax) "INCOME TAX")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -898,6 +902,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) "KILL HIM. KILL HIM NOW.")
     ((eq? id 'rule-lurker-pressure) "KILL 6 LURKERS.")
     ((eq? id 'rule-hitlist) "KILL 3 UNIQUE LURKER TYPES.")
+    ((eq? id 'rule-double-kill) "KILL 2 LURKERS AT THE SAME TIME.")
     ((eq? id 'rule-sniper) "KILL A LURKER FROM AT LEAST 70 METERS AWAY.")
     ((eq? id 'rule-crate-break) "BREAK 5 CRATES.")
     ((eq? id 'rule-money-pressure) "COLLECT 20 ORBS.")
@@ -922,7 +927,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-wings-tied) "YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT.")
     ((eq? id 'complication-jak-rabbit) "JUMP HEIGHTS ARE DOUBLED.")
     ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
-    ((eq? id 'rule-hands-on) "CRATES MAY ONLY BE BROKEN VIA DIRECT CONTACT BY JAK.")
+    ((eq? id 'rule-hands-on) "CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
     ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES TIMER.")
     ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
@@ -944,7 +949,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-invisible-man) "JAK IS INVISIBLE.")
     ((eq? id 'rule-cooked) "BURN JAK.")
     ((eq? id 'complication-joyride) "HEY! THERE\c12S THE FLUT-FLUT!")
-    ((eq? id 'rule-sagging-sails) "MISS 3 5-POUND FISH.")
+    ((eq? id 'rule-sagging-sails) "MISS 3 FIVE-POUND FISH.")
     ((eq? id 'rule-side-to-side) "DO NOT TOUCH THE MIDDLE PLATFORM.")
     ((eq? id 'rule-landlubber) "DO NOT TOUCH THE WATER.")
     ((eq? id 'complication-double-aphids) "DOUBLE THE APHIDS.")
@@ -956,6 +961,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (string-format "THE RULE ROLLED ~D RULES FROM NOW MUST BE BROKEN." rolls-away)
          "A LATER RULE MUST BE BROKEN.")))
     ((eq? id 'complication-ya-cut) "")
+    ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -965,6 +971,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-die) (seconds 20)) ;; 20
     ((eq? id 'rule-lurker-pressure) (seconds 45)) ;; 45
     ((eq? id 'rule-hitlist) (seconds 45)) ;; 45
+    ((eq? id 'rule-double-kill) (seconds 45)) ;; 45
     ((eq? id 'rule-sniper) (seconds 75)) ;; 75
     ((eq? id 'rule-money-pressure) (seconds 35)) ;; 35
     ((eq? id 'rule-fuel-pressure) (seconds 35)) ;; 35
@@ -1018,12 +1025,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     ((eq? id 'complication-ya-cut) (seconds 4)) ;; 4
+    ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
   (cond
     ((eq? id 'rule-lurker-pressure) 'counter)
     ((eq? id 'rule-hitlist) 'counter)
+    ((eq? id 'rule-double-kill) 'event-once)
     ((eq? id 'rule-crate-break) 'counter)
     ((eq? id 'rule-money-pressure) 'counter)
     ((eq? id 'rule-fuel-pressure) 'event-once)
@@ -1059,6 +1068,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-die)
          (eq? id 'rule-lurker-pressure)
          (eq? id 'rule-hitlist)
+         (eq? id 'rule-double-kill)
          (eq? id 'rule-sniper)
          (eq? id 'rule-crate-break)
          (eq? id 'rule-money-pressure)
@@ -1114,7 +1124,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-invert)
          (eq? id 'complication-loose-pockets)
          (eq? id 'complication-twisted)
-         (eq? id 'complication-ya-cut))
+         (eq? id 'complication-ya-cut)
+         (eq? id 'complication-income-tax))
      'complication)
     (else 'unknown)))
 
@@ -1587,6 +1598,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (cond
     ((eq? id 'complication-twisted) (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (mod-rand-int-range 1 4)))))
     ((eq? id 'rule-hitlist) (dotimes (slot 3) (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
+    ((eq? id 'rule-double-kill) (set! *mod-rule-last-kill-time* 0))
     ((eq? id 'rule-hidden-treasure) (refresh-money-actors))
     ((eq? id 'complication-cumbersome) (orb-weight-apply!))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
@@ -1734,6 +1746,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-clear-recent-rolls)
   (mod-rule-clear-trivia-used)
   (set! *mod-rule-current-slot* 0)
+  (set! *mod-rule-last-kill-time* 0)
   (set! *mod-rule-twist-pending-count* -1)
   (set! *mod-rule-twist-marked-slot* -1)
   (none))
@@ -1812,6 +1825,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 56) 'complication-loose-pockets)
     ((= idx 57) 'complication-twisted)
     ((= idx 58) 'complication-ya-cut)
+    ((= idx 59) 'complication-income-tax)
+    ((= idx 60) 'rule-double-kill)
     (else #f)))
 
 ;; (defun mod-rule-random-id ()
@@ -2025,6 +2040,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (task-complete? *game-info* (game-task beach-flutflut))))
       (eq? level 'citadel)
       (eq? level 'sunken)
+      (eq? level 'sunkenb)
       (eq? level 'village2)))
 
 (defun oracle-level? ((level symbol))
@@ -2037,6 +2053,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'village3)
       (eq? level 'village2)
       (eq? level 'sunken)
+      (eq? level 'sunkenb)
       (string= (current-checkpoint-name) "ogre-start")))
 
 (defun mod-rule-roll-priority ((id symbol))
@@ -2126,6 +2143,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
          (else 10)))
       ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 10))
+      ((eq? id 'rule-double-kill)
+       (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 8))
       ((eq? id 'rule-sniper)
        (if (and (not (mod-rule-active? 'rule-flop-this))
                 (or (eq? level-name 'swamp)
@@ -2211,6 +2230,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-ya-cut)
        (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 6 3))
       ((eq? id 'rule-side-to-side) (if is-klaww 50 0))
+      ((eq? id 'complication-income-tax) 6)
       ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
       ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 12))
       ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 6))
@@ -2284,7 +2304,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (is-minigame 0)
          (else 8)))
       ((eq? id 'complication-twisted) (if (or (>= *mod-rule-twist-pending-count* 0) (>= *mod-rule-twist-marked-slot* 0)) 0 6))
-      (else 10)))))
+      (else 8)))))
 
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
@@ -2666,6 +2686,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-trigger-lurker-pressure ()
   (when (mod-rule-active? 'rule-lurker-pressure)
     (mod-rule-counter-add-progress 'rule-lurker-pressure 1))
+  (none))
+
+(defun mod-rule-trigger-double-kill ()
+  (when (mod-rule-active? 'rule-double-kill)
+    (let ((now (current-time)))
+      (if (and (> *mod-rule-last-kill-time* 0) (<= (- now *mod-rule-last-kill-time*) 0.15))
+        (begin
+          (mod-rule-counter-add-progress 'rule-double-kill 1)
+          (set! *mod-rule-last-kill-time* 0))
+        (set! *mod-rule-last-kill-time* now))))
   (none))
 
 (defun mod-rule-trigger-flop-this ((flop-kill? symbol))
@@ -3161,6 +3191,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun global-countdown-add-seconds ((seconds-to-add float))
   (when *global-countdown-active?*
+    (when (mod-rule-active? 'complication-income-tax)
+      (set! seconds-to-add (* seconds-to-add 0.5)))
     (set! *global-countdown-remaining-time*
           (+ *global-countdown-remaining-time* (the int (* seconds-to-add (the float TICKS_PER_SECOND))))))
   (none))
