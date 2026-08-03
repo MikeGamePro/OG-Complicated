@@ -124,13 +124,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *global-countdown-last-warn-second* -1)
 
-(define *global-countup-active?* #f)
-
 (define *global-countup-timer* 0)
 
 (define *global-countup-last-update-time* 0)
-
-(define *global-countup-lost?* #f)
 
 (define *mod-rule-active-slots* (new 'global 'boxed-array symbol 3))
 
@@ -178,7 +174,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 
-(define *mod-rule-id-count* 61) ;; DON'T FORGET TO UPDATE WITH NEW RULES
+(define *mod-rule-id-count* 62) ;; DON'T FORGET TO UPDATE WITH NEW RULES
 
 (define *mean-look-clear-time* 0)
 
@@ -738,8 +734,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *final-score* 0)
 
-(define *show-countup?* #f)
-
 (defun mod-game-beaten-resume-from-save ((value int))
   (set! *mod-game-beaten?* (not (= value 0)))
   (none))
@@ -893,6 +887,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted) "TWISTED")
     ((eq? id 'complication-ya-cut) "I LIKE YA CUT, G")
     ((eq? id 'complication-income-tax) "INCOME TAX")
+    ((eq? id 'rule-express-delivery) "EXPRESS DELIVERY")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -962,6 +957,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          "A LATER RULE MUST BE BROKEN.")))
     ((eq? id 'complication-ya-cut) "")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
+    ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1026,6 +1022,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     ((eq? id 'complication-ya-cut) (seconds 4)) ;; 4
     ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
+    ((eq? id 'rule-express-delivery) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1048,6 +1045,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-loyal-customer) 'event-once)
     ((eq? id 'rule-cooked) 'event-once)
     ((eq? id 'rule-sagging-sails) 'counter)
+    ((eq? id 'rule-express-delivery) 'event-once)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1094,7 +1092,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-cooked)
          (eq? id 'rule-sagging-sails)
          (eq? id 'rule-side-to-side)
-         (eq? id 'rule-landlubber))
+         (eq? id 'rule-landlubber)
+         (eq? id 'rule-express-delivery))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1698,7 +1697,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-deactivate-slot slot)
     (set! (-> *mod-rule-active-slots* slot) id)
     (set! *mod-rule-last-outcome* 'none)
-    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-trivia) (eq? id 'rule-dont-move))
+    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-trivia) (eq? id 'complication-twisted) (eq? id 'rule-dont-move))
       (sound-play "warning")
       (sound-play "ecohit2"))
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
@@ -1827,6 +1826,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 58) 'complication-ya-cut)
     ((= idx 59) 'complication-income-tax)
     ((= idx 60) 'rule-double-kill)
+    ((= idx 61) 'rule-express-delivery)
     (else #f)))
 
 ;; (defun mod-rule-random-id ()
@@ -2171,7 +2171,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 25))
       ((eq? id 'complication-eco-reserve)
        (cond
-         ((or (eq? level-name 'finalboss) is-klaww) 16)
+         ((or (eq? level-name 'finalboss) is-klaww) 15)
          ((yellow-eco-level? level-name) 5)
          (else 0)))
       ((eq? id 'complication-red-stop) ;; disabled
@@ -2229,6 +2229,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ;; Special
       ((eq? id 'complication-ya-cut)
        (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 6 3))
+      ((eq? id 'rule-express-delivery)
+       (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution))) 
+                    (task-closed? (game-task misty-muse) (task-status need-introduction)))
+                    (eq? level-name 'misty)) 8 0))
       ((eq? id 'rule-side-to-side) (if is-klaww 50 0))
       ((eq? id 'complication-income-tax) 6)
       ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
@@ -2548,7 +2552,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (mod-rule-finish-slot slot #t))
         ((or ignore-grace? (not (mod-rule-slot-in-grace-period? slot)))
          (when twisted?
-           (set! *mod-rule-twist-marked-slot* -1))
+           (set! *mod-rule-twist-marked-slot* -1)
+           (sound-play "jak-shocked"))
          (sound-play "caught-eel")
          (+! *rules-broken* 1)
          (set! *mod-rule-last-outcome* 'failed)
@@ -2691,7 +2696,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-trigger-double-kill ()
   (when (mod-rule-active? 'rule-double-kill)
     (let ((now (current-time)))
-      (if (and (> *mod-rule-last-kill-time* 0) (<= (- now *mod-rule-last-kill-time*) 0.15))
+      (if (and (> *mod-rule-last-kill-time* 0)
+               (<= (- now *mod-rule-last-kill-time*) (seconds 0.15)))
         (begin
           (mod-rule-counter-add-progress 'rule-double-kill 1)
           (set! *mod-rule-last-kill-time* 0))
