@@ -437,6 +437,7 @@
   :event snow-bunny-default-event-handler
   :enter
     (behavior ()
+    (mod-rule-trigger-glare)
       (logior! (-> self nav-enemy-flags) (nav-enemy-flags navenmf2))
       (nav-enemy-neck-control-look-at)
       (if (logtest? (-> self nav-enemy-flags) (nav-enemy-flags navenmf1)) (go-virtual nav-enemy-chase))

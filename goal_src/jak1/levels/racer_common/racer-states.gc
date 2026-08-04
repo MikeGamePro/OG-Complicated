@@ -253,8 +253,9 @@
       ((-> target-racing-start exit)))
   :trans
     (behavior ()
+      (when (cpad-hold? (-> self control cpad number) x)
+        (mod-rule-trigger-failure 'rule-red-light))
       ;; og:preserve-this - High FPS Fix
-      (mod-rule-trigger-failure 'rule-red-light)
       (if (and (recently-pressed? l1 r1)
                (or (not (time-elapsed? (-> self control unknown-dword11) (seconds 0.1)))
                    (< (vector-dot (-> self control dynam gravity-normal)
