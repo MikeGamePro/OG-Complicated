@@ -254,6 +254,7 @@
   :trans
     (behavior ()
       ;; og:preserve-this - High FPS Fix
+      (mod-rule-trigger-failure 'rule-red-light)
       (if (and (recently-pressed? l1 r1)
                (or (not (time-elapsed? (-> self control unknown-dword11) (seconds 0.1)))
                    (< (vector-dot (-> self control dynam gravity-normal)
@@ -274,7 +275,6 @@
       (racer-buzz (+ 0.45 (* 1.7 (fabs (-> self racer slide-shift-x))))))
   :code
     (behavior ()
-      (mod-rule-trigger-failure 'rule-dont-move)
       (cond
         ((ja-group? eichar-racer-get-on-ja) (ja-no-eval :num! (seek!)) (while (not (ja-done? 0)) (suspend) (ja-eval)))
         ((let ((v1-16 (ja-group)))
@@ -347,7 +347,7 @@
     (behavior ((arg0 float) (arg1 float) (arg2 symbol))
       (mod-rule-trigger-brittle-bones)
       (mod-rule-trigger-failure 'rule-grounded)
-      (mod-rule-trigger-failure 'rule-dont-move)
+      (mod-rule-trigger-failure 'rule-red-light)
       (set! (-> self racer shock-offsetv) 0.0)
       (sound-play "zoomer-jump")
       (set-time! (-> self state-time))
@@ -778,7 +778,7 @@
   :code
     (behavior ((arg0 handle))
       (set! *racer-start-time* (current-time))
-      (mod-rule-trigger-failure 'rule-dont-move)
+      (mod-rule-trigger-failure 'rule-red-light)
       ;; (format #t "get on~%")
       (set! (-> self control transv quad) (the-as uint128 0))
       (set! (-> self alt-cam-pos quad) (-> self control camera-pos quad))

@@ -3,6 +3,7 @@ at least 50 trivia (10 more)
 expand cumbersome moveset
 scale punishments to settings
 block npc cells on fuel shortage (purchases done)
+zoomer doesn't break red light
 
 new zoomer rule
 add plunger-lurker as kill

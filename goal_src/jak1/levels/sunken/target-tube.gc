@@ -463,7 +463,7 @@
         event)
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-failure 'rule-dont-move)
+      (mod-rule-trigger-failure 'rule-red-light)
       (mod-rule-trigger-failure 'rule-grounded)
       (mod-rule-trigger-brittle-bones)
       (set-time! (-> self state-time))
