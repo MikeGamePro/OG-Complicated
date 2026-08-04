@@ -19,13 +19,72 @@
 (deftype complicated-settings (basic)
   ;; add new options here
   ((show-countup-timer? symbol)
-   (one-frame-toggle? symbol)
-   (invert-controls-toggle? symbol)
    (crash-toggle? symbol)
-   (math-quiz-toggle? symbol)
-   (trivia-toggle? symbol)
    (klaww-assist? symbol)
    (fish-assist? symbol)
+   (rule-grounded? symbol)
+   (rule-die? symbol)
+   (rule-lurker-pressure? symbol)
+   (rule-hitlist? symbol)
+   (rule-crate-break? symbol)
+   (complication-brittle-bones? symbol)
+   (complication-rotten-eggs? symbol)
+   (rule-keep-it-low? symbol)
+   (rule-money-pressure? symbol)
+   (rule-fuel-pressure? symbol)
+   (complication-eco-allergy? symbol)
+   (complication-sizeable? symbol)
+   (complication-ohko? symbol)
+   (complication-glare? symbol)
+   (complication-heating-balloons? symbol)
+   (rule-flop-this? symbol)
+   (complication-disassociate? symbol)
+   (complication-bus-driver? symbol)
+   (rule-buzzer-pressure? symbol)
+   (complication-wings-tied? symbol)
+   (rule-survivor? symbol)
+   (complication-fuel-shortage? symbol)
+   (complication-drought? symbol)
+   (rule-management? symbol)
+   (complication-jak-rabbit? symbol)
+   (complication-hidden-treasure? symbol)
+   (rule-vendetta? symbol)
+   (rule-hands-on? symbol)
+   (complication-eco-reserve? symbol)
+   (rule-one-frame? symbol)
+   (rule-distancing? symbol)
+   (complication-red-stop? symbol)
+   (rule-red-light? symbol)
+   (complication-rgyb? symbol)
+   (complication-butter-fingers? symbol)
+   (rule-for-billy? symbol)
+   (rule-sniper? symbol)
+   (rule-cold-feet? symbol)
+   (complication-overclock? symbol)
+   (rule-speed? symbol)
+   (rule-math-quiz? symbol)
+   (rule-trivia? symbol)
+   (complication-bad-ping? symbol)
+   (rule-green-pilled? symbol)
+   (rule-button-pusher? symbol)
+   (complication-invisible-man? symbol)
+   (rule-cooked? symbol)
+   (complication-joyride? symbol)
+   (complication-critical? symbol)
+   (rule-sagging-sails? symbol)
+   (rule-side-to-side? symbol)
+   (complication-cumbersome? symbol)
+   (rule-landlubber? symbol)
+   (rule-loyal-customer? symbol)
+   (complication-double-aphids? symbol)
+   (complication-invert? symbol)
+   (complication-loose-pockets? symbol)
+   (complication-twisted? symbol)
+   (complication-vibe-check? symbol)
+   (complication-income-tax? symbol)
+   (rule-double-kill? symbol)
+   (rule-express-delivery? symbol)
+   (rule-qte? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -40,13 +99,72 @@
 (defmethod reset ((obj complicated-settings))
   ;; default values for new settings
   (set! (-> obj show-countup-timer?) #f)
-  (set! (-> obj one-frame-toggle?) #t)
-  (set! (-> obj invert-controls-toggle?) #t)
   (set! (-> obj crash-toggle?) #t)
-  (set! (-> obj math-quiz-toggle?) #t)
-  (set! (-> obj trivia-toggle?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
+  (set! (-> obj rule-grounded?) #t)
+  (set! (-> obj rule-die?) #t)
+  (set! (-> obj rule-lurker-pressure?) #t)
+  (set! (-> obj rule-hitlist?) #t)
+  (set! (-> obj rule-crate-break?) #t)
+  (set! (-> obj complication-brittle-bones?) #t)
+  (set! (-> obj complication-rotten-eggs?) #t)
+  (set! (-> obj rule-keep-it-low?) #t)
+  (set! (-> obj rule-money-pressure?) #t)
+  (set! (-> obj rule-fuel-pressure?) #t)
+  (set! (-> obj complication-eco-allergy?) #t)
+  (set! (-> obj complication-sizeable?) #t)
+  (set! (-> obj complication-ohko?) #f)
+  (set! (-> obj complication-glare?) #t)
+  (set! (-> obj complication-heating-balloons?) #t)
+  (set! (-> obj rule-flop-this?) #t)
+  (set! (-> obj complication-disassociate?) #t)
+  (set! (-> obj complication-bus-driver?) #t)
+  (set! (-> obj rule-buzzer-pressure?) #t)
+  (set! (-> obj complication-wings-tied?) #t)
+  (set! (-> obj rule-survivor?) #t)
+  (set! (-> obj complication-fuel-shortage?) #t)
+  (set! (-> obj complication-drought?) #t)
+  (set! (-> obj rule-management?) #t)
+  (set! (-> obj complication-jak-rabbit?) #t)
+  (set! (-> obj complication-hidden-treasure?) #t)
+  (set! (-> obj rule-vendetta?) #t)
+  (set! (-> obj rule-hands-on?) #t)
+  (set! (-> obj complication-eco-reserve?) #t)
+  (set! (-> obj rule-one-frame?) #t)
+  (set! (-> obj rule-distancing?) #t)
+  (set! (-> obj complication-red-stop?) #f)
+  (set! (-> obj rule-red-light?) #t)
+  (set! (-> obj complication-rgyb?) #t)
+  (set! (-> obj complication-butter-fingers?) #f)
+  (set! (-> obj rule-for-billy?) #t)
+  (set! (-> obj rule-sniper?) #t)
+  (set! (-> obj rule-cold-feet?) #t)
+  (set! (-> obj complication-overclock?) #t)
+  (set! (-> obj rule-speed?) #f)
+  (set! (-> obj rule-math-quiz?) #t)
+  (set! (-> obj rule-trivia?) #t)
+  (set! (-> obj complication-bad-ping?) #f)
+  (set! (-> obj rule-green-pilled?) #t)
+  (set! (-> obj rule-button-pusher?) #t)
+  (set! (-> obj complication-invisible-man?) #t)
+  (set! (-> obj rule-cooked?) #t)
+  (set! (-> obj complication-joyride?) #t)
+  (set! (-> obj complication-critical?) #t)
+  (set! (-> obj rule-sagging-sails?) #t)
+  (set! (-> obj rule-side-to-side?) #t)
+  (set! (-> obj complication-cumbersome?) #t)
+  (set! (-> obj rule-landlubber?) #t)
+  (set! (-> obj rule-loyal-customer?) #t)
+  (set! (-> obj complication-double-aphids?) #f)
+  (set! (-> obj complication-invert?) #t)
+  (set! (-> obj complication-loose-pockets?) #t)
+  (set! (-> obj complication-twisted?) #t)
+  (set! (-> obj complication-vibe-check?) #t)
+  (set! (-> obj complication-income-tax?) #t)
+  (set! (-> obj rule-double-kill?) #t)
+  (set! (-> obj rule-express-delivery?) #t)
+  (set! (-> obj rule-qte?) #f)
   (set! (-> obj cell-increment) 20.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 8.0)
@@ -66,13 +184,74 @@
                                         (case-str *pc-temp-string*
                                           ;; add new options here
                                           (("show-countup-timer?") (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
-                                          (("one-frame-toggle?") (set! (-> obj one-frame-toggle?) (file-stream-read-symbol file)))
-                                          (("invert-controls-toggle?") (set! (-> obj invert-controls-toggle?) (file-stream-read-symbol file)))
+                                          (("one-frame-toggle?") (none)) 
+                                          (("invert-controls-toggle?") (none))
                                           (("crash-toggle?") (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
-                                          (("math-quiz-toggle?") (set! (-> obj math-quiz-toggle?) (file-stream-read-symbol file)))
-                                          (("trivia-toggle?") (set! (-> obj trivia-toggle?) (file-stream-read-symbol file)))
                                           (("klaww-assist?") (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
                                           (("fish-assist?") (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
+                                          (("rule-grounded?") (set! (-> obj rule-grounded?) (file-stream-read-symbol file)))
+                                          (("rule-die?") (set! (-> obj rule-die?) (file-stream-read-symbol file)))
+                                          (("rule-lurker-pressure?") (set! (-> obj rule-lurker-pressure?) (file-stream-read-symbol file)))
+                                          (("rule-hitlist?") (set! (-> obj rule-hitlist?) (file-stream-read-symbol file)))
+                                          (("rule-crate-break?") (set! (-> obj rule-crate-break?) (file-stream-read-symbol file)))
+                                          (("complication-brittle-bones?") (set! (-> obj complication-brittle-bones?) (file-stream-read-symbol file)))
+                                          (("complication-rotten-eggs?") (set! (-> obj complication-rotten-eggs?) (file-stream-read-symbol file)))
+                                          (("rule-keep-it-low?") (set! (-> obj rule-keep-it-low?) (file-stream-read-symbol file)))
+                                          (("rule-money-pressure?") (set! (-> obj rule-money-pressure?) (file-stream-read-symbol file)))
+                                          (("rule-fuel-pressure?") (set! (-> obj rule-fuel-pressure?) (file-stream-read-symbol file)))
+                                          (("complication-eco-allergy?") (set! (-> obj complication-eco-allergy?) (file-stream-read-symbol file)))
+                                          (("complication-sizeable?") (set! (-> obj complication-sizeable?) (file-stream-read-symbol file)))
+                                          (("complication-ohko?") (set! (-> obj complication-ohko?) (file-stream-read-symbol file)))
+                                          (("complication-glare?") (set! (-> obj complication-glare?) (file-stream-read-symbol file)))
+                                          (("complication-heating-balloons?") (set! (-> obj complication-heating-balloons?) (file-stream-read-symbol file)))
+                                          (("rule-flop-this?") (set! (-> obj rule-flop-this?) (file-stream-read-symbol file)))
+                                          (("complication-disassociate?") (set! (-> obj complication-disassociate?) (file-stream-read-symbol file)))
+                                          (("complication-bus-driver?") (set! (-> obj complication-bus-driver?) (file-stream-read-symbol file)))
+                                          (("rule-buzzer-pressure?") (set! (-> obj rule-buzzer-pressure?) (file-stream-read-symbol file)))
+                                          (("complication-wings-tied?") (set! (-> obj complication-wings-tied?) (file-stream-read-symbol file)))
+                                          (("rule-survivor?") (set! (-> obj rule-survivor?) (file-stream-read-symbol file)))
+                                          (("complication-fuel-shortage?") (set! (-> obj complication-fuel-shortage?) (file-stream-read-symbol file)))
+                                          (("complication-drought?") (set! (-> obj complication-drought?) (file-stream-read-symbol file)))
+                                          (("rule-management?") (set! (-> obj rule-management?) (file-stream-read-symbol file)))
+                                          (("complication-jak-rabbit?") (set! (-> obj complication-jak-rabbit?) (file-stream-read-symbol file)))
+                                          (("complication-hidden-treasure?") (set! (-> obj complication-hidden-treasure?) (file-stream-read-symbol file)))
+                                          (("rule-vendetta?") (set! (-> obj rule-vendetta?) (file-stream-read-symbol file)))
+                                          (("rule-hands-on?") (set! (-> obj rule-hands-on?) (file-stream-read-symbol file)))
+                                          (("complication-eco-reserve?") (set! (-> obj complication-eco-reserve?) (file-stream-read-symbol file)))
+                                          (("rule-one-frame?") (set! (-> obj rule-one-frame?) (file-stream-read-symbol file)))
+                                          (("rule-distancing?") (set! (-> obj rule-distancing?) (file-stream-read-symbol file)))
+                                          (("complication-red-stop?") (set! (-> obj complication-red-stop?) (file-stream-read-symbol file)))
+                                          (("rule-red-light?") (set! (-> obj rule-red-light?) (file-stream-read-symbol file)))
+                                          (("complication-rgyb?") (set! (-> obj complication-rgyb?) (file-stream-read-symbol file)))
+                                          (("complication-butter-fingers?") (set! (-> obj complication-butter-fingers?) (file-stream-read-symbol file)))
+                                          (("rule-for-billy?") (set! (-> obj rule-for-billy?) (file-stream-read-symbol file)))
+                                          (("rule-sniper?") (set! (-> obj rule-sniper?) (file-stream-read-symbol file)))
+                                          (("rule-cold-feet?") (set! (-> obj rule-cold-feet?) (file-stream-read-symbol file)))
+                                          (("complication-overclock?") (set! (-> obj complication-overclock?) (file-stream-read-symbol file)))
+                                          (("rule-speed?") (set! (-> obj rule-speed?) (file-stream-read-symbol file)))
+                                          (("rule-math-quiz?") (set! (-> obj rule-math-quiz?) (file-stream-read-symbol file)))
+                                          (("rule-trivia?") (set! (-> obj rule-trivia?) (file-stream-read-symbol file)))
+                                          (("complication-bad-ping?") (set! (-> obj complication-bad-ping?) (file-stream-read-symbol file)))
+                                          (("rule-green-pilled?") (set! (-> obj rule-green-pilled?) (file-stream-read-symbol file)))
+                                          (("rule-button-pusher?") (set! (-> obj rule-button-pusher?) (file-stream-read-symbol file)))
+                                          (("complication-invisible-man?") (set! (-> obj complication-invisible-man?) (file-stream-read-symbol file)))
+                                          (("rule-cooked?") (set! (-> obj rule-cooked?) (file-stream-read-symbol file)))
+                                          (("complication-joyride?") (set! (-> obj complication-joyride?) (file-stream-read-symbol file)))
+                                          (("complication-critical?") (set! (-> obj complication-critical?) (file-stream-read-symbol file)))
+                                          (("rule-sagging-sails?") (set! (-> obj rule-sagging-sails?) (file-stream-read-symbol file)))
+                                          (("rule-side-to-side?") (set! (-> obj rule-side-to-side?) (file-stream-read-symbol file)))
+                                          (("complication-cumbersome?") (set! (-> obj complication-cumbersome?) (file-stream-read-symbol file)))
+                                          (("rule-landlubber?") (set! (-> obj rule-landlubber?) (file-stream-read-symbol file)))
+                                          (("rule-loyal-customer?") (set! (-> obj rule-loyal-customer?) (file-stream-read-symbol file)))
+                                          (("complication-double-aphids?") (set! (-> obj complication-double-aphids?) (file-stream-read-symbol file)))
+                                          (("complication-invert?") (set! (-> obj complication-invert?) (file-stream-read-symbol file)))
+                                          (("complication-loose-pockets?") (set! (-> obj complication-loose-pockets?) (file-stream-read-symbol file)))
+                                          (("complication-twisted?") (set! (-> obj complication-twisted?) (file-stream-read-symbol file)))
+                                          (("complication-vibe-check?") (set! (-> obj complication-vibe-check?) (file-stream-read-symbol file)))
+                                          (("complication-income-tax?") (set! (-> obj complication-income-tax?) (file-stream-read-symbol file)))
+                                          (("rule-double-kill?") (set! (-> obj rule-double-kill?) (file-stream-read-symbol file)))
+                                          (("rule-express-delivery?") (set! (-> obj rule-express-delivery?) (file-stream-read-symbol file)))
+                                          (("rule-qte?") (set! (-> obj rule-qte?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -94,13 +273,72 @@
     (format file "(complicated-settings~%")
     ;; add new options here
     (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
-    (format file "  (one-frame-toggle? ~A)~%" (-> obj one-frame-toggle?))
-    (format file "  (invert-controls-toggle? ~A)~%" (-> obj invert-controls-toggle?))
     (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
-    (format file "  (math-quiz-toggle? ~A)~%" (-> obj math-quiz-toggle?))
-    (format file "  (trivia-toggle? ~A)~%" (-> obj trivia-toggle?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
+    (format file "  (rule-grounded? ~A)~%" (-> obj rule-grounded?))
+    (format file "  (rule-die? ~A)~%" (-> obj rule-die?))
+    (format file "  (rule-lurker-pressure? ~A)~%" (-> obj rule-lurker-pressure?))
+    (format file "  (rule-hitlist? ~A)~%" (-> obj rule-hitlist?))
+    (format file "  (rule-crate-break? ~A)~%" (-> obj rule-crate-break?))
+    (format file "  (complication-brittle-bones? ~A)~%" (-> obj complication-brittle-bones?))
+    (format file "  (complication-rotten-eggs? ~A)~%" (-> obj complication-rotten-eggs?))
+    (format file "  (rule-keep-it-low? ~A)~%" (-> obj rule-keep-it-low?))
+    (format file "  (rule-money-pressure? ~A)~%" (-> obj rule-money-pressure?))
+    (format file "  (rule-fuel-pressure? ~A)~%" (-> obj rule-fuel-pressure?))
+    (format file "  (complication-eco-allergy? ~A)~%" (-> obj complication-eco-allergy?))
+    (format file "  (complication-sizeable? ~A)~%" (-> obj complication-sizeable?))
+    (format file "  (complication-ohko? ~A)~%" (-> obj complication-ohko?))
+    (format file "  (complication-glare? ~A)~%" (-> obj complication-glare?))
+    (format file "  (complication-heating-balloons? ~A)~%" (-> obj complication-heating-balloons?))
+    (format file "  (rule-flop-this? ~A)~%" (-> obj rule-flop-this?))
+    (format file "  (complication-disassociate? ~A)~%" (-> obj complication-disassociate?))
+    (format file "  (complication-bus-driver? ~A)~%" (-> obj complication-bus-driver?))
+    (format file "  (rule-buzzer-pressure? ~A)~%" (-> obj rule-buzzer-pressure?))
+    (format file "  (complication-wings-tied? ~A)~%" (-> obj complication-wings-tied?))
+    (format file "  (rule-survivor? ~A)~%" (-> obj rule-survivor?))
+    (format file "  (complication-fuel-shortage? ~A)~%" (-> obj complication-fuel-shortage?))
+    (format file "  (complication-drought? ~A)~%" (-> obj complication-drought?))
+    (format file "  (rule-management? ~A)~%" (-> obj rule-management?))
+    (format file "  (complication-jak-rabbit? ~A)~%" (-> obj complication-jak-rabbit?))
+    (format file "  (complication-hidden-treasure? ~A)~%" (-> obj complication-hidden-treasure?))
+    (format file "  (rule-vendetta? ~A)~%" (-> obj rule-vendetta?))
+    (format file "  (rule-hands-on? ~A)~%" (-> obj rule-hands-on?))
+    (format file "  (complication-eco-reserve? ~A)~%" (-> obj complication-eco-reserve?))
+    (format file "  (rule-one-frame? ~A)~%" (-> obj rule-one-frame?))
+    (format file "  (rule-distancing? ~A)~%" (-> obj rule-distancing?))
+    (format file "  (complication-red-stop? ~A)~%" (-> obj complication-red-stop?))
+    (format file "  (rule-red-light? ~A)~%" (-> obj rule-red-light?))
+    (format file "  (complication-rgyb? ~A)~%" (-> obj complication-rgyb?))
+    (format file "  (complication-butter-fingers? ~A)~%" (-> obj complication-butter-fingers?))
+    (format file "  (rule-for-billy? ~A)~%" (-> obj rule-for-billy?))
+    (format file "  (rule-sniper? ~A)~%" (-> obj rule-sniper?))
+    (format file "  (rule-cold-feet? ~A)~%" (-> obj rule-cold-feet?))
+    (format file "  (complication-overclock? ~A)~%" (-> obj complication-overclock?))
+    (format file "  (rule-speed? ~A)~%" (-> obj rule-speed?))
+    (format file "  (rule-math-quiz? ~A)~%" (-> obj rule-math-quiz?))
+    (format file "  (rule-trivia? ~A)~%" (-> obj rule-trivia?))
+    (format file "  (complication-bad-ping? ~A)~%" (-> obj complication-bad-ping?))
+    (format file "  (rule-green-pilled? ~A)~%" (-> obj rule-green-pilled?))
+    (format file "  (rule-button-pusher? ~A)~%" (-> obj rule-button-pusher?))
+    (format file "  (complication-invisible-man? ~A)~%" (-> obj complication-invisible-man?))
+    (format file "  (rule-cooked? ~A)~%" (-> obj rule-cooked?))
+    (format file "  (complication-joyride? ~A)~%" (-> obj complication-joyride?))
+    (format file "  (complication-critical? ~A)~%" (-> obj complication-critical?))
+    (format file "  (rule-sagging-sails? ~A)~%" (-> obj rule-sagging-sails?))
+    (format file "  (rule-side-to-side? ~A)~%" (-> obj rule-side-to-side?))
+    (format file "  (complication-cumbersome? ~A)~%" (-> obj complication-cumbersome?))
+    (format file "  (rule-landlubber? ~A)~%" (-> obj rule-landlubber?))
+    (format file "  (rule-loyal-customer? ~A)~%" (-> obj rule-loyal-customer?))
+    (format file "  (complication-double-aphids? ~A)~%" (-> obj complication-double-aphids?))
+    (format file "  (complication-invert? ~A)~%" (-> obj complication-invert?))
+    (format file "  (complication-loose-pockets? ~A)~%" (-> obj complication-loose-pockets?))
+    (format file "  (complication-twisted? ~A)~%" (-> obj complication-twisted?))
+    (format file "  (complication-vibe-check? ~A)~%" (-> obj complication-vibe-check?))
+    (format file "  (complication-income-tax? ~A)~%" (-> obj complication-income-tax?))
+    (format file "  (rule-double-kill? ~A)~%" (-> obj rule-double-kill?))
+    (format file "  (rule-express-delivery? ~A)~%" (-> obj rule-express-delivery?))
+    (format file "  (rule-qte? ~A)~%" (-> obj rule-qte?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
@@ -126,24 +364,8 @@
   (set! (-> *complicated-settings* show-countup-timer?) new-val)
   (none))
 
-(defun one-frame-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* one-frame-toggle?) new-val)
-  (none))
-
-(defun invert-controls-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* invert-controls-toggle?) new-val)
-  (none))
-
 (defun crash-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* crash-toggle?) new-val)
-  (none))
-
-(defun math-quiz-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* math-quiz-toggle?) new-val)
-  (none))
-
-(defun trivia-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* trivia-toggle?) new-val)
   (none))
 
 (defun klaww-assist-changed! ((new-val symbol))
@@ -256,6 +478,677 @@
               (commit-to-file *complicated-settings*)
               (none)))))
 
+;; ---- Condition Toggle Submenu ----------------------------------------------
+;; on/off toggle for every rule/complication so it can be excluded from the
+;; randomizer's weighted roll (see mod-rule-condition-enabled? in
+;; mod-common-functions.gc)
+(define *condition-toggle-options*
+  (new 'static
+       'boxed-array
+       :type
+       game-option
+       ;; [0] GROUNDED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-grounded)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [1] DIE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-die)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [2] BLOODLUST
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-lurker-pressure)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [3] HITLIST
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-hitlist)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [4] BULL AND CHINA
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-crate-break)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [5] BRITTLE BONES
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-brittle-bones)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [6] ROTTEN EGGS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-rotten-eggs)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [7] KEEP IT LOW
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-keep-it-low)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [8] CASH GRAB
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-money-pressure)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [9] CELL PRESSURE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-fuel-pressure)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [10] ECO ALLERGY
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-eco-allergy)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [11] SIZEABLE CONTRIBUTIONS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-sizeable)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [12] OHKO
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-ohko)
+            :scale #t
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [13] GLARE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-glare)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [14] HEATING BALLOONS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-heating-balloons)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [15] FLOP THIS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-flop-this)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [16] DISASSOCIATE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-disassociate)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [17] BUS DRIVER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-bus-driver)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [18] BUZZER BEATER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-buzzer-pressure)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [19] WINGS TIED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-wings-tied)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [20] STEP 1
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-survivor)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [21] FUEL SHORTAGE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-fuel-shortage)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [22] DROUGHT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-drought)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [23] ANGER MANAGEMENT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-management)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [24] JAK RABBIT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-jak-rabbit)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [25] HIDDEN TREASURE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-hidden-treasure)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [26] VENDETTA
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-vendetta)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [27] HANDS ON
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-hands-on)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [28] ECO RESERVE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-eco-reserve)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [29] ONE FRAME
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-one-frame)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [30] SOCIAL DISTANCING
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-distancing)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [31] SEEING RED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-red-stop)
+            :scale #t
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [32] RED LIGHT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-red-light)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [33] RGYB
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-rgyb)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [34] BUTTER FINGERS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-butter-fingers)
+            :scale #t
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [35] FOR BILLY
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-for-billy)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [36] SNIPER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-sniper)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [37] COLD FEET
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-cold-feet)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [38] OVERCLOCK
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-overclock)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [39] SPEED RACER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-speed)
+            :scale #t
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [40] QUICK MATHS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-math-quiz)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [41] DON\c12T KNOW JAK
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-trivia)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [42] BAD PING
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-bad-ping)
+            :scale #t
+            :option-disabled-func
+            (lambda ()
+              #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [43] GREEN-PILLED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-green-pilled)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [44] BUTTON PUSHER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-button-pusher)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [45] INVISIBLE MAN
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-invisible-man)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [46] COOKED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-cooked)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [47] JOYRIDE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-joyride)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [48] CRITICAL CONDITION
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-critical)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [49] SAGGING SAILS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-sagging-sails)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [50] SIDE TO SIDE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-side-to-side)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [51] CUMBERSOME
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-cumbersome)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [52] LANDLUBBER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-landlubber)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [53] LOYAL CUSTOMER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-loyal-customer)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [54] INFESTATION
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-double-aphids)
+            :scale #t
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [55] THIS ONE SUCKS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-invert)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [56] LOOSE POCKETS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-loose-pockets)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [57] TWISTED
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-twisted)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [58] I LIKE YA CUT, G
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-vibe-check)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [59] INCOME TAX
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-income-tax)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [60] DOUBLE KILL
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-double-kill)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [61] EXPRESS DELIVERY
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-express-delivery)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [62] THINK FAST
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-qte)
+            :scale #t
+            :option-disabled-func
+            (lambda ()
+              #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [63] BACK
+       (new 'static
+            'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))))
+
 ;; ---- Main Complicated Options Submenu --------------------------------------
 (define *complicated-options*
   (new 'static
@@ -269,7 +1162,14 @@
             :name (text-id complicated-opts-increment-title)
             :scale #t
             :param3 (game-option-menu comp-timer-options))
-       ;; [1] SPEEDRUN TIMER toggle
+       ;; [1] CONDITION TOGGLE SUBMENU
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-cond-toggles-title)
+            :scale #t
+            :param3 (game-option-menu condition-toggle-options))
+       ;; [2] SPEEDRUN TIMER toggle
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -283,7 +1183,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [2] CRASH TOGGLE
+       ;; [3] CRASH TOGGLE
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -297,63 +1197,8 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [3] ONE FRAME TOGGLE
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-one-frame-toggle)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (one-frame-toggle-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [4] INVERT CONTROLS TOGGLE
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-invert-controls-toggle)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (invert-controls-toggle-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [5] MATH QUIZ TOGGLE
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-math-quiz-toggle)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (math-quiz-toggle-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [6] TRIVIA TOGGLE
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-trivia-toggle)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (trivia-toggle-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [7] KLAWW ASSIST
+
+       ;; [4] KLAWW ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -367,7 +1212,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [8] FISH ASSIST
+       ;; [5] FISH ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -381,7 +1226,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [9] BACK
+       ;; [6] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -450,6 +1295,7 @@
   (set! (-> *options-remap* (progress-screen game-settings)) *game-options-complicated*)
   (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
   (set! (-> *options-remap* (progress-screen comp-timer-options)) *comp-timer-options*)
+  (set! (-> *options-remap* (progress-screen condition-toggle-options)) *condition-toggle-options*)
   (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
   (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
   (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
@@ -458,14 +1304,74 @@
   (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; Complicated options mappings
-  (set! (-> *complicated-options* 1 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* crash-toggle?))
-  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* one-frame-toggle?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* invert-controls-toggle?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* math-quiz-toggle?))
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* trivia-toggle?))
-  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 8 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* crash-toggle?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  ;; Condition toggle mappings
+  (set! (-> *condition-toggle-options* 0 value-to-modify) (&-> *complicated-settings* rule-grounded?))
+  (set! (-> *condition-toggle-options* 1 value-to-modify) (&-> *complicated-settings* rule-die?))
+  (set! (-> *condition-toggle-options* 2 value-to-modify) (&-> *complicated-settings* rule-lurker-pressure?))
+  (set! (-> *condition-toggle-options* 3 value-to-modify) (&-> *complicated-settings* rule-hitlist?))
+  (set! (-> *condition-toggle-options* 4 value-to-modify) (&-> *complicated-settings* rule-crate-break?))
+  (set! (-> *condition-toggle-options* 5 value-to-modify) (&-> *complicated-settings* complication-brittle-bones?))
+  (set! (-> *condition-toggle-options* 6 value-to-modify) (&-> *complicated-settings* complication-rotten-eggs?))
+  (set! (-> *condition-toggle-options* 7 value-to-modify) (&-> *complicated-settings* rule-keep-it-low?))
+  (set! (-> *condition-toggle-options* 8 value-to-modify) (&-> *complicated-settings* rule-money-pressure?))
+  (set! (-> *condition-toggle-options* 9 value-to-modify) (&-> *complicated-settings* rule-fuel-pressure?))
+  (set! (-> *condition-toggle-options* 10 value-to-modify) (&-> *complicated-settings* complication-eco-allergy?))
+  (set! (-> *condition-toggle-options* 11 value-to-modify) (&-> *complicated-settings* complication-sizeable?))
+  (set! (-> *condition-toggle-options* 12 value-to-modify) (&-> *complicated-settings* complication-ohko?))
+  (set! (-> *condition-toggle-options* 13 value-to-modify) (&-> *complicated-settings* complication-glare?))
+  (set! (-> *condition-toggle-options* 14 value-to-modify) (&-> *complicated-settings* complication-heating-balloons?))
+  (set! (-> *condition-toggle-options* 15 value-to-modify) (&-> *complicated-settings* rule-flop-this?))
+  (set! (-> *condition-toggle-options* 16 value-to-modify) (&-> *complicated-settings* complication-disassociate?))
+  (set! (-> *condition-toggle-options* 17 value-to-modify) (&-> *complicated-settings* complication-bus-driver?))
+  (set! (-> *condition-toggle-options* 18 value-to-modify) (&-> *complicated-settings* rule-buzzer-pressure?))
+  (set! (-> *condition-toggle-options* 19 value-to-modify) (&-> *complicated-settings* complication-wings-tied?))
+  (set! (-> *condition-toggle-options* 20 value-to-modify) (&-> *complicated-settings* rule-survivor?))
+  (set! (-> *condition-toggle-options* 21 value-to-modify) (&-> *complicated-settings* complication-fuel-shortage?))
+  (set! (-> *condition-toggle-options* 22 value-to-modify) (&-> *complicated-settings* complication-drought?))
+  (set! (-> *condition-toggle-options* 23 value-to-modify) (&-> *complicated-settings* rule-management?))
+  (set! (-> *condition-toggle-options* 24 value-to-modify) (&-> *complicated-settings* complication-jak-rabbit?))
+  (set! (-> *condition-toggle-options* 25 value-to-modify) (&-> *complicated-settings* complication-hidden-treasure?))
+  (set! (-> *condition-toggle-options* 26 value-to-modify) (&-> *complicated-settings* rule-vendetta?))
+  (set! (-> *condition-toggle-options* 27 value-to-modify) (&-> *complicated-settings* rule-hands-on?))
+  (set! (-> *condition-toggle-options* 28 value-to-modify) (&-> *complicated-settings* complication-eco-reserve?))
+  (set! (-> *condition-toggle-options* 29 value-to-modify) (&-> *complicated-settings* rule-one-frame?))
+  (set! (-> *condition-toggle-options* 30 value-to-modify) (&-> *complicated-settings* rule-distancing?))
+  (set! (-> *condition-toggle-options* 31 value-to-modify) (&-> *complicated-settings* complication-red-stop?))
+  (set! (-> *condition-toggle-options* 32 value-to-modify) (&-> *complicated-settings* rule-red-light?))
+  (set! (-> *condition-toggle-options* 33 value-to-modify) (&-> *complicated-settings* complication-rgyb?))
+  (set! (-> *condition-toggle-options* 34 value-to-modify) (&-> *complicated-settings* complication-butter-fingers?))
+  (set! (-> *condition-toggle-options* 35 value-to-modify) (&-> *complicated-settings* rule-for-billy?))
+  (set! (-> *condition-toggle-options* 36 value-to-modify) (&-> *complicated-settings* rule-sniper?))
+  (set! (-> *condition-toggle-options* 37 value-to-modify) (&-> *complicated-settings* rule-cold-feet?))
+  (set! (-> *condition-toggle-options* 38 value-to-modify) (&-> *complicated-settings* complication-overclock?))
+  (set! (-> *condition-toggle-options* 39 value-to-modify) (&-> *complicated-settings* rule-speed?))
+  (set! (-> *condition-toggle-options* 40 value-to-modify) (&-> *complicated-settings* rule-math-quiz?))
+  (set! (-> *condition-toggle-options* 41 value-to-modify) (&-> *complicated-settings* rule-trivia?))
+  (set! (-> *condition-toggle-options* 42 value-to-modify) (&-> *complicated-settings* complication-bad-ping?))
+  (set! (-> *condition-toggle-options* 43 value-to-modify) (&-> *complicated-settings* rule-green-pilled?))
+  (set! (-> *condition-toggle-options* 44 value-to-modify) (&-> *complicated-settings* rule-button-pusher?))
+  (set! (-> *condition-toggle-options* 45 value-to-modify) (&-> *complicated-settings* complication-invisible-man?))
+  (set! (-> *condition-toggle-options* 46 value-to-modify) (&-> *complicated-settings* rule-cooked?))
+  (set! (-> *condition-toggle-options* 47 value-to-modify) (&-> *complicated-settings* complication-joyride?))
+  (set! (-> *condition-toggle-options* 48 value-to-modify) (&-> *complicated-settings* complication-critical?))
+  (set! (-> *condition-toggle-options* 49 value-to-modify) (&-> *complicated-settings* rule-sagging-sails?))
+  (set! (-> *condition-toggle-options* 50 value-to-modify) (&-> *complicated-settings* rule-side-to-side?))
+  (set! (-> *condition-toggle-options* 51 value-to-modify) (&-> *complicated-settings* complication-cumbersome?))
+  (set! (-> *condition-toggle-options* 52 value-to-modify) (&-> *complicated-settings* rule-landlubber?))
+  (set! (-> *condition-toggle-options* 53 value-to-modify) (&-> *complicated-settings* rule-loyal-customer?))
+  (set! (-> *condition-toggle-options* 54 value-to-modify) (&-> *complicated-settings* complication-double-aphids?))
+  (set! (-> *condition-toggle-options* 55 value-to-modify) (&-> *complicated-settings* complication-invert?))
+  (set! (-> *condition-toggle-options* 56 value-to-modify) (&-> *complicated-settings* complication-loose-pockets?))
+  (set! (-> *condition-toggle-options* 57 value-to-modify) (&-> *complicated-settings* complication-twisted?))
+  (set! (-> *condition-toggle-options* 58 value-to-modify) (&-> *complicated-settings* complication-vibe-check?))
+  (set! (-> *condition-toggle-options* 59 value-to-modify) (&-> *complicated-settings* complication-income-tax?))
+  (set! (-> *condition-toggle-options* 60 value-to-modify) (&-> *complicated-settings* rule-double-kill?))
+  (set! (-> *condition-toggle-options* 61 value-to-modify) (&-> *complicated-settings* rule-express-delivery?))
+  (set! (-> *condition-toggle-options* 62 value-to-modify) (&-> *complicated-settings* rule-qte?))
   ;; Increment options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* cell-increment))
@@ -477,20 +1383,8 @@
 (defun show-countup-timer-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
 
-(defun one-frame-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* one-frame-toggle?))))
-
-(defun invert-controls-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* invert-controls-toggle?))))
-
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
-
-(defun math-quiz-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* math-quiz-toggle?))))
-
-(defun trivia-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* trivia-toggle?))))
 
 (defun klaww-assist-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* klaww-assist?))))
@@ -509,3 +1403,71 @@
 
 (defun countdown-start-seconds-value ()
   (if *complicated-settings* (the float (the int (-> *complicated-settings* countdown-start-seconds))) 30.0))
+
+(defun mod-rule-condition-enabled? ((id symbol))
+  (the symbol
+    (cond
+    ((eq? id 'rule-grounded) (-> *complicated-settings* rule-grounded?))
+    ((eq? id 'rule-die) (-> *complicated-settings* rule-die?))
+    ((eq? id 'rule-lurker-pressure) (-> *complicated-settings* rule-lurker-pressure?))
+    ((eq? id 'rule-hitlist) (-> *complicated-settings* rule-hitlist?))
+    ((eq? id 'rule-crate-break) (-> *complicated-settings* rule-crate-break?))
+    ((eq? id 'complication-brittle-bones) (-> *complicated-settings* complication-brittle-bones?))
+    ((eq? id 'complication-rotten-eggs) (-> *complicated-settings* complication-rotten-eggs?))
+    ((eq? id 'rule-keep-it-low) (-> *complicated-settings* rule-keep-it-low?))
+    ((eq? id 'rule-money-pressure) (-> *complicated-settings* rule-money-pressure?))
+    ((eq? id 'rule-fuel-pressure) (-> *complicated-settings* rule-fuel-pressure?))
+    ((eq? id 'complication-eco-allergy) (-> *complicated-settings* complication-eco-allergy?))
+    ((eq? id 'complication-sizeable) (-> *complicated-settings* complication-sizeable?))
+    ((eq? id 'complication-ohko) (-> *complicated-settings* complication-ohko?))
+    ((eq? id 'complication-glare) (-> *complicated-settings* complication-glare?))
+    ((eq? id 'complication-heating-balloons) (-> *complicated-settings* complication-heating-balloons?))
+    ((eq? id 'rule-flop-this) (-> *complicated-settings* rule-flop-this?))
+    ((eq? id 'complication-disassociate) (-> *complicated-settings* complication-disassociate?))
+    ((eq? id 'complication-bus-driver) (-> *complicated-settings* complication-bus-driver?))
+    ((eq? id 'rule-buzzer-pressure) (-> *complicated-settings* rule-buzzer-pressure?))
+    ((eq? id 'complication-wings-tied) (-> *complicated-settings* complication-wings-tied?))
+    ((eq? id 'rule-survivor) (-> *complicated-settings* rule-survivor?))
+    ((eq? id 'complication-fuel-shortage) (-> *complicated-settings* complication-fuel-shortage?))
+    ((eq? id 'complication-drought) (-> *complicated-settings* complication-drought?))
+    ((eq? id 'rule-management) (-> *complicated-settings* rule-management?))
+    ((eq? id 'complication-jak-rabbit) (-> *complicated-settings* complication-jak-rabbit?))
+    ((eq? id 'complication-hidden-treasure) (-> *complicated-settings* complication-hidden-treasure?))
+    ((eq? id 'rule-vendetta) (-> *complicated-settings* rule-vendetta?))
+    ((eq? id 'rule-hands-on) (-> *complicated-settings* rule-hands-on?))
+    ((eq? id 'complication-eco-reserve) (-> *complicated-settings* complication-eco-reserve?))
+    ((eq? id 'rule-one-frame) (-> *complicated-settings* rule-one-frame?))
+    ((eq? id 'rule-distancing) (-> *complicated-settings* rule-distancing?))
+    ((eq? id 'complication-red-stop) (-> *complicated-settings* complication-red-stop?))
+    ((eq? id 'rule-red-light) (-> *complicated-settings* rule-red-light?))
+    ((eq? id 'complication-rgyb) (-> *complicated-settings* complication-rgyb?))
+    ((eq? id 'complication-butter-fingers) (-> *complicated-settings* complication-butter-fingers?))
+    ((eq? id 'rule-for-billy) (-> *complicated-settings* rule-for-billy?))
+    ((eq? id 'rule-sniper) (-> *complicated-settings* rule-sniper?))
+    ((eq? id 'rule-cold-feet) (-> *complicated-settings* rule-cold-feet?))
+    ((eq? id 'complication-overclock) (-> *complicated-settings* complication-overclock?))
+    ((eq? id 'rule-speed) (-> *complicated-settings* rule-speed?))
+    ((eq? id 'rule-math-quiz) (-> *complicated-settings* rule-math-quiz?))
+    ((eq? id 'rule-trivia) (-> *complicated-settings* rule-trivia?))
+    ((eq? id 'complication-bad-ping) (-> *complicated-settings* complication-bad-ping?))
+    ((eq? id 'rule-green-pilled) (-> *complicated-settings* rule-green-pilled?))
+    ((eq? id 'rule-button-pusher) (-> *complicated-settings* rule-button-pusher?))
+    ((eq? id 'complication-invisible-man) (-> *complicated-settings* complication-invisible-man?))
+    ((eq? id 'rule-cooked) (-> *complicated-settings* rule-cooked?))
+    ((eq? id 'complication-joyride) (-> *complicated-settings* complication-joyride?))
+    ((eq? id 'complication-critical) (-> *complicated-settings* complication-critical?))
+    ((eq? id 'rule-sagging-sails) (-> *complicated-settings* rule-sagging-sails?))
+    ((eq? id 'rule-side-to-side) (-> *complicated-settings* rule-side-to-side?))
+    ((eq? id 'complication-cumbersome) (-> *complicated-settings* complication-cumbersome?))
+    ((eq? id 'rule-landlubber) (-> *complicated-settings* rule-landlubber?))
+    ((eq? id 'rule-loyal-customer) (-> *complicated-settings* rule-loyal-customer?))
+    ((eq? id 'complication-double-aphids) (-> *complicated-settings* complication-double-aphids?))
+    ((eq? id 'complication-invert) (-> *complicated-settings* complication-invert?))
+    ((eq? id 'complication-loose-pockets) (-> *complicated-settings* complication-loose-pockets?))
+    ((eq? id 'complication-twisted) (-> *complicated-settings* complication-twisted?))
+    ((eq? id 'complication-vibe-check) (-> *complicated-settings* complication-vibe-check?))
+    ((eq? id 'complication-income-tax) (-> *complicated-settings* complication-income-tax?))
+    ((eq? id 'rule-double-kill) (-> *complicated-settings* rule-double-kill?))
+    ((eq? id 'rule-express-delivery) (-> *complicated-settings* rule-express-delivery?))
+    ((eq? id 'rule-qte) (-> *complicated-settings* rule-qte?))
+      (else #t))))

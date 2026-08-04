@@ -136,6 +136,7 @@
      ;; complicated mod
      (complicated-options)
      (comp-timer-options)
+     (condition-toggle-options)
      ;; the last one!
      (max))
    (defenum game-option-type
