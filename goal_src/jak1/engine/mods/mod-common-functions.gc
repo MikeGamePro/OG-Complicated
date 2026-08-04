@@ -174,9 +174,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 
-(define *mod-rule-id-count* 62) ;; DON'T FORGET TO UPDATE WITH NEW RULES
+(define *mod-rule-id-count* 63) ;; DON'T FORGET TO UPDATE WITH NEW RULES
 
 (define *mean-look-clear-time* 0)
+
+(define *qte-target-button* 0)
 
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 
@@ -905,6 +907,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-ya-cut) "I LIKE YA CUT, G")
     ((eq? id 'complication-income-tax) "INCOME TAX")
     ((eq? id 'rule-express-delivery) "EXPRESS DELIVERY")
+    ((eq? id 'rule-qte) "THINK FAST")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -975,6 +978,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-ya-cut) "")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
+((eq? id 'rule-qte)
+      (cond
+        ((= *qte-target-button* 0) "PRESS TRIANGLE!") 
+        ((= *qte-target-button* 1) "PRESS CIRCLE!") 
+        ((= *qte-target-button* 2) "PRESS X!") 
+        ((= *qte-target-button* 3) "PRESS SQUARE!") 
+        (else "PRESS A BUTTON!")))
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1040,6 +1050,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-ya-cut) (seconds 4)) ;; 4
     ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
     ((eq? id 'rule-express-delivery) (seconds 60)) ;; 60
+    ((eq? id 'rule-qte) (seconds 2)) ;; 2
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1063,6 +1074,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-cooked) 'event-once)
     ((eq? id 'rule-sagging-sails) 'counter)
     ((eq? id 'rule-express-delivery) 'event-once)
+    ((eq? id 'rule-qte) 'event-once)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1110,7 +1122,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-sagging-sails)
          (eq? id 'rule-side-to-side)
          (eq? id 'rule-landlubber)
-         (eq? id 'rule-express-delivery))
+         (eq? id 'rule-express-delivery)
+         (eq? id 'rule-qte))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1612,6 +1625,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-on-activate ((id symbol))
   (cond
+    ((eq? id 'rule-qte) (set! *qte-target-button* (mod-rand-int-range 0 4)))
     ((eq? id 'complication-twisted) (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (mod-rand-int-range 1 4)))))
     ((eq? id 'rule-hitlist) (dotimes (slot 3) (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
     ((eq? id 'rule-double-kill) (set! *mod-rule-last-kill-time* 0))
@@ -1714,7 +1728,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-deactivate-slot slot)
     (set! (-> *mod-rule-active-slots* slot) id)
     (set! *mod-rule-last-outcome* 'none)
-    (if (or (eq? id 'rule-math-quiz) (eq? id 'rule-trivia) (eq? id 'complication-twisted) (eq? id 'rule-red-light))
+    (if (or (eq? id 'rule-qte) (eq? id 'rule-math-quiz) (eq? id 'rule-trivia) (eq? id 'complication-twisted) (eq? id 'rule-red-light))
       (sound-play "warning")
       (sound-play "ecohit2"))
     (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal id))
@@ -1844,6 +1858,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= idx 59) 'complication-income-tax)
     ((= idx 60) 'rule-double-kill)
     ((= idx 61) 'rule-express-delivery)
+    ((= idx 62) 'rule-qte)
     (else #f)))
 
 ;; (defun mod-rule-random-id ()
@@ -2087,10 +2102,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                             (string= (current-checkpoint-name) "lavatube-middle")
                             (string= (current-checkpoint-name) "lavatube-after-ribbon")))
         (deep-lavatube (or (string= (current-checkpoint-name) "lavatube-middle") (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
-    (if (and (eq? (mod-rule-type id) 'rule)
-             (or (>= *mod-rule-twist-pending-count* 0) (>= *mod-rule-twist-marked-slot* 0))
-             (mod-rule-any-rule-active?))
-      0
+        (if (and (eq? (mod-rule-type id) 'rule)
+                    (or (>= *mod-rule-twist-marked-slot* 0)
+                        (mod-rule-active? 'complication-twisted)))
+        0
       (cond
       ;; Resources
       ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 8))
@@ -2205,28 +2220,30 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-invert) (if (invert-controls-toggle-enabled?) 5 0))
       ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 8))
       ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
-       (cond
-         ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
-         ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
-         ((and (eq? id 'rule-grounded) is-klaww) 2)
-         ((eq? id 'rule-grounded) 10)
-         ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 3)
-         (is-klaww 2)
-         (else 5)))
+      (cond
+        ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
+        ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
+        ((and (eq? id 'rule-grounded) (mod-rule-active? 'rule-qte)) 0)
+        ((and (eq? id 'rule-grounded) is-klaww) 2)
+        ((eq? id 'rule-grounded) 7)
+        ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 3)
+        (is-klaww 2)
+        (else 5)))
       ((eq? id 'rule-red-light)
        (cond
-         (is-minigame 0)
+         ((or (mod-rule-active? 'rule-qte) is-minigame) 0)
          ((or (eq? level-name 'finalboss) is-klaww) 1)
          (else 3)))
       ((eq? id 'complication-butter-fingers) ;; disabled
        (cond
          ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
          ((eq? level-name 'training) 0) ;; 3
-         (else 0))) ;; 10
-      ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable) (eq? id 'rule-management))
+         (else 0))) ;; 8
+      ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
        (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 8))
+      ((eq? id 'rule-management) (if (or on-racer on-flut (sole-zoomer-level? level-name) (mod-rule-active? 'rule-qte)) 0 8))
       ((eq? id 'complication-bad-ping) ;; disable for zed
-       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 0)) ;; 8
+       (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 0)) ;; 6
       ((eq? id 'complication-loose-pockets)
        (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 8))
       ;; Water
@@ -2310,7 +2327,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'rule-speed) ;; disabled
        (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 0 0)) ;; 25
       ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 9))
-      ((or (eq? id 'complication-disassociate) (eq? id 'complication-wings-tied)) (if on-flut 40 0))
+      ((eq? id 'complication-disassociate) (if (and on-flut (not (sparse-lurker-level? level-name))) 40 0))
+      ((eq? id 'complication-wings-tied) (if (and on-flut (not (eq? level-name 'finalboss))) 40 0))
       ((eq? id 'complication-fuel-shortage)
        (if (or (eq? level-name 'training)
                (eq? level-name 'finalboss)
@@ -2324,7 +2342,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          ((or (eq? level-name 'finalboss) is-klaww) 4)
          (is-minigame 0)
          (else 8)))
-      ((eq? id 'complication-twisted) (if (or (>= *mod-rule-twist-pending-count* 0) (>= *mod-rule-twist-marked-slot* 0)) 0 6))
+      ((eq? id 'complication-twisted) (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 6))
+      ((eq? id 'rule-qte) ;; disabled
+       (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 0)) ;; 5
       (else 8)))))
 
 (defun mod-rule-pick-weighted-id ()
