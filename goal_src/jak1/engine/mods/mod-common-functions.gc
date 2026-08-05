@@ -189,7 +189,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     'rule-double-kill 'rule-express-delivery 'rule-qte
     ))
 
-(define *mod-rule-id-count* (-> *mod-rule-ids* length)) ;; derived from *mod-rule-ids*, nothing to update by hand
+(define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
 (define *mean-look-clear-time* 0)
 

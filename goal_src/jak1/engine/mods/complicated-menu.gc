@@ -263,6 +263,15 @@
     (file-stream-close file))
   #t)
 
+(defun float-floor ((value float))
+  (let ((truncated (the float (the int value))))
+    (if (and (< value 0.0) (!= truncated value))
+      (- truncated 1.0)
+      truncated)))
+
+(defun snap-to-step ((value float) (step float))
+  (* (float-floor (+ (/ value step) 0.0001)) step))
+
 (defmethod load-from-file ((obj complicated-settings))
   (format (clear *pc-temp-string-1*) "~S/complicated-settings.gc" *pc-settings-folder*)
   (cond
@@ -345,9 +354,9 @@
     (format file "  (rule-qte? ~A)~%" (-> obj rule-qte?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
-    (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
+    (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
-    (format file "  (time-limit-multiplier ~f)~%" (-> obj time-limit-multiplier))
+    (format file "  (time-limit-multiplier ~f)~%" (snap-to-step (-> obj time-limit-multiplier) 0.1))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -370,7 +379,7 @@
   (none))
 
 (defun time-limit-multiplier-changed! ((new-val float))
-  (set! (-> *complicated-settings* time-limit-multiplier) new-val)
+  (set! (-> *complicated-settings* time-limit-multiplier) (+ (snap-to-step new-val 0.05) 0.001))
   (none))
 
 (defun crash-toggle-changed! ((new-val symbol))
@@ -390,7 +399,7 @@
   (none))
 
 (defun orb-increment-changed! ((new-val float))
-  (set! (-> *complicated-settings* orb-increment) new-val)
+  (set! (-> *complicated-settings* orb-increment) (+ (snap-to-step new-val 0.1) 0.001))
   (none))
 
 (defun fly-increment-changed! ((new-val float))
@@ -432,7 +441,7 @@
             :scale #t
             :param1 0.5
             :param2 2.0
-            :slider-step-size 0.1
+            :slider-step-size 0.05
             :slider-show-decimal? #t
             :on-change
             (lambda ((val object))
@@ -1412,7 +1421,7 @@
   (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
 
 (defun time-limit-multiplier ()
-  (if *complicated-settings* (-> *complicated-settings* time-limit-multiplier) 1.0))
+  (if *complicated-settings* (snap-to-step (-> *complicated-settings* time-limit-multiplier) 0.1) 1.0))
 
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
@@ -1424,7 +1433,7 @@
   (the symbol (and *complicated-settings* (-> *complicated-settings* fish-assist?))))
 
 (defun orb-increment-value ()
-  (if *complicated-settings* (-> *complicated-settings* orb-increment) 1.0))
+  (if *complicated-settings* (snap-to-step (-> *complicated-settings* orb-increment) 0.1) 1.0))
 
 (defun cell-increment-value ()
   (if *complicated-settings* (the float (the int (-> *complicated-settings* cell-increment))) 20.0))
