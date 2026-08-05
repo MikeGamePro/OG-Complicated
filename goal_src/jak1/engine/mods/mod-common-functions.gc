@@ -170,7 +170,26 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
 
-(define *mod-rule-id-count* 63) ;; DON'T FORGET TO UPDATE WITH NEW RULES
+;; To add a new rule, append it to the end of this list. Do not reorder or
+;; insert in the middle. That remaps existing save files to the wrong rules.
+(define *mod-rule-ids*
+  (new 'static 'boxed-array :type symbol
+    'rule-grounded 'rule-die 'rule-lurker-pressure 'rule-hitlist 'rule-crate-break
+    'complication-brittle-bones 'complication-rotten-eggs 'rule-keep-it-low 'rule-money-pressure 'rule-fuel-pressure
+    'complication-eco-allergy 'complication-sizeable 'complication-ohko 'complication-glare 'complication-heating-balloons
+    'rule-flop-this 'complication-disassociate 'complication-bus-driver 'rule-buzzer-pressure 'complication-wings-tied
+    'rule-survivor 'complication-fuel-shortage 'complication-drought 'rule-management 'complication-jak-rabbit
+    'complication-hidden-treasure 'rule-vendetta 'rule-hands-on 'complication-eco-reserve 'rule-one-frame
+    'rule-distancing 'complication-red-stop 'rule-red-light 'complication-rgyb 'complication-butter-fingers
+    'rule-for-billy 'rule-sniper 'rule-cold-feet 'complication-overclock 'rule-speed
+    'rule-math-quiz 'rule-trivia 'complication-bad-ping 'rule-green-pilled 'rule-button-pusher
+    'complication-invisible-man 'rule-cooked 'complication-joyride 'complication-critical 'rule-sagging-sails
+    'rule-side-to-side 'complication-cumbersome 'rule-landlubber 'rule-loyal-customer 'complication-double-aphids
+    'complication-invert 'complication-loose-pockets 'complication-twisted 'complication-vibe-check 'complication-income-tax
+    'rule-double-kill 'rule-express-delivery 'rule-qte
+    ))
+
+(define *mod-rule-id-count* (-> *mod-rule-ids* length)) ;; derived from *mod-rule-ids*, nothing to update by hand
 
 (define *mean-look-clear-time* 0)
 
@@ -799,8 +818,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! *complications-rolled* value)
   (none))
 
+(defun mod-rule-id-from-index ((idx int))
+  (if (and (>= idx 0) (< idx (-> *mod-rule-ids* length)))
+    (-> *mod-rule-ids* idx)
+    #f))
+
 (define SCORE-MAX-INC 35780.0)
-(define SCORE-TIME-SCALE 6300.0)
+(define SCORE-TIME-SCALE 5400.0)
 
 (defun mod-rule-collectable-inc-total ()
   (+ (* 101.0 (cell-increment-value))
@@ -813,6 +837,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *countdown-punishment-baseline-inc-total* 4916.0)
 (define *countdown-punishment-baseline-seconds* 30.0)
 
+(defun mod-rule-enabled-condition-count ()
+  (let ((count 0))
+    (dotimes (i *mod-rule-id-count*)
+      (when (mod-rule-condition-enabled? (mod-rule-id-from-index i))
+        (+! count 1)))
+    count))
+
+(defun mod-rule-enabled-condition-fraction ()
+  (/ (the float (mod-rule-enabled-condition-count)) (the float *mod-rule-id-count*)))
+
 (defun mod-calc-run-score ()
   (let* ((inc-total (mod-rule-inc-total))
          (inc-norm (/ inc-total SCORE-MAX-INC))
@@ -820,18 +854,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (time-factor (/ SCORE-TIME-SCALE (+ SCORE-TIME-SCALE final-time-seconds)))
          (raw-mult (fmax 0.01 (time-limit-multiplier)))
          (max-score 100000.0) 
-         (mult-weight 0.04)
-         (time-weight 0.25)
-         (score-weight 0.75)
+         (mult-weight 0.0175)
+         (time-weight 0.2)
+         (score-weight 0.8)
+         (conditions-weight 0.055)
          (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
+         (effective-conditions-mult (+ 1.0 (* (- 1.0 (mod-rule-enabled-condition-fraction)) conditions-weight)))
          (score 0.0))
     (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
     (let ((base-score (* max-score
                          (+ (* time-weight time-factor)
                             (* score-weight (- 1.0 inc-norm))))))
-      (set! score (/ base-score effective-mult)))
-    (format #t "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f eff-mult ~f score ~f~%"
-            inc-total inc-norm final-time-seconds time-factor effective-mult score)
+      (set! score (/ (/ base-score effective-mult) effective-conditions-mult)))
+      (format #t "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f "
+                  inc-total inc-norm final-time-seconds time-factor)
+      (format #t "eff-mult ~f eff-cond-mult ~f score ~f~%"
+              effective-mult effective-conditions-mult score)
     score))
 
 (defun mod-rule-countdown-punishment-seconds ()
@@ -1799,73 +1837,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
   (none))
-
-(defun mod-rule-id-from-index ((idx int))
-  (cond
-    ((= idx 0) 'rule-grounded)
-    ((= idx 1) 'rule-die)
-    ((= idx 2) 'rule-lurker-pressure)
-    ((= idx 3) 'rule-hitlist)
-    ((= idx 4) 'rule-crate-break)
-    ((= idx 5) 'complication-brittle-bones)
-    ((= idx 6) 'complication-rotten-eggs)
-    ((= idx 7) 'rule-keep-it-low)
-    ((= idx 8) 'rule-money-pressure)
-    ((= idx 9) 'rule-fuel-pressure)
-    ((= idx 10) 'complication-eco-allergy)
-    ((= idx 11) 'complication-sizeable)
-    ((= idx 12) 'complication-ohko)
-    ((= idx 13) 'complication-glare)
-    ((= idx 14) 'complication-heating-balloons)
-    ((= idx 15) 'rule-flop-this)
-    ((= idx 16) 'complication-disassociate)
-    ((= idx 17) 'complication-bus-driver)
-    ((= idx 18) 'rule-buzzer-pressure)
-    ((= idx 19) 'complication-wings-tied)
-    ((= idx 20) 'rule-survivor)
-    ((= idx 21) 'complication-fuel-shortage)
-    ((= idx 22) 'complication-drought)
-    ((= idx 23) 'rule-management)
-    ((= idx 24) 'complication-jak-rabbit)
-    ((= idx 25) 'complication-hidden-treasure)
-    ((= idx 26) 'rule-vendetta)
-    ((= idx 27) 'rule-hands-on)
-    ((= idx 28) 'complication-eco-reserve)
-    ((= idx 29) 'rule-one-frame)
-    ((= idx 30) 'rule-distancing)
-    ((= idx 31) 'complication-red-stop)
-    ((= idx 32) 'rule-red-light)
-    ((= idx 33) 'complication-rgyb)
-    ((= idx 34) 'complication-butter-fingers)
-    ((= idx 35) 'rule-for-billy)
-    ((= idx 36) 'rule-sniper)
-    ((= idx 37) 'rule-cold-feet)
-    ((= idx 38) 'complication-overclock)
-    ((= idx 39) 'rule-speed)
-    ((= idx 40) 'rule-math-quiz)
-    ((= idx 41) 'rule-trivia)
-    ((= idx 42) 'complication-bad-ping)
-    ((= idx 43) 'rule-green-pilled)
-    ((= idx 44) 'rule-button-pusher)
-    ((= idx 45) 'complication-invisible-man)
-    ((= idx 46) 'rule-cooked)
-    ((= idx 47) 'complication-joyride)
-    ((= idx 48) 'complication-critical)
-    ((= idx 49) 'rule-sagging-sails)
-    ((= idx 50) 'rule-side-to-side)
-    ((= idx 51) 'complication-cumbersome)
-    ((= idx 52) 'rule-landlubber)
-    ((= idx 53) 'rule-loyal-customer)
-    ((= idx 54) 'complication-double-aphids)
-    ((= idx 55) 'complication-invert)
-    ((= idx 56) 'complication-loose-pockets)
-    ((= idx 57) 'complication-twisted)
-    ((= idx 58) 'complication-vibe-check)
-    ((= idx 59) 'complication-income-tax)
-    ((= idx 60) 'rule-double-kill)
-    ((= idx 61) 'rule-express-delivery)
-    ((= idx 62) 'rule-qte)
-    (else #f)))
 
 ;; (defun mod-rule-random-id ()
 ;;   (mod-rule-id-from-index (knuth-rand-int-range 0 *mod-rule-id-count*)))
