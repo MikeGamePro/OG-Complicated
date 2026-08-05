@@ -2,6 +2,7 @@ settings (in progress)
 at least 50 trivia (10 more)
 expand cumbersome moveset
 block npc cells on fuel shortage (purchases done)
+floor orb-increase (currently 1.0 = 1.0999)
 
 new zoomer rule
 add plunger-lurker as kill

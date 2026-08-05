@@ -874,6 +874,7 @@
   (complicated-opts-cond-rule-double-kill #x1665)
   (complicated-opts-cond-rule-express-delivery #x1666)
   (complicated-opts-cond-rule-qte #x1667)
+  (complicated-opts-time-limit-multiplier #x1668)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

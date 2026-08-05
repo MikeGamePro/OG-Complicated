@@ -64,6 +64,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern countdown-start-seconds-value (function float))
 
+(define-extern time-limit-multiplier (function float))
+
 (define-extern mod-rule-twist-check-and-mark! (function int symbol none))
 
 (define-extern mod-rule-twist-marked-slot? (function int symbol))
@@ -799,9 +801,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define SCORE-MAX-INC 35780.0)
 (define SCORE-TIME-SCALE 6300.0)
-(define SCORE-MAX-SCORE 100000.0)
-(define SCORE-W-TIME 0.25)
-(define SCORE-W-INC 0.75)
 
 (defun mod-rule-collectable-inc-total ()
   (+ (* 101.0 (cell-increment-value))
@@ -819,13 +818,20 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (inc-norm (/ inc-total SCORE-MAX-INC))
          (final-time-seconds (/ (the float *final-time*) (the float TICKS_PER_SECOND)))
          (time-factor (/ SCORE-TIME-SCALE (+ SCORE-TIME-SCALE final-time-seconds)))
+         (raw-mult (fmax 0.01 (time-limit-multiplier)))
+         (max-score 100000.0) 
+         (mult-weight 0.04)
+         (time-weight 0.25)
+         (score-weight 0.75)
+         (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
          (score 0.0))
     (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
-    (set! score (* SCORE-MAX-SCORE
-                   (+ (* SCORE-W-TIME time-factor)
-                      (* SCORE-W-INC (- 1.0 inc-norm)))))
-    (format #t "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f score ~f~%"
-            inc-total inc-norm final-time-seconds time-factor score)
+    (let ((base-score (* max-score
+                         (+ (* time-weight time-factor)
+                            (* score-weight (- 1.0 inc-norm))))))
+      (set! score (/ base-score effective-mult)))
+    (format #t "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f eff-mult ~f score ~f~%"
+            inc-total inc-norm final-time-seconds time-factor effective-mult score)
     score))
 
 (defun mod-rule-countdown-punishment-seconds ()
@@ -981,18 +987,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (else "PRESS A BUTTON!")))
     (else "NO DESCRIPTION AVAILABLE.")))
 
+(defun apply-time-limit-multiplier ((base-time time-frame))
+  (let* ((raw-mult (time-limit-multiplier))
+         (tenths (the int (* raw-mult 10.0))))
+    (the time-frame (/ (* base-time (the time-frame tenths)) 10))))
+
 (defun mod-rule-duration ((id symbol))
   (cond
     ((eq? id 'rule-grounded) (seconds 15)) ;; 15
     ((eq? id 'rule-management) (seconds 90)) ;; 90
-    ((eq? id 'rule-die) (seconds 20)) ;; 20
-    ((eq? id 'rule-lurker-pressure) (seconds 45)) ;; 45
-    ((eq? id 'rule-hitlist) (seconds 45)) ;; 45
-    ((eq? id 'rule-double-kill) (seconds 45)) ;; 45
-    ((eq? id 'rule-sniper) (seconds 75)) ;; 75
-    ((eq? id 'rule-money-pressure) (seconds 40)) ;; 40
-    ((eq? id 'rule-fuel-pressure) (seconds 35)) ;; 35
-    ((eq? id 'rule-buzzer-pressure) (seconds 40)) ;; 40
+    ((eq? id 'rule-die) (apply-time-limit-multiplier (seconds 20))) ;; 20
+    ((eq? id 'rule-lurker-pressure) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-hitlist) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-double-kill) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-sniper) (apply-time-limit-multiplier (seconds 75))) ;; 75
+    ((eq? id 'rule-money-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
+    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 35))) ;; 35
+    ((eq? id 'rule-buzzer-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
     ((eq? id 'complication-rotten-eggs) (seconds 45)) ;; 45
@@ -1012,29 +1023,29 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-hidden-treasure) (seconds 60)) ;; 60
     ((eq? id 'complication-drought) (seconds 45)) ;; 45
     ((eq? id 'complication-jak-rabbit) (seconds 45)) ;; 45
-    ((eq? id 'rule-vendetta) (seconds 35)) ;; 35
+    ((eq? id 'rule-vendetta) (apply-time-limit-multiplier (seconds 35))) ;; 35
     ((eq? id 'rule-hands-on) (seconds 60)) ;; 60
     ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
-    ((eq? id 'rule-one-frame) (seconds 45)) ;; 45
+    ((eq? id 'rule-one-frame) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-distancing) (seconds 60)) ;; 60
     ((eq? id 'rule-red-light) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
-    ((eq? id 'rule-for-billy) (seconds 150)) ;; 150
+    ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 150))) ;; 150
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
-    ((eq? id 'rule-speed) (seconds 60)) ;; 60
-    ((eq? id 'rule-math-quiz) (seconds 20)) ;; 20
-    ((eq? id 'rule-trivia) (seconds 15)) ;; 15
+    ((eq? id 'rule-speed) (apply-time-limit-multiplier (seconds 60))) ;; 60
+    ((eq? id 'rule-math-quiz) (apply-time-limit-multiplier (seconds 20))) ;; 20
+    ((eq? id 'rule-trivia) (apply-time-limit-multiplier (seconds 15))) ;; 15
     ((eq? id 'complication-bad-ping) (seconds 60)) ;; 60
-    ((eq? id 'rule-green-pilled) (seconds 90)) ;; 90
-    ((eq? id 'rule-button-pusher) (seconds 45)) ;; 45
-    ((eq? id 'rule-loyal-customer) (seconds 60)) ;; 60
+    ((eq? id 'rule-green-pilled) (apply-time-limit-multiplier (seconds 90))) ;; 90
+    ((eq? id 'rule-button-pusher) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-loyal-customer) (apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'complication-invisible-man) (seconds 50)) ;; 50
-    ((eq? id 'rule-cooked) (seconds 30)) ;; 30
+    ((eq? id 'rule-cooked) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
-    ((eq? id 'rule-sagging-sails) (seconds 30)) ;; 30
+    ((eq? id 'rule-sagging-sails) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-side-to-side) (seconds 60)) ;; 60
     ((eq? id 'rule-landlubber) (seconds 40)) ;; 40
     ((eq? id 'complication-double-aphids) (seconds 40)) ;; 40
@@ -1043,7 +1054,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     ((eq? id 'complication-vibe-check) (seconds 4)) ;; 4
     ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
-    ((eq? id 'rule-express-delivery) (seconds 60)) ;; 60
+    ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 60))) ;; 60
+    ((eq? id 'rule-crate-break) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-qte) (seconds 2)) ;; 2
     (else (seconds 30))))
 

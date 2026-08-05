@@ -88,7 +88,8 @@
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
-   (countdown-start-seconds float))
+   (countdown-start-seconds float)
+   (time-limit-multiplier float))
   (:methods
    (reset (_type_) _type_)
    (commit-to-file (_type_) none)
@@ -169,6 +170,7 @@
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 8.0)
   (set! (-> obj countdown-start-seconds) 30.0)
+  (set! (-> obj time-limit-multiplier) 1.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -184,8 +186,9 @@
                                         (case-str *pc-temp-string*
                                           ;; add new options here
                                           (("show-countup-timer?") (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
-                                          (("one-frame-toggle?") (none)) 
-                                          (("invert-controls-toggle?") (none))
+                                          ;; retired condition-menu toggles; do not restore these as real fields.
+                                          (("one-frame-toggle?" "invert-controls-toggle?" "math-quiz-toggle?" "trivia-toggle?")
+                                           (file-stream-read-symbol file))
                                           (("crash-toggle?") (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
                                           (("klaww-assist?") (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
                                           (("fish-assist?") (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
@@ -255,7 +258,8 @@
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
-                                          (("countdown-start-seconds") (set! (-> obj countdown-start-seconds) (file-stream-read-float file))))))))
+                                          (("countdown-start-seconds") (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
+                                          (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file))))))))
     (file-stream-close file))
   #t)
 
@@ -343,6 +347,7 @@
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (-> obj orb-increment))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
+    (format file "  (time-limit-multiplier ~f)~%" (-> obj time-limit-multiplier))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -362,6 +367,10 @@
 ;; add new options here (handler) - ONLY memory updates here
 (defun countup-timer-setting-changed! ((new-val symbol))
   (set! (-> *complicated-settings* show-countup-timer?) new-val)
+  (none))
+
+(defun time-limit-multiplier-changed! ((new-val float))
+  (set! (-> *complicated-settings* time-limit-multiplier) new-val)
   (none))
 
 (defun crash-toggle-changed! ((new-val symbol))
@@ -415,7 +424,25 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [1] CELL INCREMENT
+        ;; [1] PRESSURE MULTIPLIER
+       (new 'static
+            'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-time-limit-multiplier)
+            :scale #t
+            :param1 0.5
+            :param2 2.0
+            :slider-step-size 0.1
+            :slider-show-decimal? #t
+            :on-change
+            (lambda ((val object))
+              (time-limit-multiplier-changed! (the-as float val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [2] CELL INCREMENT
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -432,7 +459,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [2] ORB INCREMENT
+       ;; [3] ORB INCREMENT
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -450,7 +477,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [3] FLY INCREMENT
+       ;; [4] FLY INCREMENT
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -467,7 +494,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [4] BACK
+       ;; [5] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1372,16 +1399,20 @@
   (set! (-> *condition-toggle-options* 60 value-to-modify) (&-> *complicated-settings* rule-double-kill?))
   (set! (-> *condition-toggle-options* 61 value-to-modify) (&-> *complicated-settings* rule-express-delivery?))
   (set! (-> *condition-toggle-options* 62 value-to-modify) (&-> *complicated-settings* rule-qte?))
-  ;; Increment options mappings
+  ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
-  (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* cell-increment))
-  (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* orb-increment))
-  (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* fly-increment))
+  (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
+  (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* cell-increment))
+  (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* orb-increment))
+  (set! (-> *comp-timer-options* 4 value-to-modify) (&-> *complicated-settings* fly-increment))
   (none))
 
 ;; add new options here (getter)
 (defun show-countup-timer-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
+
+(defun time-limit-multiplier ()
+  (if *complicated-settings* (-> *complicated-settings* time-limit-multiplier) 1.0))
 
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
