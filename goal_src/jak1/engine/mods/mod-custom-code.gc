@@ -45,7 +45,8 @@
              ))))))
   (if *show-input-display* (input-display-on) (input-display-off))
   (if (!= (current-level-name) 'swamp) (mod-rule-trigger-failure 'rule-for-billy))
-  (if (= (-> *target* control ground-pat material) (pat-material ice)) (mod-rule-trigger-failure 'rule-cold-feet) (none))
+  (if (= (-> *target* control ground-pat material) (pat-material ice)) (mod-rule-trigger-failure 'rule-cold-feet))
+  (if (= (-> *target* control ground-pat material) (pat-material grass)) (mod-rule-counter-add-progress 'rule-touch-grass 1))
   (when (mod-rule-active? 'complication-drought)
     (set! *ocean-off* #t))
   (when *debug-segment*

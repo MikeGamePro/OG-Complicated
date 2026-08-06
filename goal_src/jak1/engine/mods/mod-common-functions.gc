@@ -186,7 +186,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     'complication-invisible-man 'rule-cooked 'complication-joyride 'complication-critical 'rule-sagging-sails
     'rule-side-to-side 'complication-cumbersome 'rule-landlubber 'rule-loyal-customer 'complication-double-aphids
     'complication-invert 'complication-loose-pockets 'complication-twisted 'complication-vibe-check 'complication-income-tax
-    'rule-double-kill 'rule-express-delivery 'rule-qte
+    'rule-double-kill 'rule-express-delivery 'rule-qte 'rule-touch-grass
     ))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
@@ -946,6 +946,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-income-tax) "INCOME TAX")
     ((eq? id 'rule-express-delivery) "EXPRESS DELIVERY")
     ((eq? id 'rule-qte) "THINK FAST")
+    ((eq? id 'rule-touch-grass) "TOUCH GRASS")
     (else "UNKNOWN")))
 
 (defun mod-rule-description ((id symbol))
@@ -1015,6 +1016,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          "A LATER RULE MUST BE BROKEN.")))
     ((eq? id 'complication-vibe-check) "")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
+    ((eq? id 'rule-touch-grass) "TOUCH GRASS.")
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
 ((eq? id 'rule-qte)
       (cond
@@ -1095,6 +1097,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'rule-crate-break) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-qte) (seconds 2)) ;; 2
+    ((eq? id 'rule-touch-grass) (apply-time-limit-multiplier (seconds 15))) ;; 15
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1119,6 +1122,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-sagging-sails) 'counter)
     ((eq? id 'rule-express-delivery) 'event-once)
     ((eq? id 'rule-qte) 'event-once)
+    ((eq? id 'rule-touch-grass) 'event-once)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1167,7 +1171,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-side-to-side)
          (eq? id 'rule-landlubber)
          (eq? id 'rule-express-delivery)
-         (eq? id 'rule-qte))
+         (eq? id 'rule-qte)
+         (eq? id 'rule-touch-grass))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -2022,6 +2027,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'robocave)
       (eq? level 'citadel)))
 
+(defun grass-level? ((level symbol))
+  (or (eq? level 'beach)
+      (eq? level 'village1)
+      (eq? level 'jungle)
+      (eq? level 'village2)))
+
 (defun no-drought-level? ((level symbol))
   (or (eq? level 'swamp)
       (string= (current-checkpoint-name) "ogre-race")
@@ -2263,6 +2274,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          7))
       ((eq? id 'rule-sagging-sails) (if (target-fishing?) 50 0))
       ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 40 0))
+      ((eq? id 'rule-touch-grass) (if (or (and (eq? level-name 'jungleb) 
+        (task-closed? (game-task jungle-plant) (task-status need-resolution))) 
+        (and (not (= (-> *target* control ground-pat material) (pat-material grass))) (grass-level? level-name))) 10 0))
       ((eq? id 'rule-math-quiz)
        (if (or (mod-rule-active? 'rule-trivia) (eq? level-name 'training)) 0 4))
       ((eq? id 'rule-trivia)
@@ -2324,7 +2338,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((eq? id 'complication-twisted) (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 6))
       ((eq? id 'rule-qte) ;; disabled
        (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
-      (else 8))))))
+      (else 6))))))
 
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)

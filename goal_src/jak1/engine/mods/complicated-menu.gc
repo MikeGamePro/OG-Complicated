@@ -85,6 +85,7 @@
    (rule-double-kill? symbol)
    (rule-express-delivery? symbol)
    (rule-qte? symbol)
+   (rule-touch-grass? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -166,6 +167,7 @@
   (set! (-> obj rule-double-kill?) #t)
   (set! (-> obj rule-express-delivery?) #t)
   (set! (-> obj rule-qte?) #f)
+  (set! (-> obj rule-touch-grass?) #t)
   (set! (-> obj cell-increment) 20.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 8.0)
@@ -255,6 +257,7 @@
                                           (("rule-double-kill?") (set! (-> obj rule-double-kill?) (file-stream-read-symbol file)))
                                           (("rule-express-delivery?") (set! (-> obj rule-express-delivery?) (file-stream-read-symbol file)))
                                           (("rule-qte?") (set! (-> obj rule-qte?) (file-stream-read-symbol file)))
+                                          (("rule-touch-grass?") (set! (-> obj rule-touch-grass?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -352,6 +355,7 @@
     (format file "  (rule-double-kill? ~A)~%" (-> obj rule-double-kill?))
     (format file "  (rule-express-delivery? ~A)~%" (-> obj rule-express-delivery?))
     (format file "  (rule-qte? ~A)~%" (-> obj rule-qte?))
+    (format file "  (rule-touch-grass? ~A)~%" (-> obj rule-touch-grass?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1174,7 +1178,17 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [63] BACK
+       ;; [63] TOUCH GRASS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-touch-grass)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [64] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1408,6 +1422,7 @@
   (set! (-> *condition-toggle-options* 60 value-to-modify) (&-> *complicated-settings* rule-double-kill?))
   (set! (-> *condition-toggle-options* 61 value-to-modify) (&-> *complicated-settings* rule-express-delivery?))
   (set! (-> *condition-toggle-options* 62 value-to-modify) (&-> *complicated-settings* rule-qte?))
+  (set! (-> *condition-toggle-options* 63 value-to-modify) (&-> *complicated-settings* rule-touch-grass?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -1510,4 +1525,5 @@
     ((eq? id 'rule-double-kill) (-> *complicated-settings* rule-double-kill?))
     ((eq? id 'rule-express-delivery) (-> *complicated-settings* rule-express-delivery?))
     ((eq? id 'rule-qte) (-> *complicated-settings* rule-qte?))
+    ((eq? id 'rule-touch-grass) (-> *complicated-settings* rule-touch-grass?))
       (else #t))))
