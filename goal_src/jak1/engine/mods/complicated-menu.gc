@@ -393,6 +393,9 @@
     (set! (-> *complicated-settings* fly-increment) 15.0)
     (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
     (set! (-> *complicated-settings* time-limit-multiplier) 1.5)
+    (set! (-> *complicated-settings* rule-one-frame?) #f)
+    (set! (-> *complicated-settings* complication-rotten-eggs?) #f)
+    (set! (-> *complicated-settings* complication-heating-balloons?) #f)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -403,6 +406,9 @@
     (set! (-> *complicated-settings* fly-increment) 10.0)
     (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
     (set! (-> *complicated-settings* time-limit-multiplier) 1.2)
+    (set! (-> *complicated-settings* rule-one-frame?) #f)
+    (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+    (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -413,6 +419,9 @@
     (set! (-> *complicated-settings* fly-increment) 8.0)
     (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
     (set! (-> *complicated-settings* time-limit-multiplier) 1.0)
+    (set! (-> *complicated-settings* rule-one-frame?) #t)
+    (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+    (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -423,6 +432,9 @@
     (set! (-> *complicated-settings* fly-increment) 4.0)
     (set! (-> *complicated-settings* countdown-start-seconds) 10.0)
     (set! (-> *complicated-settings* time-limit-multiplier) 0.8)
+    (set! (-> *complicated-settings* rule-one-frame?) #t)
+    (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+    (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
