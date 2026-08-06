@@ -386,6 +386,46 @@
   (set! (-> *complicated-settings* time-limit-multiplier) (+ (snap-to-step new-val 0.05) 0.001))
   (none))
 
+(defun apply-easy-preset! ()
+  (when *complicated-settings*
+    (set! (-> *complicated-settings* cell-increment) 40.0)
+    (set! (-> *complicated-settings* orb-increment) 2.0)
+    (set! (-> *complicated-settings* fly-increment) 15.0)
+    (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
+    (set! (-> *complicated-settings* time-limit-multiplier) 1.5)
+    (commit-to-file *complicated-settings*))
+  (none))
+
+(defun apply-medium-preset! ()
+  (when *complicated-settings*
+    (set! (-> *complicated-settings* cell-increment) 30.0)
+    (set! (-> *complicated-settings* orb-increment) 1.0)
+    (set! (-> *complicated-settings* fly-increment) 10.0)
+    (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
+    (set! (-> *complicated-settings* time-limit-multiplier) 1.2)
+    (commit-to-file *complicated-settings*))
+  (none))
+
+(defun apply-speedrunner-preset! ()
+  (when *complicated-settings*
+    (set! (-> *complicated-settings* cell-increment) 20.0)
+    (set! (-> *complicated-settings* orb-increment) 1.0)
+    (set! (-> *complicated-settings* fly-increment) 8.0)
+    (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
+    (set! (-> *complicated-settings* time-limit-multiplier) 1.0)
+    (commit-to-file *complicated-settings*))
+  (none))
+
+(defun apply-brutal-preset! ()
+  (when *complicated-settings*
+    (set! (-> *complicated-settings* cell-increment) 20.0)
+    (set! (-> *complicated-settings* orb-increment) 1.0)
+    (set! (-> *complicated-settings* fly-increment) 4.0)
+    (set! (-> *complicated-settings* countdown-start-seconds) 5.0)
+    (set! (-> *complicated-settings* time-limit-multiplier) 0.8)
+    (commit-to-file *complicated-settings*))
+  (none))
+
 (defun crash-toggle-changed! ((new-val symbol))
   (set! (-> *complicated-settings* crash-toggle?) new-val)
   (none))
@@ -518,10 +558,62 @@
               (commit-to-file *complicated-settings*)
               (none)))))
 
-;; ---- Condition Toggle Submenu ----------------------------------------------
-;; on/off toggle for every rule/complication so it can be excluded from the
-;; randomizer's weighted roll (see mod-rule-condition-enabled? in
-;; mod-common-functions.gc)
+(define *difficulty-preset-options*
+  (new 'static
+       'boxed-array
+       :type
+       game-option
+       ;; [0] EASY PRESET
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-easy-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-easy-preset!)
+              (none)))
+       ;; [1] HARD PRESET
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-medium-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-medium-preset!)
+              (none)))
+       ;; [2] SPEEDRUNNER PRESET
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-speedrunner-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-speedrunner-preset!)
+              (none)))
+       ;; [3] BRUTAL PRESET
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-brutal-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-brutal-preset!)
+              (none)))
+       ;; [4] BACK
+       (new 'static
+            'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))))
+
 (define *condition-toggle-options*
   (new 'static
        'boxed-array
@@ -1219,7 +1311,14 @@
             :name (text-id complicated-opts-cond-toggles-title)
             :scale #t
             :param3 (game-option-menu condition-toggle-options))
-       ;; [2] SPEEDRUN TIMER toggle
+       ;; [2] DIFFICULTY PRESETS SUBMENU
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-difficulty-presets-title)
+            :scale #t
+            :param3 (game-option-menu difficulty-preset-options))
+       ;; [3] SPEEDRUN TIMER toggle
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1233,7 +1332,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [3] CRASH TOGGLE
+       ;; [4] CRASH TOGGLE
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1248,7 +1347,7 @@
               (commit-to-file *complicated-settings*)
               (none)))
 
-       ;; [4] KLAWW ASSIST
+       ;; [5] KLAWW ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1262,7 +1361,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [5] FISH ASSIST
+       ;; [6] FISH ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1276,7 +1375,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [6] BACK
+       ;; [7] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1346,6 +1445,7 @@
   (set! (-> *options-remap* (progress-screen complicated-options)) *complicated-options*)
   (set! (-> *options-remap* (progress-screen comp-timer-options)) *comp-timer-options*)
   (set! (-> *options-remap* (progress-screen condition-toggle-options)) *condition-toggle-options*)
+  (set! (-> *options-remap* (progress-screen difficulty-preset-options)) *difficulty-preset-options*)
   (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
   (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
   (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
@@ -1354,10 +1454,10 @@
   (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; Complicated options mappings
-  (set! (-> *complicated-options* 2 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* crash-toggle?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* crash-toggle?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
   ;; Condition toggle mappings
   (set! (-> *condition-toggle-options* 0 value-to-modify) (&-> *complicated-settings* rule-grounded?))
   (set! (-> *condition-toggle-options* 1 value-to-modify) (&-> *complicated-settings* rule-die?))

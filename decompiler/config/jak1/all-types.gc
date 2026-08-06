@@ -15951,6 +15951,7 @@
   (complicated-options)
   (comp-timer-options)
   (condition-toggle-options)
+  (difficulty-preset-options)
   ;; the last one!
   (max)
   )
