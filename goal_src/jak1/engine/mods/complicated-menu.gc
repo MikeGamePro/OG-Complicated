@@ -87,6 +87,9 @@
    (rule-qte? symbol)
    (rule-touch-grass? symbol)
    (complication-mirror? symbol)
+   (complication-no-double-jump? symbol)
+   (rule-hang-time? symbol)
+   (complication-unbreakable? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -170,6 +173,9 @@
   (set! (-> obj rule-qte?) #f)
   (set! (-> obj rule-touch-grass?) #t)
   (set! (-> obj complication-mirror?) #t)
+  (set! (-> obj complication-no-double-jump?) #f)
+  (set! (-> obj rule-hang-time?) #t)
+  (set! (-> obj complication-unbreakable?) #t)
   (set! (-> obj cell-increment) 20.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 8.0)
@@ -260,6 +266,9 @@
                                           (("rule-qte?") (set! (-> obj rule-qte?) (file-stream-read-symbol file)))
                                           (("rule-touch-grass?") (set! (-> obj rule-touch-grass?) (file-stream-read-symbol file)))
                                           (("complication-mirror?") (set! (-> obj complication-mirror?) (file-stream-read-symbol file)))
+                                          (("complication-no-double-jump?") (set! (-> obj complication-no-double-jump?) (file-stream-read-symbol file)))
+                                          (("rule-hang-time?") (set! (-> obj rule-hang-time?) (file-stream-read-symbol file)))
+                                          (("complication-unbreakable?") (set! (-> obj complication-unbreakable?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -357,6 +366,9 @@
     (format file "  (rule-qte? ~A)~%" (-> obj rule-qte?))
     (format file "  (rule-touch-grass? ~A)~%" (-> obj rule-touch-grass?))
     (format file "  (complication-mirror? ~A)~%" (-> obj complication-mirror?))
+    (format file "  (complication-no-double-jump? ~A)~%" (-> obj complication-no-double-jump?))
+    (format file "  (rule-hang-time? ~A)~%" (-> obj rule-hang-time?))
+    (format file "  (complication-unbreakable? ~A)~%" (-> obj complication-unbreakable?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -397,6 +409,7 @@
     (set! (-> *complicated-settings* rule-one-frame?) #f)
     (set! (-> *complicated-settings* complication-rotten-eggs?) #f)
     (set! (-> *complicated-settings* complication-heating-balloons?) #f)
+    (set! (-> *complicated-settings* rule-hang-time?) #f)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -410,6 +423,7 @@
     (set! (-> *complicated-settings* rule-one-frame?) #f)
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
+    (set! (-> *complicated-settings* rule-hang-time?) #f)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -423,6 +437,7 @@
     (set! (-> *complicated-settings* rule-one-frame?) #t)
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
+    (set! (-> *complicated-settings* rule-hang-time?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -436,6 +451,7 @@
     (set! (-> *complicated-settings* rule-one-frame?) #t)
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
+    (set! (-> *complicated-settings* rule-hang-time?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -1303,7 +1319,37 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [65] BACK
+       ;; [65] ONE AND DONE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-no-double-jump)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [66] HANG TIME
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-hang-time)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [67] UNBREAKABLE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-unbreakable)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [--] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1546,6 +1592,9 @@
   (set! (-> *condition-toggle-options* 62 value-to-modify) (&-> *complicated-settings* rule-qte?))
   (set! (-> *condition-toggle-options* 63 value-to-modify) (&-> *complicated-settings* rule-touch-grass?))
   (set! (-> *condition-toggle-options* 64 value-to-modify) (&-> *complicated-settings* complication-mirror?))
+  (set! (-> *condition-toggle-options* 65 value-to-modify) (&-> *complicated-settings* complication-no-double-jump?))
+  (set! (-> *condition-toggle-options* 66 value-to-modify) (&-> *complicated-settings* rule-hang-time?))
+  (set! (-> *condition-toggle-options* 67 value-to-modify) (&-> *complicated-settings* complication-unbreakable?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -1650,4 +1699,7 @@
          ((eq? id 'rule-qte) (-> *complicated-settings* rule-qte?))
          ((eq? id 'rule-touch-grass) (-> *complicated-settings* rule-touch-grass?))
          ((eq? id 'complication-mirror) (-> *complicated-settings* complication-mirror?))
+         ((eq? id 'complication-no-double-jump) (-> *complicated-settings* complication-no-double-jump?))
+         ((eq? id 'rule-hang-time) (-> *complicated-settings* rule-hang-time?))
+         ((eq? id 'complication-unbreakable) (-> *complicated-settings* complication-unbreakable?))
          (else #t))))
