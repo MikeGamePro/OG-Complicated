@@ -881,6 +881,7 @@
   (complicated-opts-cond-rule-qte #x1667)
   (complicated-opts-time-limit-multiplier #x1668)
   (complicated-opts-cond-rule-touch-grass #x1669)
+  (complicated-opts-cond-complication-mirror #x166f)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

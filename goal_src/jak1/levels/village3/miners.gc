@@ -301,7 +301,13 @@
           (close-current! (-> this tasks))
           (send-event *target* 'get-pickup 5 (- (-> *GAME-bank* money-task-inc)))
           (save-reminder (-> this tasks) (+ s4-3 1) 2))
-         (else (set! (-> this will-talk) (if (or (mod-rule-active? 'complication-fuel-shortage) (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical))) #f #t)) (set! (-> this talk-message) (text-id press-to-trade-money))))
+         (else
+          (set! (-> this will-talk)
+                (if (or (mod-rule-active? 'complication-fuel-shortage)
+                        (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))
+                  #f
+                  #t))
+          (set! (-> this talk-message) (text-id press-to-trade-money))))
        (if (< (the-as uint s4-3) (the-as uint 3))
          (new 'static 'spool-anim :name "minershort-resolution-1-orbs" :index 7 :parts 2 :command-list '())
          (new 'static

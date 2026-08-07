@@ -59,7 +59,7 @@
   :virtual #t
   :enter
     (behavior ()
-    (mod-rule-counter-add-progress 'rule-express-delivery 1)
+      (mod-rule-counter-add-progress 'rule-express-delivery 1)
       (muse-to-idle (the-as muse self))))
 
 (defmethod play-anim! ((this sculptor) (arg0 symbol))

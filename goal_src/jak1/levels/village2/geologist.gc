@@ -64,7 +64,13 @@
            (set! (-> this cell-for-task) (current-task (-> this tasks)))
            (close-current! (-> this tasks))
            (send-event *target* 'get-pickup 5 (- (-> *GAME-bank* money-task-inc))))
-          (else (set! (-> this will-talk) (if (or (mod-rule-active? 'complication-fuel-shortage) (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical))) #f #t)) (set! (-> this talk-message) (text-id press-to-trade-money))))
+          (else
+           (set! (-> this will-talk)
+                 (if (or (mod-rule-active? 'complication-fuel-shortage)
+                         (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))
+                   #f
+                   #t))
+           (set! (-> this talk-message) (text-id press-to-trade-money))))
         (new 'static 'spool-anim :name "geologist-resolution-money" :index 10 :parts 2 :command-list '()))))
     (else
      (if arg0

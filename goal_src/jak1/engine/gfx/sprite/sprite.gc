@@ -282,7 +282,7 @@
   (set! (-> data basis-x quad) (the-as uint128 0))
   (set! (-> data basis-x x) (- (-> *math-camera* perspective vector 0 x)))
   (with-pc
-    (when (pc-cheats? (-> *pc-settings* cheats) mirror)
+    (when (or (pc-cheats? (-> *pc-settings* cheats) mirror) *mod-mirror-active?*)
       (*! (-> data basis-x x) -1.0)))
   (set! (-> data basis-y quad) (the-as uint128 0))
   (set! (-> data basis-y y) (- (-> *math-camera* perspective vector 1 y)))

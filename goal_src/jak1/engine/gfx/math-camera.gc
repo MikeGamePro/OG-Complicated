@@ -180,7 +180,7 @@
             ;; #x4b002032 -> #x4b002031
             (set! (-> math-cam isometric vector 3 z) (the-as float (1- (the-as int (-> math-cam isometric vector 3 z)))))
             ;; also do mirror game check here.
-            (when (pc-cheats? (-> *pc-settings* cheats) mirror)
+            (when (or (pc-cheats? (-> *pc-settings* cheats) mirror) *mod-mirror-active?*)
               (*! (-> math-cam perspective vector 0 x) -1.))))
         (set! (-> math-cam isometric vector 3 w) fog-slope)
         ;; perspective matrix

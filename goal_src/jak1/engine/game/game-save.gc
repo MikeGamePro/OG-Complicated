@@ -793,12 +793,10 @@
            (mod-trivia-used-word0-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-trivia-used-word1))
            (mod-trivia-used-word1-resume-from-save (the-as int (-> save-data user-uint64))))
-          ((= a0-1 (game-save-elt final-time))
-           (final-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt final-time)) (final-time-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt final-remaining-time))
            (final-remaining-time-resume-from-save (the-as int (-> save-data user-uint64))))
-          ((= a0-1 (game-save-elt final-score))
-           (final-score-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt final-score)) (final-score-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
