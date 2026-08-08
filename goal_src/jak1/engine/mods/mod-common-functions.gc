@@ -1783,7 +1783,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
     ((eq? id 'rule-hang-time) (set! *mod-rule-hang-time-air-start* (current-time)))
     ((eq? id 'complication-vibe-check)
-     (play-custom-sfx "I like ya cut g.mp3" 30.0)
+     (play-custom-sfx "I like ya cut g.mp3" 35.0)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1.35)) (suspend)))
@@ -2207,7 +2207,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         0
         (cond
           ;; Resources
-          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 8))
+          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 7))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
                    (mod-rule-active? 'rule-distancing)
@@ -2269,12 +2269,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
            (cond
              ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
-             ((eq? id 'complication-glare) 10)
+             ((eq? id 'complication-glare) 8)
              ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
-             (else 10)))
-          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 10))
+             (else 7)))
+          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 9))
           ((eq? id 'rule-double-kill)
-           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 8))
+           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 7))
           ((eq? id 'rule-sniper)
            (if (and (not (mod-rule-active? 'rule-flop-this))
                     (or (eq? level-name 'swamp)
@@ -2297,7 +2297,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (target-billy-game?)
                    (mod-rule-active? 'rule-sniper))
              0
-             10))
+             9))
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 15))
           ((eq? id 'complication-eco-reserve)
            (cond
@@ -2312,7 +2312,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 0 20))
           ;; Crates
           ((eq? id 'rule-crate-break)
-           (if (or is-klaww is-minigame (string= (current-checkpoint-name) "sunkenb-helix") (sparse-crate-level? level-name)) 0 10))
+           (if (or is-klaww is-minigame (string= (current-checkpoint-name) "sunkenb-helix") (sparse-crate-level? level-name)) 0 6))
           ((eq? id 'rule-hands-on) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 7))
           ;; Movement
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
@@ -2377,12 +2377,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (target-on-racer-or-flut?)
                    is-minigame
                    (eq? level-name 'finalboss)
+                   (and (mod-rule-active? 'rule-button-pusher) (or (eq? level-name 'sunken) (eq? level-name 'sunkenb)))
                    ;;  (eq? level-name 'swamp)
                    ;;  (eq? level-name 'snow)
                    (string= (current-checkpoint-name) "firecanyon-start")
                    (eq? level-name 'lavatube))
              0
-             7))
+             4))
           ((eq? id 'rule-sagging-sails) (if (target-fishing?) 35 0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
@@ -2439,6 +2440,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (eq? level-name 'training)
                    (eq? level-name 'finalboss)
                    (mod-rule-active? 'rule-loyal-customer)
+                   (string= (current-checkpoint-name) "lavatube-middle")
                    (and (string= (current-checkpoint-name) "citadel-elevator")
                         (task-closed? (game-task citadel-sage-green) (task-status need-resolution))))
              0
