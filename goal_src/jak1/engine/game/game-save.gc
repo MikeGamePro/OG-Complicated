@@ -96,6 +96,28 @@
 
 (define-extern final-score-save-value (function int))
 
+(define-extern mod-rule-active-slots-resume-from-save (function int none))
+
+(define-extern mod-rule-slot0-end-time-resume-from-save (function int none))
+
+(define-extern mod-rule-slot1-end-time-resume-from-save (function int none))
+
+(define-extern mod-rule-slot2-end-time-resume-from-save (function int none))
+
+(define-extern mod-rule-active-slots-save-value (function int))
+
+(define-extern mod-rule-slot0-end-time-save-value (function int))
+
+(define-extern mod-rule-slot1-end-time-save-value (function int))
+
+(define-extern mod-rule-slot2-end-time-save-value (function int))
+
+(define-extern mod-rule-active-slots-reset! (function none))
+
+(define-extern mod-rule-twist-marked-slot-save-value (function int))
+
+(define-extern mod-rule-twist-marked-slot-resume-from-save (function int none))
+
 ;; version identifier
 (defconstant SAVE_VERSION 1)
 
@@ -187,7 +209,12 @@
   (mod-trivia-used-word1 523)
   (final-time 524)
   (final-remaining-time 525)
-  (final-score 526))
+  (final-score 526)
+  (mod-rule-active-slots 527)
+  (mod-rule-slot0-end-time 528)
+  (mod-rule-slot1-end-time 529)
+  (mod-rule-slot2-end-time 530)
+  (mod-rule-twist-marked-slot 531))
 
 ;; DECOMP BEGINS
 
@@ -745,7 +772,35 @@
                                                                                                             (set! (-> a0-105 elt-type) (game-save-elt final-score))
                                                                                                             (set! (-> a0-105 elt-count) 0)
                                                                                                             (set! (-> a0-105 user-uint64) (the-as uint (final-score-save-value))))
-                                                                                                          (set! (-> arg0 length) (&- (&+ v1-113 272) (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+                                                                                                          (let ((a0-106 (the-as game-save-tag (&+ v1-113 272))))
+                                                                                                            (set! (-> a0-106 elt-type) (game-save-elt mod-rule-active-slots))
+                                                                                                            (set! (-> a0-106 elt-count) 0)
+                                                                                                            (set! (-> a0-106 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-active-slots-save-value))))
+                                                                                                          (let ((a0-107 (the-as game-save-tag (&+ v1-113 288))))
+                                                                                                            (set! (-> a0-107 elt-type) (game-save-elt mod-rule-slot0-end-time))
+                                                                                                            (set! (-> a0-107 elt-count) 0)
+                                                                                                            (set! (-> a0-107 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-slot0-end-time-save-value))))
+                                                                                                          (let ((a0-108 (the-as game-save-tag (&+ v1-113 304))))
+                                                                                                            (set! (-> a0-108 elt-type) (game-save-elt mod-rule-slot1-end-time))
+                                                                                                            (set! (-> a0-108 elt-count) 0)
+                                                                                                            (set! (-> a0-108 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-slot1-end-time-save-value))))
+                                                                                                          (let ((a0-109 (the-as game-save-tag (&+ v1-113 320))))
+                                                                                                            (set! (-> a0-109 elt-type) (game-save-elt mod-rule-slot2-end-time))
+                                                                                                            (set! (-> a0-109 elt-count) 0)
+                                                                                                            (set! (-> a0-109 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-slot2-end-time-save-value))))
+                                                                                                          (let ((a0-110 (the-as game-save-tag (&+ v1-113 336))))
+                                                                                                            (set! (-> a0-110 elt-type) (game-save-elt mod-rule-twist-marked-slot))
+                                                                                                            (set! (-> a0-110 elt-count) 0)
+                                                                                                            (set! (-> a0-110 user-uint64)
+                                                                                                                  (the-as uint (mod-rule-twist-marked-slot-save-value))))
+
+                                                                                                          (set! (-> arg0 length)
+                                                                                                                (&- (&+ v1-113 352)
+                                                                                                                    (the-as uint (the-as pointer (-> arg0 tag)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   (if (< (-> arg0 allocated-length) (-> arg0 length))
     (format 0 "ERROR: SAVEGAME: fatal error, save is using ~D of ~D bytes." (-> arg0 length) (-> arg0 allocated-length)))
   (none))
@@ -755,6 +810,7 @@
   (set! *mod-game-beaten?* #f)
   (mod-rng-reset-state!)
   (mod-rule-context-reset!)
+  (mod-rule-active-slots-reset!)
   (let ((save-data (the-as game-save-tag (-> save tag))))
     ;; loop over all tags
     (while (< (the-as int save-data) (the-as int (+ (+ (-> save length) 76) (the-as int save))))
@@ -797,6 +853,16 @@
           ((= a0-1 (game-save-elt final-remaining-time))
            (final-remaining-time-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt final-score)) (final-score-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-active-slots))
+          (mod-rule-active-slots-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-slot0-end-time))
+          (mod-rule-slot0-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-slot1-end-time))
+          (mod-rule-slot1-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-slot2-end-time))
+          (mod-rule-slot2-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
+          ((= a0-1 (game-save-elt mod-rule-twist-marked-slot))
+          (mod-rule-twist-marked-slot-resume-from-save (the-as int (-> save-data user-uint64))))
           (else (format 0 "PC PORT: Skipping setting from game save, its stored in the pc-settings now~%"))))
       (set! save-data
             (the-as game-save-tag
