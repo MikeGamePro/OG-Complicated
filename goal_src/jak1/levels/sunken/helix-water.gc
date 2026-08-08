@@ -319,6 +319,7 @@
 (defstate helix-button-idle-down (helix-button)
   :code
     (behavior ()
+      (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (loop
         (suspend))))
 

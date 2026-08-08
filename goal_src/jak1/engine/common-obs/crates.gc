@@ -458,7 +458,9 @@
          (('explode 'eco-yellow 'darkeco 'flut-bonk 'flut-attack 'racer) (mod-rule-trigger-failure 'rule-hands-on)))
        (case (-> self defense)
         (('iron)
-        (case (if (and (mod-rule-active? 'complication-unbreakable) (!= (-> arg3 param 1) 'eco-yellow))
+        (case (if (and (mod-rule-active? 'complication-unbreakable) 
+               (!= (-> arg3 param 1) 'eco-yellow)
+               (!= (-> arg3 param 1) 'darkeco))
                 'none
                 (-> arg3 param 1))
           (('flop 'uppercut 'explode 'darkeco 'eco-yellow 'bonk 'racer 'tube 'flut-bonk 'flut-attack)
