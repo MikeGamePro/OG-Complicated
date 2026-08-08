@@ -176,11 +176,11 @@
   (set! (-> obj complication-no-double-jump?) #f)
   (set! (-> obj rule-hang-time?) #t)
   (set! (-> obj complication-unbreakable?) #t)
-  (set! (-> obj cell-increment) 20.0)
+  (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
-  (set! (-> obj fly-increment) 8.0)
+  (set! (-> obj fly-increment) 10.0)
   (set! (-> obj countdown-start-seconds) 30.0)
-  (set! (-> obj time-limit-multiplier) 1.0)
+  (set! (-> obj time-limit-multiplier) 1.2)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -1608,7 +1608,7 @@
   (the symbol (and *complicated-settings* (-> *complicated-settings* show-countup-timer?))))
 
 (defun time-limit-multiplier ()
-  (if *complicated-settings* (snap-to-step (-> *complicated-settings* time-limit-multiplier) 0.1) 1.0))
+  (if *complicated-settings* (snap-to-step (-> *complicated-settings* time-limit-multiplier) 0.1) 1.2))
 
 (defun crash-toggle-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
@@ -1623,10 +1623,10 @@
   (if *complicated-settings* (snap-to-step (-> *complicated-settings* orb-increment) 0.1) 1.0))
 
 (defun cell-increment-value ()
-  (if *complicated-settings* (the float (the int (-> *complicated-settings* cell-increment))) 20.0))
+  (if *complicated-settings* (the float (the int (-> *complicated-settings* cell-increment))) 30.0))
 
 (defun fly-increment-value ()
-  (if *complicated-settings* (the float (the int (-> *complicated-settings* fly-increment))) 8.0))
+  (if *complicated-settings* (the float (the int (-> *complicated-settings* fly-increment))) 10.0))
 
 (defun countdown-start-seconds-value ()
   (if *complicated-settings* (the float (the int (-> *complicated-settings* countdown-start-seconds))) 30.0))

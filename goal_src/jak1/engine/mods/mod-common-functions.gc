@@ -1085,7 +1085,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (> rolls-away 0)
          (string-format "THE RULE ROLLED ~D RULES FROM NOW DECEIVES YOU." rolls-away)
          "A LATER RULE MUST BE BROKEN.")))
-    ((eq? id 'complication-vibe-check) "")
+    ((eq? id 'complication-vibe-check) "I LIKE YA CUT, G")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
     ((eq? id 'rule-touch-grass) "DO THAT.")
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
@@ -2226,7 +2226,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'jungleb)
                    (eq? level-name 'finalboss))
              0
-             9))
+             6))
           ((eq? id 'rule-fuel-pressure)
            (cond
              ((or (< fuel-left 1) is-minigame is-klaww (eq? level-name 'jungleb) racer-lavatube (eq? level-name 'finalboss)) 0)
@@ -2235,7 +2235,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (eq? level-name 'village3)
                   (mod-rule-active? 'complication-fuel-shortage))
               3)
-             (else 10)))
+             (else 8)))
           ((eq? id 'rule-money-pressure)
            (if (or (< money-left 35)
                    is-minigame
@@ -2243,7 +2243,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'finalboss)
                    (string= (current-checkpoint-name) "lavatube-after-ribbon"))
              0
-             9))
+             6))
           ((eq? id 'complication-hidden-treasure)
            (if (or is-klaww (eq? level-name 'finalboss) (string= (current-checkpoint-name) "firecanyon-start") deep-lavatube) 0 7))
           ((eq? id 'rule-loyal-customer)
@@ -2368,11 +2368,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'misty))
              8
              0))
-          ((eq? id 'rule-side-to-side) (if is-klaww 50 0))
+          ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 6 0))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
-          ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 6))
+          ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
                    is-minigame
@@ -2383,7 +2383,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'lavatube))
              0
              7))
-          ((eq? id 'rule-sagging-sails) (if (target-fishing?) 50 0))
+          ((eq? id 'rule-sagging-sails) (if (target-fishing?) 35 0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))
@@ -2391,8 +2391,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                         (grass-level? level-name)))
              9
              0))
-          ((eq? id 'rule-math-quiz) (if (or (mod-rule-active? 'rule-trivia) (eq? level-name 'training)) 0 4))
-          ((eq? id 'rule-trivia) (if (or (mod-rule-active? 'rule-math-quiz) (eq? level-name 'training)) 0 4))
+          ((eq? id 'rule-math-quiz) (if (or (mod-rule-active? 'rule-trivia) (eq? level-name 'training)) 0 3))
+          ((eq? id 'rule-trivia) (if (or (mod-rule-active? 'rule-math-quiz) (eq? level-name 'training)) 0 3))
           ((eq? id 'complication-overclock)
            (if (and (not (string= (current-checkpoint-name) "citadel-elevator")) (eq? level-name 'citadel)) 20 0))
           ((eq? id 'rule-one-frame)
@@ -2426,7 +2426,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((or (eq? level-name 'finalboss) (eq? level-name 'village3)) 0)
              (is-klaww 2)
-             (else 8)))
+             (else 6)))
           ((eq? id 'complication-heating-balloons)
            (if (or (string= (current-checkpoint-name) "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
           ((eq? id 'complication-bus-driver) (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 15 0))
@@ -2449,7 +2449,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (is-minigame 0)
              (else 8)))
           ((eq? id 'complication-twisted)
-           (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 6))
+           (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 5))
           ((eq? id 'rule-qte) ;; disabled
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           (else 6))))))
@@ -2693,16 +2693,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (when twisted?
            (set! *mod-rule-twist-marked-slot* -1))
          (sound-play "buzzer-pickup")
-         (set! *mod-rule-last-outcome* 'success)
+         (set! *mod-rule-last-outcome* (if twisted? 'twisted-success 'success))
          (+! *rules-followed* 1)
          (mod-rule-finish-slot slot #t))
         ((or ignore-grace? (not (mod-rule-slot-in-grace-period? slot)))
          (when twisted?
-           (set! *mod-rule-twist-marked-slot* -1)
-           (sound-play "jak-shocked"))
+           (set! *mod-rule-twist-marked-slot* -1))
          (sound-play "caught-eel")
          (+! *rules-broken* 1)
-         (set! *mod-rule-last-outcome* 'failed)
+         (set! *mod-rule-last-outcome* (if twisted? 'twisted-failed 'failed))
          (let ((punishment (or (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment))))
            (if (eq? punishment 'punishment-extra-rule)
              (mod-rule-apply-extra-rule-punishment slot)
@@ -3269,7 +3268,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? *mod-rule-last-outcome* 'success)
      (draw-string-xy-scaled "GOOD JOB!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
     ((eq? *mod-rule-last-outcome* 'failed)
-     (draw-string-xy-scaled "RULE BROKEN!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4)))
+     (draw-string-xy-scaled "RULE BROKEN!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4))
+    ((eq? *mod-rule-last-outcome* 'twisted-success)
+     (draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
+    ((eq? *mod-rule-last-outcome* 'twisted-failed)
+     (draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4)))
   (none))
 
 (defun mod-rule-draw-rolling-slot ((buf dma-buffer))
