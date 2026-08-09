@@ -1181,13 +1181,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     ((eq? id 'complication-vibe-check) (seconds 4)) ;; 4
     ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
-    ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 60))) ;; 60
+    ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 90))) ;; 90
     ((eq? id 'rule-crate-break) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-qte) (seconds 2)) ;; 2
     ((eq? id 'rule-touch-grass) (apply-time-limit-multiplier (seconds 15))) ;; 15
     ((eq? id 'complication-mirror) (seconds 60)) ;; 60
     ((eq? id 'complication-no-double-jump) (seconds 60)) ;; 60
-    ((eq? id 'rule-hang-time) (apply-time-limit-multiplier (seconds 60))) ;; 60
+    ((eq? id 'rule-hang-time) (apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'complication-unbreakable) (seconds 60)) ;; 60
     ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
     (else (seconds 30))))
@@ -1768,7 +1768,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) (set! *mod-rule-hang-time-air-start* (current-time)))
     ((eq? id 'complication-get-a-grip) (set! *get-a-grip-last-grab* (current-time)))
     ((eq? id 'complication-vibe-check)
-     (play-custom-sfx "I like ya cut g.mp3" 35.0)
+     (play-custom-sfx "I like ya cut g.mp3" 30.0)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1.35)) (suspend)))
@@ -2108,6 +2108,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'jungle)
       (eq? level 'misty)
       (eq? level 'rolling)
+      (eq? level 'swamp)
       (eq? level 'sunkenb)
       (eq? level 'snow)
       (eq? level 'maincave)
@@ -2357,7 +2358,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 6 0))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
-          ((eq? id 'complication-get-a-grip) (if (or is-minigame is-klaww (eq? level-name 'finalboss) 
+          ((eq? id 'complication-get-a-grip) (if (or (sole-zoomer-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) 
                                                  (mod-rule-timed-punishment-active? 'punishment-edge) (target-on-racer-or-flut?)) 0 5))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
