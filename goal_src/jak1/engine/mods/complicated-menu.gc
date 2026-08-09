@@ -90,6 +90,7 @@
    (complication-no-double-jump? symbol)
    (rule-hang-time? symbol)
    (complication-unbreakable? symbol)
+   (complication-get-a-grip? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -137,7 +138,7 @@
   (set! (-> obj rule-vendetta?) #t)
   (set! (-> obj rule-hands-on?) #t)
   (set! (-> obj complication-eco-reserve?) #t)
-  (set! (-> obj rule-one-frame?) #t)
+  (set! (-> obj rule-one-frame?) #f)
   (set! (-> obj rule-distancing?) #t)
   (set! (-> obj complication-red-stop?) #f)
   (set! (-> obj rule-red-light?) #t)
@@ -174,8 +175,9 @@
   (set! (-> obj rule-touch-grass?) #t)
   (set! (-> obj complication-mirror?) #t)
   (set! (-> obj complication-no-double-jump?) #f)
-  (set! (-> obj rule-hang-time?) #t)
+  (set! (-> obj rule-hang-time?) #f)
   (set! (-> obj complication-unbreakable?) #t)
+  (set! (-> obj complication-get-a-grip?) #f)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -269,6 +271,7 @@
                                           (("complication-no-double-jump?") (set! (-> obj complication-no-double-jump?) (file-stream-read-symbol file)))
                                           (("rule-hang-time?") (set! (-> obj rule-hang-time?) (file-stream-read-symbol file)))
                                           (("complication-unbreakable?") (set! (-> obj complication-unbreakable?) (file-stream-read-symbol file)))
+                                          (("complication-get-a-grip?") (set! (-> obj complication-get-a-grip?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -369,6 +372,7 @@
     (format file "  (complication-no-double-jump? ~A)~%" (-> obj complication-no-double-jump?))
     (format file "  (rule-hang-time? ~A)~%" (-> obj rule-hang-time?))
     (format file "  (complication-unbreakable? ~A)~%" (-> obj complication-unbreakable?))
+    (format file "  (complication-get-a-grip? ~A)~%" (-> obj complication-get-a-grip?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -410,6 +414,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #f)
     (set! (-> *complicated-settings* complication-heating-balloons?) #f)
     (set! (-> *complicated-settings* rule-hang-time?) #f)
+    (set! (-> *complicated-settings* complication-get-a-grip?) #f)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -424,10 +429,11 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #f)
+    (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
-(defun apply-speedrunner-preset! ()
+(defun apply-esoteric-preset! ()
   (when *complicated-settings*
     (set! (-> *complicated-settings* cell-increment) 20.0)
     (set! (-> *complicated-settings* orb-increment) 1.0)
@@ -438,10 +444,11 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #t)
+    (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
-(defun apply-brutal-preset! ()
+(defun apply-unfathomable-preset! ()
   (when *complicated-settings*
     (set! (-> *complicated-settings* cell-increment) 20.0)
     (set! (-> *complicated-settings* orb-increment) 1.0)
@@ -452,6 +459,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #t)
+    (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -602,7 +610,7 @@
             (lambda ()
               (apply-easy-preset!)
               (none)))
-       ;; [1] HARD PRESET
+       ;; [1] MEDIUM PRESET
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
@@ -612,25 +620,25 @@
             (lambda ()
               (apply-medium-preset!)
               (none)))
-       ;; [2] SPEEDRUNNER PRESET
+       ;; [2] ESOTERIC PRESET
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
-            :name (text-id complicated-opts-speedrunner-preset)
+            :name (text-id complicated-opts-esoteric-preset)
             :scale #t
             :on-confirm
             (lambda ()
-              (apply-speedrunner-preset!)
+              (apply-esoteric-preset!)
               (none)))
-       ;; [3] BRUTAL PRESET
+       ;; [3] UNFATHOMABLE PRESET
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
-            :name (text-id complicated-opts-brutal-preset)
+            :name (text-id complicated-opts-unfathomable-preset)
             :scale #t
             :on-confirm
             (lambda ()
-              (apply-brutal-preset!)
+              (apply-unfathomable-preset!)
               (none)))
        ;; [4] BACK
        (new 'static
@@ -1349,6 +1357,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [68] GET A GRIP
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-get-a-grip)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] BACK
        (new 'static
             'game-option
@@ -1595,6 +1613,7 @@
   (set! (-> *condition-toggle-options* 65 value-to-modify) (&-> *complicated-settings* complication-no-double-jump?))
   (set! (-> *condition-toggle-options* 66 value-to-modify) (&-> *complicated-settings* rule-hang-time?))
   (set! (-> *condition-toggle-options* 67 value-to-modify) (&-> *complicated-settings* complication-unbreakable?))
+  (set! (-> *condition-toggle-options* 68 value-to-modify) (&-> *complicated-settings* complication-get-a-grip?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -1702,4 +1721,5 @@
          ((eq? id 'complication-no-double-jump) (-> *complicated-settings* complication-no-double-jump?))
          ((eq? id 'rule-hang-time) (-> *complicated-settings* rule-hang-time?))
          ((eq? id 'complication-unbreakable) (-> *complicated-settings* complication-unbreakable?))
+          ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
          (else #t))))

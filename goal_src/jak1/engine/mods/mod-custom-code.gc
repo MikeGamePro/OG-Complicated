@@ -131,6 +131,7 @@
     (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 0.0)
     (send-event *target* 'sidekick #f)
     (none))
+  (mod-rule-trigger-get-a-grip)
   ;; Code here runs every time jak spawns (loading a file new game or death)
   ;;uncomment this to use custom music for custom levels - the function is in mod-common-functions.gc
   ;;(process-spawn-function process music-manager-proc)

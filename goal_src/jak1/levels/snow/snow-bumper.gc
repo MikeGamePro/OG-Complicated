@@ -169,6 +169,7 @@
   :trans rider-trans
   :code
     (behavior ()
+      (mod-rule-counter-add-progress 'rule-button-pusher 1)
       (logclear! (-> self mask) (process-mask actor-pause))
       (sound-play "bumper-pwr-dwn")
       (ja-no-eval :group! snow-bumper-button-ja :num! (seek! max 0.05) :frame-num 0.0)

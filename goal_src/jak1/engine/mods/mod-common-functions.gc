@@ -174,11 +174,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-last-kill-time* 0)
 
-(define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 4))
+(define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol 8))
 
-(define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 4))
+(define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame 8))
 
-(define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 4))
+(define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame 8))
 
 ;; To add a new rule, append it to the end of this list. Do not reorder or
 ;; insert in the middle. That remaps existing save files to the wrong rules.
@@ -254,7 +254,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-mirror
        'complication-no-double-jump
        'rule-hang-time
-       'complication-unbreakable))
+       'complication-unbreakable
+       'complication-get-a-grip))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -351,6 +352,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *orb-weight-base-flip-jump-speed* 51200.0)
 
 (define *orb-weight-last-applied-orbs* -1.0)
+
+(define *get-a-grip-last-grab* 0)
 
 (define *math-quiz-val1* 0)
 
@@ -1018,7 +1021,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-no-double-jump) "ONE AND DONE")
     ((eq? id 'rule-hang-time) "HANG TIME")
     ((eq? id 'complication-unbreakable) "UNBREAKABLE")
+    ((eq? id 'complication-get-a-grip) "GET A GRIP")
     (else "UNKNOWN")))
+
+(defun apply-time-limit-multiplier ((base-time time-frame))
+  (let* ((raw-mult (time-limit-multiplier))
+         (tenths (the int (* raw-mult 10.0))))
+    (the time-frame (/ (* base-time (the time-frame tenths)) 10))))
 
 (defun mod-rule-description ((id symbol))
   (cond
@@ -1100,12 +1109,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-no-double-jump) "JAK FORGOT HOW TO DOUBLE JUMP.")
     ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING.")
     ((eq? id 'complication-unbreakable) "SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO.")
+    ((eq? id 'complication-get-a-grip)
+        (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 10))) (seconds 1))))
+            (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
     (else "NO DESCRIPTION AVAILABLE.")))
-
-(defun apply-time-limit-multiplier ((base-time time-frame))
-  (let* ((raw-mult (time-limit-multiplier))
-         (tenths (the int (* raw-mult 10.0))))
-    (the time-frame (/ (* base-time (the time-frame tenths)) 10))))
 
 (defun mod-rule-duration ((id symbol))
   (cond
@@ -1177,6 +1184,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-no-double-jump) (seconds 60)) ;; 60
     ((eq? id 'rule-hang-time) (apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'complication-unbreakable) (seconds 60)) ;; 60
+    ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1288,7 +1296,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-income-tax)
          (eq? id 'complication-mirror)
          (eq? id 'complication-no-double-jump)
-         (eq? id 'complication-unbreakable))
+         (eq? id 'complication-unbreakable)
+         (eq? id 'complication-get-a-grip))
      'complication)
     (else 'unknown)))
 
@@ -1374,6 +1383,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-trip) (seconds 120))
     ((eq? punishment 'punishment-edge) (seconds 240))
     ((eq? punishment 'punishment-delay) (seconds 60))
+    ((eq? punishment 'punishment-iframes) (seconds 180))
     (else 0)))
 
 (defun mod-rule-find-timed-punishment-slot ((punishment symbol))
@@ -1421,7 +1431,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('punishment-fall-damage)
      (set! (-> *TARGET-bank* fall-far) (meters 30))
      (set! (-> *TARGET-bank* fall-far-inc) (meters 20)))
-    (('punishment-delay) (input-delay-enable! #f 0.0)))
+    (('punishment-delay) (input-delay-enable! #f 0.0))
+    (('punishment-iframes) (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 3))))
   (none))
 
 (defun mod-rule-update-timed-punishments ()
@@ -1671,9 +1682,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (weight-revert 10)
          (weight-extra-rule 10)
          (weight-crash 4)
-         (weight-delay 0) ;; disable for zed
+         (weight-delay 0) ;; disabled for zed
+         (weight-iframes 0) ;; disabled
+         (weight-blind 0) ;; disabled
          (can-countdown (mod-rule-punishment-rollable? 'punishment-countdown))
-         (can-fall-damage (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
+         (can-fall-damage (and (not (or (eq? (current-level-name) 'finalboss) (target-on-racer-or-flut?))) (mod-rule-punishment-rollable? 'punishment-fall-damage)))
          (can-trip (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip)))
          (can-edge (and (not (eq? (current-level-name) 'finalboss))
                         (not (target-on-racer-or-flut?))
@@ -1687,6 +1700,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (can-blind (mod-rule-punishment-rollable? 'punishment-blind))
          (can-crash (and (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash)))
          (can-delay (and (not (mod-rule-active? 'complication-bad-ping)) (mod-rule-punishment-rollable? 'punishment-delay)))
+         (can-iframes (mod-rule-punishment-rollable? 'punishment-iframes))
          (total-weight 0)
          (roll 0))
     (when can-countdown
@@ -1709,7 +1723,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! total-weight weight-crash))
     (when can-delay
       (+! total-weight weight-delay))
-    ;; If every option got excluded, fall back to countdown.
+    (when can-blind
+      (+! total-weight weight-blind))
+    (when can-iframes
+      (+! total-weight weight-iframes))
     (when (<= total-weight 0)
       (return 'punishment-countdown))
     (set! roll (mod-rand-punish-int-range 0 total-weight))
@@ -1764,6 +1781,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (when (< roll next-weight)
           (return 'punishment-delay))
         (set! total-weight next-weight)))
+    (when can-blind
+      (let ((next-weight (+ total-weight weight-blind)))
+        (when (< roll next-weight)
+          (return 'punishment-blind))
+        (set! total-weight next-weight)))
+    (when can-iframes
+      (let ((next-weight (+ total-weight weight-iframes)))
+        (when (< roll next-weight)
+          (return 'punishment-iframes))
+        (set! total-weight next-weight)))
     #f))
 
 (defun play-custom-sfx ((filename string) (base-volume float))
@@ -1782,6 +1809,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-cumbersome) (orb-weight-apply!))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
     ((eq? id 'rule-hang-time) (set! *mod-rule-hang-time-air-start* (current-time)))
+    ((eq? id 'complication-get-a-grip) (set! *get-a-grip-last-grab* (current-time)))
     ((eq? id 'complication-vibe-check)
      (play-custom-sfx "I like ya cut g.mp3" 35.0)
      (process-spawn-function process
@@ -2361,7 +2389,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           ;; Special
           ((eq? id 'rule-hang-time ) (if (or is-minigame (mod-rule-active? 'rule-grounded) (not (hang-time-level? level-name))) 0 7))
-          ((eq? id 'complication-vibe-check) (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 6 3))
+          ((eq? id 'complication-vibe-check) (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 4 2))
           ((eq? id 'rule-express-delivery)
            (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
                         (task-closed? (game-task misty-muse) (task-status need-introduction)))
@@ -2369,9 +2397,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              8
              0))
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
+          ((eq? id 'complication-mirror) 4)
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 6 0))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
+          ((eq? id 'complication-get-a-grip) (if (or is-minigame is-klaww (eq? level-name 'finalboss) 
+                                                 (mod-rule-timed-punishment-active? 'punishment-edge) (target-on-racer-or-flut?)) 0 5))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
@@ -2634,6 +2665,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 4 MINUTES")
     ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
+    ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     (else "NONE")))
 
 (defun mod-rule-timed-punishment-name ((punishment symbol))
@@ -2642,6 +2674,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-trip) "TRIP")
     ((eq? punishment 'punishment-edge) "LEDGE GRAB")
     ((eq? punishment 'punishment-delay) "INPUT DELAY")
+    ((eq? punishment 'punishment-iframes) "I-FRAMES")
     (else (mod-rule-punishment-name punishment))))
 
 (defun mod-rule-apply-extra-rule-punishment ((failed-slot int))
@@ -2680,6 +2713,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-trip) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-edge) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-delay) (input-delay-enable! #t 0.2) (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-iframes)
+      (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0))
+      (mod-rule-start-timed-punishment punishment))
     (else (none)))
   (none))
 
@@ -2801,9 +2837,20 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (send-event *target* 'attack #t (new 'static 'attack-info)))))
   (none))
 
+(defun mod-rule-on-jump ()
+  (mod-rule-trigger-brittle-bones)
+  (mod-rule-trigger-failure 'rule-grounded)
+  (mod-rule-trigger-failure 'rule-red-light)
+  (none))
+
 (defun mod-rule-trigger-loose-pockets ()
   (when (mod-rule-active? 'complication-loose-pockets)
     (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 20.0))))
+  (none))
+
+(defun mod-rule-trigger-get-a-grip ()
+  (when (mod-rule-active? 'complication-get-a-grip)
+        (set! *get-a-grip-last-grab* (current-time)))
   (none))
 
 (defun mod-rule-trigger-rotten-eggs ()
@@ -3003,6 +3050,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (set! (-> *mod-rule-timed-punishment-end-times* slot) (+ (-> *mod-rule-timed-punishment-end-times* slot) elapsed))
               (set! (-> *mod-rule-timed-punishment-next-ticks* slot) (+ (-> *mod-rule-timed-punishment-next-ticks* slot) elapsed))))
           (set! *mod-rule-hang-time-air-start* (+ *mod-rule-hang-time-air-start* elapsed))
+          (set! *get-a-grip-last-grab* (+ *get-a-grip-last-grab* elapsed))
           (set! elapsed 0))
         (cond
           ((global-countdown-paused?)
@@ -3016,7 +3064,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (when (-> *mod-rule-timed-punishments* slot)
                 (set! (-> *mod-rule-timed-punishment-end-times* slot) (+ (-> *mod-rule-timed-punishment-end-times* slot) elapsed))
                 (set! (-> *mod-rule-timed-punishment-next-ticks* slot) (+ (-> *mod-rule-timed-punishment-next-ticks* slot) elapsed))))
-            (set! *mod-rule-hang-time-air-start* (+ *mod-rule-hang-time-air-start* elapsed))))
+            (set! *mod-rule-hang-time-air-start* (+ *mod-rule-hang-time-air-start* elapsed))
+            (set! *get-a-grip-last-grab* (+ *get-a-grip-last-grab* elapsed))))
           (else
            ;; (+! *global-countup-timer* elapsed)
            (when (and (> *mean-look-clear-time* 0) (>= (current-time) *mean-look-clear-time*))
@@ -3026,6 +3075,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-math-quiz)
            (mod-rule-update-trivia)
            (mod-rule-update-hang-time)
+           (when (mod-rule-active? 'complication-get-a-grip)
+            (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 10)))
+              (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))
+              (set! *get-a-grip-last-grab* (current-time))))
            (when (mod-rule-active? 'complication-cumbersome)
              (orb-weight-apply!))
            (dotimes (slot 3)
@@ -3239,6 +3292,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (if (mod-rule-active? 'complication-bus-driver)
           (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row 8))
+    (when (eq? id 'complication-get-a-grip)
+          (draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
+          (-! row 2) 
+          (let* ((elapsed (- (current-time) *get-a-grip-last-grab*))
+                (time-left (max 0 (- (apply-time-limit-multiplier (seconds 10)) elapsed))))
+            (draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
+                                  buf
+                                  66
+                                  row
+                                  (font-color white)
+                                  (font-flags shadow kerning large)
+                                  0.4))
+          (+! row 8))
     row))
 
 (defun mod-rule-draw-timed-punishments ((buf dma-buffer))

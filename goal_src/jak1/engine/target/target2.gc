@@ -11,6 +11,8 @@
 
 (define-extern mod-rule-trigger-loose-pockets (function none))
 
+(define-extern mod-rule-trigger-get-a-grip (function none))
+
 (defstate target-load-wait (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
@@ -770,6 +772,7 @@
         (send-event *camera* 'damp-up)))
   :trans
     (behavior ()
+      (mod-rule-trigger-get-a-grip)
       (when (and (time-elapsed? (-> self state-time) (seconds 0.2))
                  ;; og:preserve-this - High FPS Fix
                  (recently-pressed? x)

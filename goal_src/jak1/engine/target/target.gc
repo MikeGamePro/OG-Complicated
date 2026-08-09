@@ -31,7 +31,7 @@
 
 (define-extern mod-rule-trigger-failure (function symbol none))
 
-(define-extern mod-rule-trigger-brittle-bones (function none))
+(define-extern mod-rule-on-jump (function none))
 
 (define-extern mod-rule-trigger-sizeable (function symbol))
 
@@ -854,9 +854,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float) (arg2 surface))
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-failure 'rule-grounded)
-      (mod-rule-trigger-failure 'rule-red-light)
+      (mod-rule-on-jump)
       (when (= (-> self control unknown-symbol40) 'launch)
         (level-hint-spawn (text-id sidekick-launcher1) "sksp009d" (the-as entity #f) *entity-pool* (game-task none))
         (level-hint-spawn (text-id sidekick-launcher2) "sksp009e" (the-as entity #f) *entity-pool* (game-task none))
@@ -967,9 +965,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-failure 'rule-red-light)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-failure 'rule-grounded)
+      (mod-rule-on-jump)
       (when (= (-> self control unknown-symbol40) 'launch)
         enter-state
         (let ((a0-3 (-> self control unknown-dword60))
@@ -1017,9 +1013,7 @@
   :event target-jump-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float) (arg2 basic))
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-failure 'rule-grounded)
-      (mod-rule-trigger-failure 'rule-red-light)
+      (mod-rule-on-jump)
       (when (and (= (-> self control unknown-symbol40) 'launch) (!= arg2 'launch))
         enter-state
         (let ((a0-3 (-> self control unknown-dword60))
@@ -1537,9 +1531,7 @@
   :event target-dangerous-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-failure 'rule-red-light)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-failure 'rule-grounded)
+      (mod-rule-on-jump)
       (set-time! (-> self state-time))
       (target-start-attack)
       (target-danger-set! 'uppercut #f)
@@ -1642,8 +1634,7 @@
     (behavior ((arg0 float) (arg1 float) (arg2 float))
       (mod-rule-trigger-failure 'rule-red-light)
       (when (and (= (-> self fact eco-type) (pickup-type eco-yellow)) (>= (-> self fact eco-level) 1.0))
-        (mod-rule-trigger-brittle-bones)
-        (mod-rule-trigger-failure 'rule-grounded)
+        (mod-rule-on-jump)
         (go target-yellow-jump-blast))
       (if (= arg2 0.0) (set-forward-vel arg2) (set-forward-vel (-> self control ctrl-xz-vel)))
       (set-time! (-> self state-time))
@@ -1899,9 +1890,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ((arg0 float) (arg1 float))
-      (mod-rule-trigger-failure 'rule-red-light)
-      (mod-rule-trigger-brittle-bones)
-      (mod-rule-trigger-failure 'rule-grounded)
+      (mod-rule-on-jump)
       (set! (-> self control mod-surface) *wheel-flip-mods*))
   :exit target-exit
   :trans
