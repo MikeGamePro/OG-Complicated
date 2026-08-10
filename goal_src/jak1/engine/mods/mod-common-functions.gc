@@ -2067,7 +2067,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'sunkenb)))
 
 (defun sparse-crate-level? ((level symbol))
-  (or (eq? level 'village3) (eq? level 'jungleb) (eq? level 'lavatube) (eq? level 'citadel) (eq? level 'finalboss)))
+  (or (eq? level 'village3) (eq? level 'jungleb) (eq? level 'darkcave) (eq? level 'lavatube) (eq? level 'citadel) (eq? level 'finalboss)))
 
 (defun sparse-green-eco-level? ((level symbol))
   (or (eq? level 'village3)
@@ -2080,7 +2080,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'firecanyon)))
 
 (defun red-eco-level? ((level symbol))
-  (or (eq? level 'misty) (eq? level 'snowy) (eq? level 'citadel)))
+  (or (eq? level 'misty) (eq? level 'snowy) (string= (current-checkpoint-name) "citadel-generator-start")))
 
 (defun yellow-eco-level? ((level symbol))
   (or (eq? level 'swamp)
@@ -2125,7 +2125,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'jungleb)
       (eq? level 'swamp)
       (eq? level 'robocave)
-      (eq? level 'citadel)))
+      (or (string= (current-checkpoint-name) "citadel-start") (string= (current-checkpoint-name) "citadel-launch-start") (string= (current-checkpoint-name) "citadel-launch-end"))))
 
 (defun grass-level? ((level symbol))
   (or (eq? level 'beach) (eq? level 'village1) (eq? level 'jungle) (eq? level 'village2)))
@@ -2259,7 +2259,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 7)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 9))
           ((eq? id 'rule-double-kill)
-           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 7))
+           (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name)) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 7))
           ((eq? id 'rule-sniper)
            (if (and (not (mod-rule-active? 'rule-flop-this))
                     (or (eq? level-name 'swamp)
@@ -2355,7 +2355,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0))
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
           ((eq? id 'complication-mirror) 4)
-          ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 6 0))
+          ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 6))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
           ((eq? id 'complication-get-a-grip) (if (or (sole-zoomer-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) 
@@ -3087,6 +3087,26 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-wrap-line-2* (new 'global 'string 128 (the-as string #f)))
 
+(defun mod-rule-string-width ((str string) (flags font-flags) (scale float))
+  (let ((font-ctxt (new 'stack 'font-context *font-default-matrix* 0 0 0.0 (font-color white) flags)))
+    (* (get-string-length str font-ctxt) scale)))
+
+(define *mod-rule-highlight-line-buf* (new 'global 'string 128 (the-as string #f)))
+
+(defun mod-rule-find-substr ((str string) (sub string) (start int))
+  (let* ((str-len (length str))
+         (sub-len (length sub))
+         (limit (- str-len sub-len))
+         (found -1))
+    (dotimes (i (+ limit 1))
+      (when (and (= found -1) (>= i start))
+        (let ((match #t))
+          (dotimes (j sub-len)
+            (when (!= (-> str data (+ i j)) (-> sub data j))
+              (set! match #f)))
+          (when match (set! found i)))))
+    found))
+
 (defun mod-rule-copy-range! ((dst string) (src string) (start int) (end int))
   (let ((j 0))
     (dotimes (i (- end start))
@@ -3094,6 +3114,25 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! j 1))
     (set! (-> dst data j) 0))
   dst)
+
+(defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
+  (let ((idx (mod-rule-find-substr line highlight 0))
+        (flags (font-flags shadow kerning large)))
+    (if (< idx 0)
+      (draw-string-xy-scaled line buf x y (font-color white) flags scale)
+      (let ((cur-x x)
+            (highlight-end (+ idx (length highlight))))
+        (when (> idx 0)
+          (mod-rule-copy-range! *mod-rule-highlight-line-buf* line 0 idx)
+          (draw-string-xy-scaled *mod-rule-highlight-line-buf* buf cur-x y (font-color white) flags scale)
+          (+! cur-x (the int (mod-rule-string-width *mod-rule-highlight-line-buf* flags scale))))
+        (mod-rule-copy-range! *mod-rule-highlight-line-buf* line idx highlight-end)
+        (draw-string-xy-scaled *mod-rule-highlight-line-buf* buf cur-x y highlight-color flags scale)
+        (when (< highlight-end (length line))
+          (+! cur-x (the int (mod-rule-string-width *mod-rule-highlight-line-buf* flags scale)))
+          (mod-rule-copy-range! *mod-rule-highlight-line-buf* line highlight-end (length line))
+          (draw-string-xy-scaled *mod-rule-highlight-line-buf* buf cur-x y (font-color white) flags scale)))))
+  (none))
 
 (defun mod-rule-wrap-point ((str string) (max-len int))
   (let ((len (length str)))
@@ -3103,6 +3142,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (dotimes (i (+ max-len 1))
           (if (= (-> str data i) 32) (set! break-idx i)))
         (if (>= break-idx 0) break-idx max-len)))))
+
+(defun mod-rule-draw-desc-line! ((buf dma-buffer) (id symbol) (line string) (x int) (y int) (scale float))
+  (if (eq? id 'complication-twisted)
+    (mod-rule-draw-line-highlighted! buf line "RULE" (font-color orangeb) x y scale)
+    (draw-string-xy-scaled line buf x y (font-color white) (font-flags shadow kerning large) scale))
+  (none))
 
 (defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int))
   (let* ((id (-> *mod-rule-active-slots* slot))
@@ -3124,14 +3169,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (+! row 10)
     (if (>= break-idx (length desc))
       (begin
-        (draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
         (+! row 9))
       (begin
         (mod-rule-copy-range! *mod-rule-wrap-line-1* desc 0 break-idx)
         (mod-rule-copy-range! *mod-rule-wrap-line-2* desc (+ break-idx 1) (length desc))
-        (draw-string-xy-scaled *mod-rule-wrap-line-1* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-1* 10 row 0.35)
         (+! row 9)
-        (draw-string-xy-scaled *mod-rule-wrap-line-2* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-2* 10 row 0.35)
         (+! row 9)))
     (when punishment
       (draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
