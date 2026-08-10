@@ -2355,7 +2355,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0))
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
           ((eq? id 'complication-mirror) 4)
-          ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 6))
+          ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 3))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
           ((eq? id 'complication-get-a-grip) (if (or (sole-zoomer-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) 
