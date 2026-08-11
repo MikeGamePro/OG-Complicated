@@ -84,12 +84,12 @@
 | **LOYAL CUSTOMER** | BUY AN ORACLE CELL. |
 | **COOKED** | BURN JAK. | The fire pits in Rock Village do *not* send a burn event.
 | **SAGGING SAILS** | MISS 3 FIVE-POUND FISH. |
-| **SIDE TO SIDE** | DO NOT TOUCH THE MIDDLE PLATFORM. | Do not touch the middle platform of the three you jump on before the large platform.
+| **SIDE TO SIDE** | DO NOT TOUCH THE MIDDLE PLATFORM. | During the Klaww fight, do not touch the middle of the three small platforms you jump on.
 | **LANDLUBBER** | DO NOT TOUCH THE WATER. | Any contact with water breaks this rule.
 | **TOUCH GRASS** | DO THAT. |
 | **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
 | **QUICK TIME EVENT** | QUICKLY PRESS A FACE BUTTON. |
-| **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Spinning/kicking resets the progress.
+| **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Landing, spinning/kicking, grabbing a ledge, or entering goggles resets the progress.
 
 </details>
 <details>
