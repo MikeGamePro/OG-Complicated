@@ -10,6 +10,8 @@
 
 (define-extern draw-power-beam (function vector vector none))
 
+(define-extern mod-rule-trigger-eco-allergy (function none))
+
 ;; DECOMP BEGINS
 
 (defpartgroup group-jungle-binoculars
@@ -1499,7 +1501,7 @@
                                                   t2-0
                                                   (new 'static 'pat-surface :noentity #x1))
                 0.0)
-          (if (mod-rule-active? 'complication-rgyb) (send-event *target* 'get-pickup 1 5.0) (send-event *target* 'get-pickup 3 5.0)))))
+          (begin (mod-rule-trigger-eco-allergy) (if (mod-rule-active? 'complication-rgyb) (send-event *target* 'get-pickup 1 5.0) (send-event *target* 'get-pickup 3 5.0))))))
     (if (and (< 4096.0 (vector-vector-distance (camera-pos) arg0)) (< 4096.0 (vector-vector-distance (camera-pos) arg1)))
       (draw-eco-beam arg0 arg1)))
   0

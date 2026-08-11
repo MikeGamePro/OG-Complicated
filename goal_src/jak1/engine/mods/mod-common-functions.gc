@@ -131,9 +131,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *global-countdown-last-warn-second* -1)
 
+(define *global-countdown-saved-remaining-time* -1)
+
 (define *global-countup-timer* 0)
 
 (define *global-countup-last-update-time* 0)
+
+(define *global-countup-saved-time* -1)
 
 (define *mod-rule-slot-count* 3)
 
@@ -1212,7 +1216,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-loose-pockets) (seconds 60)) ;; 60
     ((eq? id 'complication-twisted) (seconds 10)) ;; 10
     ((eq? id 'complication-vibe-check) (seconds 4)) ;; 4
-    ((eq? id 'complication-income-tax) (seconds 45)) ;; 45
+    ((eq? id 'complication-income-tax) (seconds 30)) ;; 30
     ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 90))) ;; 90
     ((eq? id 'rule-crate-break) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-qte) (seconds 2)) ;; 2
@@ -3682,6 +3686,83 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1)))
   (none))
 
+(defun mod-rule-slot-progress-save-value ((group int))
+  (let ((result (the uint 0))
+        (start (* group 2))
+        (offset 0))
+    (while (< offset 2)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-rule-slot-count*)
+          (set! result
+                (logior result
+                         (shl (the uint (min #xffff (max 0 (-> *mod-rule-slot-progress* slot))))
+                              (* offset 16)))))
+        (+! offset 1)))
+    (the int result)))
+
+(defun mod-rule-slot-progress-resume-from-save ((group int) (val int))
+  (let ((bits (the uint val))
+        (start (* group 2))
+        (offset 0))
+    (while (< offset 2)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-rule-slot-count*)
+          (set! (-> *mod-rule-slot-progress* slot)
+                (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
+        (+! offset 1))))
+  (none))
+
+(defun mod-rule-slot-progress0-save-value () (mod-rule-slot-progress-save-value 0))
+(defun mod-rule-slot-progress0-resume-from-save ((val int)) (mod-rule-slot-progress-resume-from-save 0 val))
+(defun mod-rule-slot-progress1-save-value () (mod-rule-slot-progress-save-value 1))
+(defun mod-rule-slot-progress1-resume-from-save ((val int)) (mod-rule-slot-progress-resume-from-save 1 val))
+
+(defun mod-rule-math-quiz-state-save-value ()
+  (the int
+       (logior (the uint *math-quiz-val1*)
+               (shl (the uint *math-quiz-val2*) 8)
+               (shl (the uint *math-quiz-op*) 16))))
+
+(defun mod-rule-math-quiz-state-resume-from-save ((val int))
+  (let ((bits (the uint val)))
+    (set! *math-quiz-val1* (the int (logand bits (the uint #xff))))
+    (set! *math-quiz-val2* (the int (logand (shr bits 8) (the uint #xff))))
+    (set! *math-quiz-op* (the int (logand (shr bits 16) (the uint #x3))))
+    (cond
+      ((= *math-quiz-op* 0) (set! *math-quiz-answer* (+ *math-quiz-val1* *math-quiz-val2*)))
+      ((= *math-quiz-op* 1) (set! *math-quiz-answer* (- *math-quiz-val1* *math-quiz-val2*)))
+      ((= *math-quiz-op* 2) (set! *math-quiz-answer* (* *math-quiz-val1* *math-quiz-val2*)))))
+  (none))
+
+(defun mod-rule-math-quiz-guess-save-value () *math-quiz-current-guess*)
+(defun mod-rule-math-quiz-guess-resume-from-save ((val int))
+  (set! *math-quiz-current-guess* val)
+  (none))
+
+(defun mod-rule-trivia-state-save-value ()
+  (the int
+       (logior (the uint *trivia-current-question*)
+               (shl (the uint (+ *trivia-current-guess* 1)) 8)
+               (shl (the uint (-> *trivia-shuffle-map* 0)) 11)
+               (shl (the uint (-> *trivia-shuffle-map* 1)) 13)
+               (shl (the uint (-> *trivia-shuffle-map* 2)) 15)
+               (shl (the uint (-> *trivia-shuffle-map* 3)) 17))))
+
+(defun mod-rule-trivia-state-resume-from-save ((val int))
+  (let ((bits (the uint val)))
+    (set! *trivia-current-question* (the int (logand bits (the uint #xff))))
+    (set! *trivia-current-guess* (- (the int (logand (shr bits 8) (the uint #x7))) 1))
+    (dotimes (i 4)
+      (set! (-> *trivia-shuffle-map* i)
+            (the int (logand (shr bits (+ 11 (* i 2))) (the uint #x3)))))
+    (set! *trivia-last-tracked-question* *trivia-current-question*))
+  (none))
+
+(defun mod-rule-qte-state-save-value () *qte-target-button*)
+(defun mod-rule-qte-state-resume-from-save ((val int))
+  (set! *qte-target-button* val)
+  (none))
+
 (defun mod-rule-timed-punishments-save-value ()
   (let ((result (the uint 0))
         (slot 0))
@@ -3928,46 +4009,46 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (if *global-countdown-active?* (the int *global-countdown-remaining-time*) 0))
 
 (defun global-countdown-resume-from-save ((saved-time int))
-  (if *mod-game-beaten?*
-    ;; This save file already beat the game
-    (when (or *global-countdown-active?* *global-countdown-lost?*)
-      (global-countdown-reset))
-    ;; This save file has NOT beaten the game
-    (cond
-      ((> saved-time 0)
-       ;; Saved file HAS a countdown.
-       (set! *global-countdown-remaining-time* saved-time)
-       (set! *global-countdown-last-update-time* (current-time))
-       (set! *global-countup-last-update-time* (current-time))
-       (cond
-         ((not *global-countdown-active?*)
-          ;; SCENARIO A: system was dormant (fresh boot / post-crash reload).
-          (set! *global-countdown-active?* #t)
-          (set! *global-countdown-lost?* #f)
-          (set! *mod-rule-last-update-time* (current-time))
-          (kill-by-name 'global-countdown *active-pool*)
-          (mod-rules-start)
-          (process-spawn-function process
-            global-countdown-proc
-            :name 'global-countdown))
-         (else
-          ;; SCENARIO B: system was already active (normal in-game save/load).
-          (mod-rules-resume)
-          (kill-by-name 'global-countdown *active-pool*)
-          (process-spawn-function process
-            global-countdown-proc
-            :name 'global-countdown))))
-      (else
-       ;; SCENARIO C: no countdown saved in this file at all.
-       (when (or *global-countdown-active?* *global-countdown-lost?*)
-         (global-countdown-reset)))))
+  (set! *global-countdown-saved-remaining-time* saved-time)
+  (none))
+
+(defun global-countdown-finalize-resume-from-save ()
+  (let ((saved-time *global-countdown-saved-remaining-time*))
+    (set! *global-countdown-saved-remaining-time* -1)
+    (if *mod-game-beaten?*
+      ;; This save file already beat the game.
+      (when (or *global-countdown-active?* *global-countdown-lost?*)
+        (global-countdown-reset))
+      (cond
+        ((> saved-time 0)
+         (set! *global-countdown-remaining-time* saved-time)
+         (set! *global-countdown-last-update-time* (current-time))
+         (set! *global-countup-last-update-time* (current-time))
+         (set! *mod-rule-last-update-time* (current-time))
+         (set! *global-countdown-active?* #t)
+         (set! *global-countdown-lost?* #f)
+         (mod-rules-resume)
+         (kill-by-name 'global-countdown *active-pool*)
+         (process-spawn-function process
+           global-countdown-proc
+           :name 'global-countdown))
+        (else
+         ;; No countdown was saved in this file.
+         (when (or *global-countdown-active?* *global-countdown-lost?*)
+           (global-countdown-reset))))))
   (none))
 
 (defun global-countup-save-value ()
   (if *global-countdown-active?* (the int *global-countup-timer*) 0))
 
 (defun global-countup-resume-from-save ((saved-time int))
-  (if (not *mod-game-beaten?*) (when (> saved-time 0)   (set! *global-countup-timer* saved-time)))
+  (set! *global-countup-saved-time* saved-time)
+  (none))
+
+(defun global-countup-finalize-resume-from-save ()
+  (when (and (not *mod-game-beaten?*) (> *global-countup-saved-time* 0))
+    (set! *global-countup-timer* *global-countup-saved-time*))
+  (set! *global-countup-saved-time* -1)
   (none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
