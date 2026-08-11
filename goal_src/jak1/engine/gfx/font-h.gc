@@ -62,8 +62,7 @@
   (dark-purple 45)
   (lavender 46)
   (amber-orange 47)
-  (sunset-orange 48)
-  )
+  (sunset-orange 48))
 
 (defenum font-flags
   :type uint32
@@ -914,7 +913,7 @@
                       (static-rgba #x14 #x7A #x5C #x80)
                       (static-rgba #x09 #x38 #x2B #x80)
                       (static-rgba #x09 #x38 #x2B #x80)))
-          ;; 44 - vibrant purple
+            ;; 44 - vibrant purple
             (new 'static
                  'char-color
                  :color
@@ -926,7 +925,7 @@
                       (static-rgba #x80 #x20 #x80 #x80)
                       (static-rgba #x30 #x00 #x40 #x80)
                       (static-rgba #x30 #x00 #x40 #x80)))
-          ;; 45 - dark eco violet
+            ;; 45 - dark eco violet
             (new 'static
                  'char-color
                  :color
@@ -938,7 +937,7 @@
                       (static-rgba #x60 #x10 #x80 #x80)
                       (static-rgba #x15 #x00 #x30 #x80)
                       (static-rgba #x15 #x00 #x30 #x80)))
-          ;; 46 - lavender
+            ;; 46 - lavender
             (new 'static
                  'char-color
                  :color
@@ -950,7 +949,7 @@
                       (static-rgba #x78 #x60 #x80 #x80)
                       (static-rgba #x35 #x20 #x40 #x80)
                       (static-rgba #x35 #x20 #x40 #x80)))
-          ;; 47 - amber orange
+            ;; 47 - amber orange
             (new 'static
                  'char-color
                  :color
@@ -962,8 +961,8 @@
                       (static-rgba #x80 #x50 #x10 #x80)
                       (static-rgba #x50 #x15 #x00 #x80)
                       (static-rgba #x50 #x15 #x00 #x80)))
-          ;; 48 - sunset orange
-               (new 'static
+            ;; 48 - sunset orange
+            (new 'static
                  'char-color
                  :color
                  (new 'static

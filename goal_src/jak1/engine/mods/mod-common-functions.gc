@@ -193,9 +193,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-timed-punishments* (new 'global 'boxed-array symbol *mod-rule-timed-punishment-slot-count*))
 
-(define *mod-rule-timed-punishment-end-times* (new 'global 'boxed-array time-frame *mod-rule-timed-punishment-slot-count*))
+(define *mod-rule-timed-punishment-end-times*
+  (new 'global 'boxed-array time-frame *mod-rule-timed-punishment-slot-count*))
 
-(define *mod-rule-timed-punishment-next-ticks* (new 'global 'boxed-array time-frame *mod-rule-timed-punishment-slot-count*))
+(define *mod-rule-timed-punishment-next-ticks*
+  (new 'global 'boxed-array time-frame *mod-rule-timed-punishment-slot-count*))
 
 (define *mod-rule-timed-punishment-saved-ids* (new 'global 'boxed-array symbol *mod-rule-timed-punishment-slot-count*))
 
@@ -205,7 +207,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-rule-punishment-ids*
   (new 'static
        'boxed-array
-       :type symbol
+       :type
+       symbol
        'punishment-countdown
        'punishment-fall-damage
        'punishment-trip
@@ -1145,8 +1148,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING.")
     ((eq? id 'complication-unbreakable) "SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO.")
     ((eq? id 'complication-get-a-grip)
-        (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 10))) (seconds 1))))
-            (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
+     (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 10))) (seconds 1))))
+       (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -2103,7 +2106,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'sunkenb)))
 
 (defun sparse-crate-level? ((level symbol))
-  (or (eq? level 'village3) (eq? level 'jungleb) (eq? level 'darkcave) (eq? level 'lavatube) (eq? level 'citadel) (eq? level 'finalboss)))
+  (or (eq? level 'village3)
+      (eq? level 'jungleb)
+      (eq? level 'darkcave)
+      (eq? level 'lavatube)
+      (eq? level 'citadel)
+      (eq? level 'finalboss)))
 
 (defun sparse-green-eco-level? ((level symbol))
   (or (eq? level 'village3)
@@ -2161,7 +2169,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'jungleb)
       (eq? level 'swamp)
       (eq? level 'robocave)
-      (or (string= (current-checkpoint-name) "citadel-start") (string= (current-checkpoint-name) "citadel-launch-start") (string= (current-checkpoint-name) "citadel-launch-end"))))
+      (or (string= (current-checkpoint-name) "citadel-start")
+          (string= (current-checkpoint-name) "citadel-launch-start")
+          (string= (current-checkpoint-name) "citadel-launch-end"))))
 
 (defun grass-level? ((level symbol))
   (or (eq? level 'beach) (eq? level 'village1) (eq? level 'jungle) (eq? level 'village2)))
@@ -2295,7 +2305,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 7)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 9))
           ((eq? id 'rule-double-kill)
-           (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name)) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 7))
+           (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
+                   is-minigame
+                   is-klaww
+                   (eq? level-name 'finalboss)
+                   (eq? level-name 'sunkenb))
+             0
+             7))
           ((eq? id 'rule-sniper)
            (if (and (not (mod-rule-active? 'rule-flop-this))
                     (or (eq? level-name 'swamp)
@@ -2381,7 +2397,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               6)
              (else 0)))
           ;; Special
-          ((eq? id 'rule-hang-time ) (if (or is-minigame (mod-rule-active? 'rule-grounded) (not (hang-time-level? level-name))) 0 5))
+          ((eq? id 'rule-hang-time) (if (or is-minigame (mod-rule-active? 'rule-grounded) (not (hang-time-level? level-name))) 0 5))
           ((eq? id 'complication-vibe-check) (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 4 2))
           ((eq? id 'rule-express-delivery)
            (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
@@ -2394,8 +2410,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 3))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
-          ((eq? id 'complication-get-a-grip) (if (or (sole-zoomer-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) 
-                                                 (mod-rule-timed-punishment-active? 'punishment-edge) (target-on-racer-or-flut?)) 0 5))
+          ((eq? id 'complication-get-a-grip)
+           (if (or (sole-zoomer-level? level-name)
+                   is-minigame
+                   is-klaww
+                   (eq? level-name 'finalboss)
+                   (mod-rule-timed-punishment-active? 'punishment-edge)
+                   (target-on-racer-or-flut?))
+             0
+             5))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
@@ -2699,9 +2722,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (when *global-countdown-active?*
        (set! *global-countdown-remaining-time* (- *global-countdown-remaining-time* (mod-rule-countdown-punishment-ticks)))))
     ((eq? punishment 'punishment-revert-cell) (mod-rule-revert-random-collected-cell))
-    ((eq? punishment 'punishment-blind)
-     (set-blackout-frames (seconds 10))
-     (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-blind) (set-blackout-frames (seconds 10)) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-fall-damage)
      (set! (-> *TARGET-bank* fall-far) (meters 7.0))
      (set! (-> *TARGET-bank* fall-far-inc) (meters 10.0))
@@ -2710,8 +2731,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-delay) (input-delay-enable! #t 0.2) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-iframes)
-      (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0))
-      (mod-rule-start-timed-punishment punishment))
+     (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0))
+     (mod-rule-start-timed-punishment punishment))
     (else (none)))
   (none))
 
@@ -2846,7 +2867,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-get-a-grip ()
   (when (mod-rule-active? 'complication-get-a-grip)
-        (set! *get-a-grip-last-grab* (current-time)))
+    (set! *get-a-grip-last-grab* (current-time)))
   (none))
 
 (defun mod-rule-trigger-rotten-eggs ()
@@ -2938,9 +2959,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-counter-add-progress 'rule-die 1)
   (mod-rule-trigger-failure 'rule-survivor)
   (when (mod-rule-active? 'rule-hang-time)
-    (let ((slot (mod-rule-find-active-slot 'rule-hang-time)))
-      (when (>= slot 0)
-        (set! (-> *mod-rule-slot-progress* slot) 0))))
+    (let ((slot (mod-rule-find-active-slot 'rule-hang-time))) (when (>= slot 0) (set! (-> *mod-rule-slot-progress* slot) 0))))
   (set! *mod-rule-hang-time-air-start* (current-time))
   (none))
 
@@ -3058,9 +3077,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (mod-rule-shift-all-timers! elapsed)
           (set! elapsed 0))
         (cond
-          ((global-countdown-paused?)
-          (when (> elapsed 0)
-            (mod-rule-shift-all-timers! elapsed)))
+          ((global-countdown-paused?) (when (> elapsed 0) (mod-rule-shift-all-timers! elapsed)))
           (else
            ;; (+! *global-countup-timer* elapsed)
            (when (and (> *mean-look-clear-time* 0) (>= (current-time) *mean-look-clear-time*))
@@ -3071,9 +3088,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-trivia)
            (mod-rule-update-hang-time)
            (when (mod-rule-active? 'complication-get-a-grip)
-            (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 10)))
-              (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))
-              (set! *get-a-grip-last-grab* (current-time))))
+             (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 10)))
+               (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))
+               (set! *get-a-grip-last-grab* (current-time))))
            (when (mod-rule-active? 'complication-cumbersome)
              (orb-weight-apply!))
            (dotimes (slot *mod-rule-slot-count*)
@@ -3143,7 +3160,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (dotimes (j sub-len)
             (when (!= (-> str data (+ i j)) (-> sub data j))
               (set! match #f)))
-          (when match (set! found i)))))
+          (when match
+            (set! found i)))))
     found))
 
 (defun mod-rule-copy-range! ((dst string) (src string) (start int) (end int))
@@ -3157,41 +3175,37 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun draw-qte-button ((arg0 dma-buffer) (x int) (y int))
   (case *qte-target-button*
     ((0)
-     (draw-string-xy-scaled
-       (lookup-text! *common-text* (text-id pad-triangle) #f)
-       arg0
-       x
-       y
-       (font-color green)
-       (font-flags shadow kerning large)
-       0.65))
+     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-triangle) #f)
+                            arg0
+                            x
+                            y
+                            (font-color green)
+                            (font-flags shadow kerning large)
+                            0.65))
     ((1)
-     (draw-string-xy-scaled
-       (lookup-text! *common-text* (text-id pad-circle) #f)
-       arg0
-       x
-       y
-       (font-color green)
-       (font-flags shadow kerning large)
-       0.65))
+     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-circle) #f)
+                            arg0
+                            x
+                            y
+                            (font-color green)
+                            (font-flags shadow kerning large)
+                            0.65))
     ((2)
-     (draw-string-xy-scaled
-       (lookup-text! *common-text* (text-id pad-x) #f)
-       arg0
-       x
-       y
-       (font-color green)
-       (font-flags shadow kerning large)
-       0.65))
+     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-x) #f)
+                            arg0
+                            x
+                            y
+                            (font-color green)
+                            (font-flags shadow kerning large)
+                            0.65))
     ((3)
-     (draw-string-xy-scaled
-       (lookup-text! *common-text* (text-id pad-square) #f)
-       arg0
-       x
-       y
-       (font-color green)
-       (font-flags shadow kerning large)
-       0.65))))
+     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-square) #f)
+                            arg0
+                            x
+                            y
+                            (font-color green)
+                            (font-flags shadow kerning large)
+                            0.65))))
 
 (defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
   (let ((idx (mod-rule-find-substr line highlight 0))
@@ -3237,55 +3251,30 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (row y)
          (desc (mod-rule-description id))
          (break-idx (mod-rule-wrap-point desc 25)))
-(draw-string-xy-scaled (mod-rule-name id)
-  buf
-  10
-  row
-  (if (eq? (mod-rule-type id) 'rule)
-    (font-color orangeb)
-    (font-color triangleb))
-  (font-flags shadow kerning large)
-  0.5)
-
-(+! row 10)
-
-(if (>= break-idx (length desc))
-  (if (eq? id 'rule-qte)
-    (begin
-      (draw-string-xy-scaled
-        desc
-        buf
-        10
-        row
-        (font-color white)
-        (font-flags shadow kerning large)
-        0.35)
-      (draw-qte-button buf 50 row)
-      (+! row 15))
-    (begin
-      (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
-      (+! row 9)))
-  (begin
-    (mod-rule-copy-range! *mod-rule-wrap-line-1* desc 0 break-idx)
-    (mod-rule-copy-range! *mod-rule-wrap-line-2* desc (+ break-idx 1) (length desc))
-
-    (mod-rule-draw-desc-line!
-      buf
-      id
-      *mod-rule-wrap-line-1*
-      10
-      row
-      0.35)
-    (+! row 9)
-
-    (mod-rule-draw-desc-line!
-      buf
-      id
-      *mod-rule-wrap-line-2*
-      10
-      row
-      0.35)
-    (+! row 9)))
+    (draw-string-xy-scaled (mod-rule-name id)
+                           buf
+                           10
+                           row
+                           (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
+                           (font-flags shadow kerning large)
+                           0.5)
+    (+! row 10)
+    (if (>= break-idx (length desc))
+      (if (eq? id 'rule-qte)
+        (begin
+          (draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+          (draw-qte-button buf 50 row)
+          (+! row 15))
+        (begin
+          (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
+          (+! row 9)))
+      (begin
+        (mod-rule-copy-range! *mod-rule-wrap-line-1* desc 0 break-idx)
+        (mod-rule-copy-range! *mod-rule-wrap-line-2* desc (+ break-idx 1) (length desc))
+        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-1* 10 row 0.35)
+        (+! row 9)
+        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-2* 10 row 0.35)
+        (+! row 9)))
     (when punishment
       (draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
       (let* ((punishment-str (mod-rule-punishment-name punishment))
@@ -3305,21 +3294,21 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
       (if (eq? id 'rule-hang-time)
         (let* ((elapsed (min (seconds (mod-rule-counter-goal 'rule-hang-time)) (- (current-time) *mod-rule-hang-time-air-start*)))
-              (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
+               (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
           (draw-string-xy-scaled (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal)
-                                buf
-                                80
-                                row
-                                (font-color white)
-                                (font-flags shadow kerning large)
-                                0.5))
+                                 buf
+                                 80
+                                 row
+                                 (font-color white)
+                                 (font-flags shadow kerning large)
+                                 0.5))
         (draw-string-xy-scaled (string-format "~D/~D" progress goal)
-                              buf
-                              80
-                              row
-                              (font-color white)
-                              (font-flags shadow kerning large)
-                              0.5))
+                               buf
+                               80
+                               row
+                               (font-color white)
+                               (font-flags shadow kerning large)
+                               0.5))
       (+! row 7))
     (draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
                            buf
@@ -3402,18 +3391,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row 8))
     (when (eq? id 'complication-get-a-grip)
-          (draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
-          (-! row 2) 
-          (let* ((elapsed (- (current-time) *get-a-grip-last-grab*))
-                (time-left (max 0 (- (apply-time-limit-multiplier (seconds 10)) elapsed))))
-            (draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
-                                  buf
-                                  66
-                                  row
-                                  (font-color white)
-                                  (font-flags shadow kerning large)
-                                  0.4))
-          (+! row 8))
+      (draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
+      (-! row 2)
+      (let* ((elapsed (- (current-time) *get-a-grip-last-grab*))
+             (time-left (max 0 (- (apply-time-limit-multiplier (seconds 10)) elapsed))))
+        (draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
+                               buf
+                               66
+                               row
+                               (font-color white)
+                               (font-flags shadow kerning large)
+                               0.4))
+      (+! row 8))
     row))
 
 (defun mod-rule-draw-timed-punishments ((buf dma-buffer))
@@ -3673,9 +3662,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     -1))
 
 (defun mod-rule-punishment-id-from-index ((idx int))
-  (if (and (>= idx 0) (< idx *mod-rule-punishment-id-count*))
-    (-> *mod-rule-punishment-ids* idx)
-    #f))
+  (if (and (>= idx 0) (< idx *mod-rule-punishment-id-count*)) (-> *mod-rule-punishment-ids* idx) #f))
 
 (defun mod-rule-slot-punishments-save-value ()
   (let ((result (the uint 0))
@@ -3693,8 +3680,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (slot 0))
     (while (< slot *mod-rule-slot-count*)
       (let ((idx (the int (logand (shr bits (* slot 8)) (the uint #xff)))))
-        (set! (-> *mod-rule-slot-saved-punishments* slot)
-              (if (= idx #xff) #f (mod-rule-punishment-id-from-index idx))))
+        (set! (-> *mod-rule-slot-saved-punishments* slot) (if (= idx #xff) #f (mod-rule-punishment-id-from-index idx))))
       (+! slot 1)))
   (none))
 
@@ -3731,13 +3717,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((result (the uint 0))
         (slot 0))
     (while (< slot *mod-rule-slot-count*)
-      (let ((remaining (if (-> *mod-rule-pending-slots* slot)
-                           (max 0 (- (-> *mod-rule-slot-roll-ready-times* slot) (current-time)))
-                           0)))
-        (set! result
-              (logior result
-                       (shl (the uint (min #x3ff (/ (+ remaining 29) 30)))
-                            (* slot 10)))))
+      (let ((remaining (if (-> *mod-rule-pending-slots* slot) (max 0 (- (-> *mod-rule-slot-roll-ready-times* slot) (current-time))) 0)))
+        (set! result (logior result (shl (the uint (min #x3ff (/ (+ remaining 29) 30))) (* slot 10)))))
       (+! slot 1))
     (the int result)))
 
@@ -3745,8 +3726,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((bits (the uint val))
         (slot 0))
     (while (< slot *mod-rule-slot-count*)
-      (set! (-> *mod-rule-slot-saved-roll-tenths* slot)
-            (the int (logand (shr bits (* slot 10)) (the uint #x3ff))))
+      (set! (-> *mod-rule-slot-saved-roll-tenths* slot) (the int (logand (shr bits (* slot 10)) (the uint #x3ff))))
       (+! slot 1)))
   (none))
 
@@ -3757,10 +3737,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< offset 2)
       (let ((slot (+ start offset)))
         (when (< slot *mod-rule-slot-count*)
-          (set! result
-                (logior result
-                         (shl (the uint (min #xffff (max 0 (-> *mod-rule-slot-progress* slot))))
-                              (* offset 16)))))
+          (set! result (logior result (shl (the uint (min #xffff (max 0 (-> *mod-rule-slot-progress* slot)))) (* offset 16)))))
         (+! offset 1)))
     (the int result)))
 
@@ -3771,21 +3748,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< offset 2)
       (let ((slot (+ start offset)))
         (when (< slot *mod-rule-slot-count*)
-          (set! (-> *mod-rule-slot-progress* slot)
-                (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
+          (set! (-> *mod-rule-slot-progress* slot) (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
         (+! offset 1))))
   (none))
 
-(defun mod-rule-slot-progress0-save-value () (mod-rule-slot-progress-save-value 0))
-(defun mod-rule-slot-progress0-resume-from-save ((val int)) (mod-rule-slot-progress-resume-from-save 0 val))
-(defun mod-rule-slot-progress1-save-value () (mod-rule-slot-progress-save-value 1))
-(defun mod-rule-slot-progress1-resume-from-save ((val int)) (mod-rule-slot-progress-resume-from-save 1 val))
+(defun mod-rule-slot-progress0-save-value ()
+  (mod-rule-slot-progress-save-value 0))
+
+(defun mod-rule-slot-progress0-resume-from-save ((val int))
+  (mod-rule-slot-progress-resume-from-save 0 val))
+
+(defun mod-rule-slot-progress1-save-value ()
+  (mod-rule-slot-progress-save-value 1))
+
+(defun mod-rule-slot-progress1-resume-from-save ((val int))
+  (mod-rule-slot-progress-resume-from-save 1 val))
 
 (defun mod-rule-math-quiz-state-save-value ()
-  (the int
-       (logior (the uint *math-quiz-val1*)
-               (shl (the uint *math-quiz-val2*) 8)
-               (shl (the uint *math-quiz-op*) 16))))
+  (the int (logior (the uint *math-quiz-val1*) (shl (the uint *math-quiz-val2*) 8) (shl (the uint *math-quiz-op*) 16))))
 
 (defun mod-rule-math-quiz-state-resume-from-save ((val int))
   (let ((bits (the uint val)))
@@ -3798,7 +3778,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       ((= *math-quiz-op* 2) (set! *math-quiz-answer* (* *math-quiz-val1* *math-quiz-val2*)))))
   (none))
 
-(defun mod-rule-math-quiz-guess-save-value () *math-quiz-current-guess*)
+(defun mod-rule-math-quiz-guess-save-value ()
+  *math-quiz-current-guess*)
+
 (defun mod-rule-math-quiz-guess-resume-from-save ((val int))
   (set! *math-quiz-current-guess* val)
   (none))
@@ -3817,12 +3799,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! *trivia-current-question* (the int (logand bits (the uint #xff))))
     (set! *trivia-current-guess* (- (the int (logand (shr bits 8) (the uint #x7))) 1))
     (dotimes (i 4)
-      (set! (-> *trivia-shuffle-map* i)
-            (the int (logand (shr bits (+ 11 (* i 2))) (the uint #x3)))))
+      (set! (-> *trivia-shuffle-map* i) (the int (logand (shr bits (+ 11 (* i 2))) (the uint #x3)))))
     (set! *trivia-last-tracked-question* *trivia-current-question*))
   (none))
 
-(defun mod-rule-qte-state-save-value () *qte-target-button*)
+(defun mod-rule-qte-state-save-value ()
+  *qte-target-button*)
+
 (defun mod-rule-qte-state-resume-from-save ((val int))
   (set! *qte-target-button* val)
   (none))
@@ -3845,13 +3828,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< offset 4)
       (let ((slot (+ start offset)))
         (when (< slot *mod-rule-timed-punishment-slot-count*)
-          (let ((remaining (if (-> *mod-rule-timed-punishments* slot)
-                               (max 0 (- (-> *mod-rule-timed-punishment-end-times* slot) (current-time)))
-                               0)))
-            (set! result
-                  (logior result
-                          (shl (the uint (min #xffff (/ (+ remaining 29) 30)))
-                               (* offset 16)))))))
+          (let ((remaining (if (-> *mod-rule-timed-punishments* slot) (max 0 (- (-> *mod-rule-timed-punishment-end-times* slot) (current-time))) 0)))
+            (set! result (logior result (shl (the uint (min #xffff (/ (+ remaining 29) 30))) (* offset 16)))))))
       (+! offset 1))
     (the int result)))
 
@@ -3860,8 +3838,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (slot 0))
     (while (< slot *mod-rule-timed-punishment-slot-count*)
       (let ((idx (the int (logand (shr bits (* slot 4)) (the uint #xf)))))
-        (set! (-> *mod-rule-timed-punishment-saved-ids* slot)
-              (if (= idx #xf) #f (mod-rule-punishment-id-from-index idx))))
+        (set! (-> *mod-rule-timed-punishment-saved-ids* slot) (if (= idx #xf) #f (mod-rule-punishment-id-from-index idx))))
       (+! slot 1)))
   (none))
 
@@ -3872,8 +3849,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< offset 4)
       (let ((slot (+ start offset)))
         (when (< slot *mod-rule-timed-punishment-slot-count*)
-          (set! (-> *mod-rule-timed-punishment-saved-tenths* slot)
-                (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
+          (set! (-> *mod-rule-timed-punishment-saved-tenths* slot) (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
         (+! offset 1))))
   (none))
 
@@ -3890,7 +3866,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-timed-punishment-times-resume-from-save 1 val))
 
 (defun mod-rule-active-slots-save-value ()
-  (let ((result (the uint 0)) (i 0))
+  (let ((result (the uint 0))
+        (i 0))
     (while (< i 3)
       (let* ((sym (-> *mod-rule-active-slots* i))
              (idx (if sym (mod-rule-index-from-id sym) -1))
@@ -3900,38 +3877,43 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (the int result)))
 
 (defun mod-rule-slot-remaining-time-save-value ((slot int))
-  (if (-> *mod-rule-active-slots* slot)
-      (the int (max 0 (- (-> *mod-rule-slot-end-times* slot) (current-time))))
-      0))
+  (if (-> *mod-rule-active-slots* slot) (the int (max 0 (- (-> *mod-rule-slot-end-times* slot) (current-time)))) 0))
 
 (defun mod-rule-slot-remaining-time-resume-from-save ((slot int) (val int))
   (set! (-> *mod-rule-slot-saved-remaining-times* slot) (max 0 val))
   (none))
 
-(defun mod-rule-slot0-end-time-save-value () (mod-rule-slot-remaining-time-save-value 0))
-(defun mod-rule-slot0-end-time-resume-from-save ((val int)) (mod-rule-slot-remaining-time-resume-from-save 0 val))
-(defun mod-rule-slot1-end-time-save-value () (mod-rule-slot-remaining-time-save-value 1))
-(defun mod-rule-slot1-end-time-resume-from-save ((val int)) (mod-rule-slot-remaining-time-resume-from-save 1 val))
-(defun mod-rule-slot2-end-time-save-value () (mod-rule-slot-remaining-time-save-value 2))
-(defun mod-rule-slot2-end-time-resume-from-save ((val int)) (mod-rule-slot-remaining-time-resume-from-save 2 val))
+(defun mod-rule-slot0-end-time-save-value ()
+  (mod-rule-slot-remaining-time-save-value 0))
+
+(defun mod-rule-slot0-end-time-resume-from-save ((val int))
+  (mod-rule-slot-remaining-time-resume-from-save 0 val))
+
+(defun mod-rule-slot1-end-time-save-value ()
+  (mod-rule-slot-remaining-time-save-value 1))
+
+(defun mod-rule-slot1-end-time-resume-from-save ((val int))
+  (mod-rule-slot-remaining-time-resume-from-save 1 val))
+
+(defun mod-rule-slot2-end-time-save-value ()
+  (mod-rule-slot-remaining-time-save-value 2))
+
+(defun mod-rule-slot2-end-time-resume-from-save ((val int))
+  (mod-rule-slot-remaining-time-resume-from-save 2 val))
 
 (defun mod-rule-finalize-resume-from-save ()
   (dotimes (slot *mod-rule-slot-count*)
     (let ((remaining (-> *mod-rule-slot-saved-remaining-times* slot)))
       (when (-> *mod-rule-active-slots* slot)
-        (set! (-> *mod-rule-slot-end-times* slot)
-              (+ (current-time) (if (>= remaining 0) remaining 0)))
-        (set! (-> *mod-rule-slot-goals* slot)
-              (mod-rule-counter-goal (-> *mod-rule-active-slots* slot)))
-        (set! (-> *mod-rule-slot-punishments* slot)
-              (-> *mod-rule-slot-saved-punishments* slot)))))
+        (set! (-> *mod-rule-slot-end-times* slot) (+ (current-time) (if (>= remaining 0) remaining 0)))
+        (set! (-> *mod-rule-slot-goals* slot) (mod-rule-counter-goal (-> *mod-rule-active-slots* slot)))
+        (set! (-> *mod-rule-slot-punishments* slot) (-> *mod-rule-slot-saved-punishments* slot)))))
   (dotimes (slot *mod-rule-slot-count*)
     (let ((pending (-> *mod-rule-slot-saved-pending* slot))
           (tenths (-> *mod-rule-slot-saved-roll-tenths* slot)))
       (when pending
         (set! (-> *mod-rule-pending-slots* slot) pending)
-        (set! (-> *mod-rule-slot-roll-ready-times* slot)
-              (+ (current-time) (* (max 0 tenths) 30)))
+        (set! (-> *mod-rule-slot-roll-ready-times* slot) (+ (current-time) (* (max 0 tenths) 30)))
         (set! (-> *mod-rule-roll-last-warn-second* slot) -1))))
   (mod-rule-clear-all-timed-punishments)
   (dotimes (slot *mod-rule-timed-punishment-slot-count*)
@@ -3939,38 +3921,37 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (tenths (-> *mod-rule-timed-punishment-saved-tenths* slot)))
       (when (and punishment (> tenths 0))
         (set! (-> *mod-rule-timed-punishments* slot) punishment)
-        (set! (-> *mod-rule-timed-punishment-end-times* slot)
-              (+ (current-time) (* tenths 30)))
-        (set! (-> *mod-rule-timed-punishment-next-ticks* slot)
-              (+ (current-time) (seconds 1)))
+        (set! (-> *mod-rule-timed-punishment-end-times* slot) (+ (current-time) (* tenths 30)))
+        (set! (-> *mod-rule-timed-punishment-next-ticks* slot) (+ (current-time) (seconds 1)))
         (case punishment
           (('punishment-blind) (set-blackout-frames (* tenths 30)))
           (('punishment-fall-damage)
            (set! (-> *TARGET-bank* fall-far) (meters 7.0))
            (set! (-> *TARGET-bank* fall-far-inc) (meters 10.0)))
           (('punishment-delay) (input-delay-enable! #t 0.2))
-          (('punishment-iframes)
-           (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0)))))))
+          (('punishment-iframes) (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0)))))))
   (set! *mod-rule-last-update-time* (current-time))
   (none))
 
 (defun mod-rule-active-slots-resume-from-save ((val int))
-  (let ((i 0))
-    (while (< i 3)
-      (mod-rule-deactivate-slot i)
-      (+! i 1)))
-  (let ((bits (the uint val)) (i 0))
+  (let ((i 0)) (while (< i 3) (mod-rule-deactivate-slot i) (+! i 1)))
+  (let ((bits (the uint val))
+        (i 0))
     (while (< i 3)
       (let* ((byte-val (logand (shr bits (* i 8)) (the uint #xff)))
              (id (if (= byte-val (the uint #xff)) #f (mod-rule-id-from-index (the int byte-val)))))
         (set! (-> *mod-rule-active-slots* i) id)
-        (when id (mod-rule-reapply-slot-visual-effect id)))
+        (when id
+          (mod-rule-reapply-slot-visual-effect id)))
       (+! i 1)))
   (none))
 
-(defun mod-rule-twist-marked-slot-save-value () *mod-rule-twist-marked-slot*)
+(defun mod-rule-twist-marked-slot-save-value ()
+  *mod-rule-twist-marked-slot*)
+
 (defun mod-rule-twist-marked-slot-resume-from-save ((val int))
-  (set! *mod-rule-twist-marked-slot* val) (none))
+  (set! *mod-rule-twist-marked-slot* val)
+  (none))
 
 (defun mod-rng-content-state-save-value ()
   (the int *mod-rng-content-state*))

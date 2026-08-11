@@ -101,38 +101,71 @@
 (define-extern final-score-save-value (function int))
 
 (define-extern mod-rule-active-slots-save-value (function int))
+
 (define-extern mod-rule-active-slots-resume-from-save (function int none))
+
 (define-extern mod-rule-slot0-end-time-save-value (function int))
+
 (define-extern mod-rule-slot0-end-time-resume-from-save (function int none))
+
 (define-extern mod-rule-slot1-end-time-save-value (function int))
+
 (define-extern mod-rule-slot1-end-time-resume-from-save (function int none))
+
 (define-extern mod-rule-slot2-end-time-save-value (function int))
+
 (define-extern mod-rule-slot2-end-time-resume-from-save (function int none))
+
 (define-extern mod-rule-twist-marked-slot-save-value (function int))
+
 (define-extern mod-rule-twist-marked-slot-resume-from-save (function int none))
+
 (define-extern mod-rule-slot-punishments-save-value (function int))
+
 (define-extern mod-rule-slot-punishments-resume-from-save (function int none))
+
 (define-extern mod-rule-timed-punishments-save-value (function int))
+
 (define-extern mod-rule-timed-punishments-resume-from-save (function int none))
+
 (define-extern mod-rule-timed-punishment-times0-save-value (function int))
+
 (define-extern mod-rule-timed-punishment-times0-resume-from-save (function int none))
+
 (define-extern mod-rule-timed-punishment-times1-save-value (function int))
+
 (define-extern mod-rule-timed-punishment-times1-resume-from-save (function int none))
+
 (define-extern mod-rule-pending-slots-save-value (function int))
+
 (define-extern mod-rule-pending-slots-resume-from-save (function int none))
+
 (define-extern mod-rule-pending-times-save-value (function int))
+
 (define-extern mod-rule-pending-times-resume-from-save (function int none))
+
 (define-extern mod-rule-slot-progress0-save-value (function int))
+
 (define-extern mod-rule-slot-progress0-resume-from-save (function int none))
+
 (define-extern mod-rule-slot-progress1-save-value (function int))
+
 (define-extern mod-rule-slot-progress1-resume-from-save (function int none))
+
 (define-extern mod-rule-math-quiz-state-save-value (function int))
+
 (define-extern mod-rule-math-quiz-state-resume-from-save (function int none))
+
 (define-extern mod-rule-math-quiz-guess-save-value (function int))
+
 (define-extern mod-rule-math-quiz-guess-resume-from-save (function int none))
+
 (define-extern mod-rule-trivia-state-save-value (function int))
+
 (define-extern mod-rule-trivia-state-resume-from-save (function int none))
+
 (define-extern mod-rule-qte-state-save-value (function int))
+
 (define-extern mod-rule-qte-state-resume-from-save (function int none))
 
 (define-extern mod-rule-finalize-resume-from-save (function none))

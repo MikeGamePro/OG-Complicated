@@ -1725,5 +1725,5 @@
          ((eq? id 'complication-no-double-jump) (-> *complicated-settings* complication-no-double-jump?))
          ((eq? id 'rule-hang-time) (-> *complicated-settings* rule-hang-time?))
          ((eq? id 'complication-unbreakable) (-> *complicated-settings* complication-unbreakable?))
-          ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
+         ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
          (else #t))))
