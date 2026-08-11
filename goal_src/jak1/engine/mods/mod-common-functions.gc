@@ -1710,10 +1710,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-punishment-rollable? ((punishment symbol))
   (and (not (mod-rule-timed-punishment-active? punishment)) (not (mod-rule-punishment-used-by-active-slot? punishment))))
 
-(defun mod-rule-random-available-punishment ()
+(defun mod-rule-random-available-punishment ((rule-id symbol))
   (let ((selected 'punishment-countdown)
         (running-total 0))
-    (when (mod-rule-punishment-rollable? 'punishment-countdown)
+    (when (and (not (eq? rule-id 'rule-for-billy)) (mod-rule-punishment-rollable? 'punishment-countdown))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
@@ -1758,7 +1758,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-extra-rule))))
-    (when (and (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash))
+    (when (and (not (eq? rule-id 'rule-qte)) (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash))
       (let ((w 6))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
@@ -1912,7 +1912,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *mod-rule-slot-progress* slot) 0)
     (if (eq? (mod-rule-type id) 'rule)
       (begin
-        (set! (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment))
+        (set! (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment id))
         (+! *rules-rolled* 1)
         (mod-rule-twist-check-and-mark! slot id))
       (begin
@@ -2412,9 +2412,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-cooked) (if (or on-racer (not (burn-level? level-name))) 0 9))
           ((eq? id 'complication-get-a-grip)
            (if (or (sole-zoomer-level? level-name)
+                   (string= (current-checkpoint-name) "swamp-cave1")
+                   (string= (current-checkpoint-name) "citadel-elevator")
                    is-minigame
                    is-klaww
                    (eq? level-name 'finalboss)
+                   (mod-rule-active? 'complication-joyride)
                    (mod-rule-timed-punishment-active? 'punishment-edge)
                    (target-on-racer-or-flut?))
              0
@@ -2593,7 +2596,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (dotimes (slot *mod-rule-slot-count*)
       (let ((id (-> *mod-rule-active-slots* slot)))
         (when (and id (eq? (mod-rule-type id) 'rule))
-          (set! (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment))))))
+          (set! (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment id))))))
   (none))
 
 (defun mod-rule-on-cell-pickup ((amount int))
@@ -2757,7 +2760,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (sound-play "caught-eel")
          (+! *rules-broken* 1)
          (set! *mod-rule-last-outcome* (if twisted? 'twisted-failed 'failed))
-         (let ((punishment (or (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment))))
+         (let ((punishment (or (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment (-> *mod-rule-active-slots* slot)))))
            (if (eq? punishment 'punishment-extra-rule)
              (mod-rule-apply-extra-rule-punishment slot)
              (begin
@@ -3173,39 +3176,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   dst)
 
 (defun draw-qte-button ((arg0 dma-buffer) (x int) (y int))
-  (case *qte-target-button*
-    ((0)
-     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-triangle) #f)
-                            arg0
-                            x
-                            y
-                            (font-color green)
-                            (font-flags shadow kerning large)
-                            0.65))
-    ((1)
-     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-circle) #f)
-                            arg0
-                            x
-                            y
-                            (font-color green)
-                            (font-flags shadow kerning large)
-                            0.65))
-    ((2)
-     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-x) #f)
-                            arg0
-                            x
-                            y
-                            (font-color green)
-                            (font-flags shadow kerning large)
-                            0.65))
-    ((3)
-     (draw-string-xy-scaled (lookup-text! *common-text* (text-id pad-square) #f)
-                            arg0
-                            x
-                            y
-                            (font-color green)
-                            (font-flags shadow kerning large)
-                            0.65))))
+  (let ((button-text
+          (case *qte-target-button*
+            ((0) (lookup-text! *common-text* (text-id pad-triangle) #f))
+            ((1) (lookup-text! *common-text* (text-id pad-circle) #f))
+            ((2) (lookup-text! *common-text* (text-id pad-x) #f))
+            ((3) (lookup-text! *common-text* (text-id pad-square) #f))
+            (else #f))))
+    (when button-text
+      (draw-string-xy-scaled
+        (the string button-text)
+        arg0
+        x
+        y
+        (font-color green)
+        (font-flags shadow kerning large)
+        0.65))))
 
 (defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
   (let ((idx (mod-rule-find-substr line highlight 0))
