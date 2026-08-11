@@ -253,8 +253,8 @@
       ((-> target-racing-start exit)))
   :trans
     (behavior ()
-      (when (cpad-hold? (-> self control cpad number) x)
-        (mod-rule-trigger-failure 'rule-red-light))
+      ;; (when (cpad-hold? (-> self control cpad number) x)
+      ;;   (mod-rule-trigger-failure 'rule-red-light))
       ;; og:preserve-this - High FPS Fix
       (if (and (recently-pressed? l1 r1)
                (or (not (time-elapsed? (-> self control unknown-dword11) (seconds 0.1)))
@@ -777,7 +777,7 @@
   :code
     (behavior ((arg0 handle))
       (set! *racer-start-time* (current-time))
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       ;; (format #t "get on~%")
       (set! (-> self control transv quad) (the-as uint128 0))
       (set! (-> self alt-cam-pos quad) (-> self control camera-pos quad))

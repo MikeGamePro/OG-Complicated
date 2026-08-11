@@ -436,7 +436,7 @@
       ((-> target-flut-start exit)))
   :trans
     (behavior ()
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (if (not (move-legs?)) (go target-flut-stance))
       ;; og:preserve-this - High FPS Fix
       (if (and (recently-pressed? x) (can-jump? #f))
@@ -463,7 +463,7 @@
                  (* 81920.0 (seconds-per-frame))))))
   :code
     (behavior ()
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (let ((f28-0 0.0)
             (f30-0 0.0))
         (let ((gp-0 22))
@@ -752,7 +752,7 @@
 (defstate target-flut-running-attack (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (case message
         (('touched)
          (cond
@@ -908,7 +908,7 @@
 (defstate target-flut-air-attack (target)
   :event
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (if (and (= message 'touched)
                ((method-of-type touching-shapes-entry prims-touching?)
                 (the-as touching-shapes-entry (-> block param 0))
@@ -1220,7 +1220,7 @@
         exit)
   :code
     (behavior ((arg0 handle))
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (set! (-> self control transv quad) (the-as uint128 0))
       (set! (-> self alt-cam-pos quad) (-> self control camera-pos quad))
       (logior! (-> self state-flags) (state-flags use-alt-cam-pos))
