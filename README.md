@@ -28,7 +28,6 @@
 
 | Setting | Description |
 | :--- | :--- |
-| **Preset** | Select a pre-configured difficulty template (see table below), or set to **Custom** for full control. |
 | **Countdown Start Time** | The global countdown's starting time, in seconds. |
 | **Time Limit Multiplier** | A multiplier applied to rules that have time limits. For example, a value of 2.0 doubles the amount of time you have; 0.5 halves. |
 | **Increments** | The amount of time, in seconds, that will be added to the timer for obtaining a Power Cell, Scout Fly, or Precursor Orb. |
@@ -83,7 +82,7 @@
 | **GREEN-PILLED** | COLLECT 50 SMALL GREEN ECO PILLS. |
 | **BUTTON PUSHER** | PUSH A BUTTON. |
 | **LOYAL CUSTOMER** | BUY AN ORACLE CELL. |
-| **COOKED** | BURN JAK. | The fire pits in Rock Village do not send a burn event.
+| **COOKED** | BURN JAK. | The fire pits in Rock Village do *not* send a burn event.
 | **SAGGING SAILS** | MISS 3 FIVE-POUND FISH. |
 | **SIDE TO SIDE** | DO NOT TOUCH THE MIDDLE PLATFORM. | Do not touch the middle platform of the three you jump on before the large platform.
 | **LANDLUBBER** | DO NOT TOUCH THE WATER. | Any contact with water breaks this rule.
@@ -126,7 +125,7 @@
 | **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
 | **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
 | **TWISTED** | A LATER RULE MUST BE BROKEN. | A twisted rule is chosen at random. You must *break* this rule. Rules are colored orange.
-| **VIBE CHECK** | I LIKE YA CUT, G | Jak gets smacked into the air and damaged.
+| **VIBE CHECK** | I LIKE YA CUT, G | Jak gets smacked into the air and takes damage.
 | **INCOME TAX** | TIMER INCREMENTS ARE HALVED. |
 | **MIRRORED** | THE WORLD IS MIRRORED. |
 | **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
