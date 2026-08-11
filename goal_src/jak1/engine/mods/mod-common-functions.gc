@@ -1173,7 +1173,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-cumbersome) (seconds 40)) ;; 40
     ((eq? id 'complication-ohko) (seconds 60)) ;; 60
     ((eq? id 'complication-critical) (seconds 60)) ;; 60
-    ((eq? id 'complication-heating-balloons) (seconds 30)) ;; 30
+    ((eq? id 'complication-heating-balloons) (seconds 20)) ;; 20
     ((eq? id 'complication-glare) (seconds 60)) ;; 60
     ((eq? id 'complication-disassociate) (seconds 50)) ;; 50
     ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
@@ -1190,7 +1190,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-one-frame) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-distancing) (seconds 60)) ;; 60
     ((eq? id 'rule-red-light) (seconds 5)) ;; 5
-    ((eq? id 'complication-rgyb) (seconds 60)) ;; 60
+    ((eq? id 'complication-rgyb) (seconds 45)) ;; 45
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
     ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 150))) ;; 150
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
@@ -1216,7 +1216,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-income-tax) (seconds 30)) ;; 30
     ((eq? id 'rule-express-delivery) (apply-time-limit-multiplier (seconds 90))) ;; 90
     ((eq? id 'rule-crate-break) (apply-time-limit-multiplier (seconds 30))) ;; 30
-    ((eq? id 'rule-qte) (seconds 2)) ;; 2
+    ((eq? id 'rule-qte) (seconds 1.8)) ;; 1.8
     ((eq? id 'rule-touch-grass) (apply-time-limit-multiplier (seconds 15))) ;; 15
     ((eq? id 'complication-mirror) (seconds 60)) ;; 60
     ((eq? id 'complication-no-double-jump) (seconds 60)) ;; 60
@@ -1666,6 +1666,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun target-on-racer-or-flut? ()
   (or (target-on-racer?) (target-on-flut?)))
+
+(defun mod-rule-trigger-red-light ()
+  (when (mod-rule-active? 'rule-red-light)
+    (when (or (and (not (target-on-racer?))
+                   (or (cpad-pressed? 0 circle)
+                       (cpad-pressed? 0 square)
+                       (cpad-pressed? 0 x)))
+              (!= (-> *cpad-list* cpads 0 stick0-speed) 0.0)
+              (and (target-on-racer?) (cpad-hold? 0 x)))
+      (mod-rule-trigger-failure 'rule-red-light)))
+  (none))
 
 (define *target-mesh-envmap-save* (new 'global 'boxed-array int32 512))
 
@@ -2501,7 +2512,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (is-minigame 0)
              (else 8)))
           ((eq? id 'complication-twisted)
-           (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 5))
+           (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 4))
           ((eq? id 'rule-qte)
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           (else 6))))))
@@ -2860,7 +2871,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-on-jump ()
   (mod-rule-trigger-brittle-bones)
   (mod-rule-trigger-failure 'rule-grounded)
-  (mod-rule-trigger-failure 'rule-red-light)
   (none))
 
 (defun mod-rule-trigger-loose-pockets ()
@@ -3090,6 +3100,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-math-quiz)
            (mod-rule-update-trivia)
            (mod-rule-update-hang-time)
+           (mod-rule-trigger-red-light)
            (when (mod-rule-active? 'complication-get-a-grip)
              (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 10)))
                (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))

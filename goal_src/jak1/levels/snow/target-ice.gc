@@ -103,7 +103,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ()
-      (mod-rule-trigger-failure 'rule-red-light)
+      ;; (mod-rule-trigger-failure 'rule-red-light)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *walk-mods*))
   :exit
