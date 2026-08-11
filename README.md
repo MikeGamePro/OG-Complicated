@@ -134,7 +134,7 @@
 
 </details>
 
-### Seeds
+## Seeds
 - This mod supports seeds, which means each run has a sequence of numbers that determines all of its RNG. The seed is displayed on the bottom-left of the screen, and you can use that seed to roll the exact same RNG for another run! This is also nice for races.
-- To input a custom seed, display the OpenGOAL toolbar by pressing Left Alt. Then select Tools -> Complicated Seed and input the seed into the box. The next run will use that seed!
+- To input a custom seed, access the OpenGOAL toolbar by pressing Left Alt. Then select Tools -> Complicated Seed and input the seed into the box. The next run will use that seed!
 - **Note:** The seed's RNG is prone to divergence or branching based on player action. Each condition roll takes into account many factors (your location, orb count, active punishments, etc.), meaning rolls can vary wildly based on where you are and what you do at certain moments.
