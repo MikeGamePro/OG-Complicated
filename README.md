@@ -1,4 +1,4 @@
- > [!NOTE]
+> [!NOTE]
 
 > You can read the original README for the OpenGOAL project [here](https://github.com/open-goal/jak-project/blob/master/README.md).
 
