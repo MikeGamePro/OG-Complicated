@@ -120,7 +120,7 @@
 | **OVERCLOCK** | CITADEL DISCS ARE FASTER. | The large disc platforms in Citadel (pizzas) rotate faster.
 | **BAD PING** | YOU HAVE 120MS INPUT DELAY. | This is currently disabled until Zed releases his mod.
 | **INVISIBLE MAN** | JAK IS INVISIBLE. |
-| **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is. Going into the stance state mounts it again.
+| **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is.
 | **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) are doubled.
 | **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
 | **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
@@ -133,3 +133,8 @@
 | **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from 10 seconds; if it reaches 0, you die. Grabbing a ledge resets it.
 
 </details>
+
+### Seeds
+- This mod supports seeds, which means each run has a sequence of numbers that determines all of its RNG. The seed is displayed on the bottom-left of the screen, and you can use that seed to roll the exact same RNG for another run! This is also nice for races.
+- To input a custom seed, display the OpenGOAL toolbar by pressing Left Alt. Then select Tools -> Complicated Seed and input the seed into the box. The next run will use that seed!
+- **Note:** The seed's RNG is prone to divergence or branching based on player action. Each condition roll takes into account many factors (your location, orb count, active punishments, etc.), meaning rolls can vary wildly based on where you are and what you do at certain moments.
