@@ -171,7 +171,7 @@
   (set! (-> obj complication-income-tax?) #t)
   (set! (-> obj rule-double-kill?) #t)
   (set! (-> obj rule-express-delivery?) #t)
-  (set! (-> obj rule-qte?) #f)
+  (set! (-> obj rule-qte?) #t)
   (set! (-> obj rule-touch-grass?) #t)
   (set! (-> obj complication-mirror?) #t)
   (set! (-> obj complication-no-double-jump?) #f)
@@ -414,6 +414,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #f)
     (set! (-> *complicated-settings* complication-heating-balloons?) #f)
     (set! (-> *complicated-settings* rule-hang-time?) #f)
+    (set! (-> *complicated-settings* rule-qte?) #f)
     (set! (-> *complicated-settings* complication-get-a-grip?) #f)
     (commit-to-file *complicated-settings*))
   (none))
@@ -429,6 +430,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #f)
+    (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -444,6 +446,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #t)
+    (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -459,6 +462,7 @@
     (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
     (set! (-> *complicated-settings* complication-heating-balloons?) #t)
     (set! (-> *complicated-settings* rule-hang-time?) #t)
+    (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -1294,15 +1298,15 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [62] THINK FAST
+       ;; [62] QUICK TIME EVENT
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-cond-rule-qte)
             :scale #t
-            :option-disabled-func
-            (lambda ()
-              #t)
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
             :on-confirm
             (lambda ()
               (commit-to-file *complicated-settings*)

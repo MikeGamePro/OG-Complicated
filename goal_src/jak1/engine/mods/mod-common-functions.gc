@@ -1056,7 +1056,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-vibe-check) "VIBE CHECK")
     ((eq? id 'complication-income-tax) "INCOME TAX")
     ((eq? id 'rule-express-delivery) "EXPRESS DELIVERY")
-    ((eq? id 'rule-qte) "THINK FAST")
+    ((eq? id 'rule-qte) "QUICK TIME EVENT")
     ((eq? id 'rule-touch-grass) "TOUCH GRASS")
     ((eq? id 'complication-mirror) "MIRRORED")
     ((eq? id 'complication-no-double-jump) "ONE AND DONE")
@@ -1139,13 +1139,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
     ((eq? id 'rule-touch-grass) "DO THAT.")
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
-    ((eq? id 'rule-qte)
-     (cond
-       ((= *qte-target-button* 0) "PRESS TRIANGLE!")
-       ((= *qte-target-button* 1) "PRESS CIRCLE!")
-       ((= *qte-target-button* 2) "PRESS X!")
-       ((= *qte-target-button* 3) "PRESS SQUARE!")
-       (else "PRESS A BUTTON!")))
+    ((eq? id 'rule-qte) "PRESS ")
     ((eq? id 'complication-mirror) "THE WORLD IS MIRRORED.")
     ((eq? id 'complication-no-double-jump) "JAK FORGOT HOW TO DOUBLE JUMP.")
     ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING.")
@@ -1762,7 +1756,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-extra-rule))))
     (when (and (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash))
-      (let ((w 4))
+      (let ((w 6))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-crash))))
@@ -2482,7 +2476,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 8)))
           ((eq? id 'complication-twisted)
            (if (or (>= *mod-rule-twist-pending-count* 0) (mod-rule-any-rule-active?) (>= *mod-rule-twist-marked-slot* 0)) 0 5))
-          ((eq? id 'rule-qte) ;; disabled
+          ((eq? id 'rule-qte)
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           (else 6))))))
 
@@ -2688,6 +2682,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0)))
      (auto-save-command 'auto-save 0 0 *default-pool*))
     ((eq? punishment 'punishment-crash)
+     (auto-save-command 'auto-save 0 0 *default-pool*)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1)) (suspend)))
@@ -3159,6 +3154,45 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> dst data j) 0))
   dst)
 
+(defun draw-qte-button ((arg0 dma-buffer) (x int) (y int))
+  (case *qte-target-button*
+    ((0)
+     (draw-string-xy-scaled
+       (lookup-text! *common-text* (text-id pad-triangle) #f)
+       arg0
+       x
+       y
+       (font-color green)
+       (font-flags shadow kerning large)
+       0.65))
+    ((1)
+     (draw-string-xy-scaled
+       (lookup-text! *common-text* (text-id pad-circle) #f)
+       arg0
+       x
+       y
+       (font-color green)
+       (font-flags shadow kerning large)
+       0.65))
+    ((2)
+     (draw-string-xy-scaled
+       (lookup-text! *common-text* (text-id pad-x) #f)
+       arg0
+       x
+       y
+       (font-color green)
+       (font-flags shadow kerning large)
+       0.65))
+    ((3)
+     (draw-string-xy-scaled
+       (lookup-text! *common-text* (text-id pad-square) #f)
+       arg0
+       x
+       y
+       (font-color green)
+       (font-flags shadow kerning large)
+       0.65))))
+
 (defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
   (let ((idx (mod-rule-find-substr line highlight 0))
         (flags (font-flags shadow kerning large)))
@@ -3203,25 +3237,55 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (row y)
          (desc (mod-rule-description id))
          (break-idx (mod-rule-wrap-point desc 25)))
-    (draw-string-xy-scaled (mod-rule-name id)
-                           buf
-                           10
-                           row
-                           (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
-                           (font-flags shadow kerning large)
-                           0.5)
-    (+! row 10)
-    (if (>= break-idx (length desc))
-      (begin
-        (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
-        (+! row 9))
-      (begin
-        (mod-rule-copy-range! *mod-rule-wrap-line-1* desc 0 break-idx)
-        (mod-rule-copy-range! *mod-rule-wrap-line-2* desc (+ break-idx 1) (length desc))
-        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-1* 10 row 0.35)
-        (+! row 9)
-        (mod-rule-draw-desc-line! buf id *mod-rule-wrap-line-2* 10 row 0.35)
-        (+! row 9)))
+(draw-string-xy-scaled (mod-rule-name id)
+  buf
+  10
+  row
+  (if (eq? (mod-rule-type id) 'rule)
+    (font-color orangeb)
+    (font-color triangleb))
+  (font-flags shadow kerning large)
+  0.5)
+
+(+! row 10)
+
+(if (>= break-idx (length desc))
+  (if (eq? id 'rule-qte)
+    (begin
+      (draw-string-xy-scaled
+        desc
+        buf
+        10
+        row
+        (font-color white)
+        (font-flags shadow kerning large)
+        0.35)
+      (draw-qte-button buf 50 row)
+      (+! row 15))
+    (begin
+      (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
+      (+! row 9)))
+  (begin
+    (mod-rule-copy-range! *mod-rule-wrap-line-1* desc 0 break-idx)
+    (mod-rule-copy-range! *mod-rule-wrap-line-2* desc (+ break-idx 1) (length desc))
+
+    (mod-rule-draw-desc-line!
+      buf
+      id
+      *mod-rule-wrap-line-1*
+      10
+      row
+      0.35)
+    (+! row 9)
+
+    (mod-rule-draw-desc-line!
+      buf
+      id
+      *mod-rule-wrap-line-2*
+      10
+      row
+      0.35)
+    (+! row 9)))
     (when punishment
       (draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
       (let* ((punishment-str (mod-rule-punishment-name punishment))
