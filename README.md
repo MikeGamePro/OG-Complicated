@@ -77,10 +77,10 @@
 | **FOR BILLY** | PROTECT FARTHY'S SNACKS. DO NOT LEAVE BOGGY SWAMP. | You must complete the rats minigame, and also not leave Boggy Swamp.
 | **COLD FEET** | KEEP OFF THE ICE. |
 | **SPEED RACER** | REACH A SPEED OF 40 METERS PER SECOND. |
-| **QUICK MATHS** | ANSWER A MATH QUESTION CORRECTLY. |
-| **DON'T KNOW JAK** | ANSWER A TRIVIA QUESTION CORRECTLY. |
-| **GREEN-PILLED** | COLLECT 50 SMALL GREEN ECO PILLS. |
-| **BUTTON PUSHER** | PUSH A BUTTON. |
+| **QUICK MATHS** | ANSWER A MATH QUESTION CORRECTLY. | Use the D-Pad to input your answer. Up/Down step with 1, Left/Right step with 5. You can use L2+R2 to submit an answer early.
+| **DON'T KNOW JAK** | ANSWER A TRIVIA QUESTION CORRECTLY. | Use the D-Pad to navigate choices. You can use L2+R2 to submit an answer early.
+| **GREEN-PILLED** | COLLECT 50 SMALL GREEN ECO PILLS. | Only the small ones count.
+| **BUTTON PUSHER** | PUSH A BUTTON. | Not to be confused with Quick Time Event; Jak must press a button somewhere in the world.
 | **LOYAL CUSTOMER** | BUY AN ORACLE CELL. |
 | **COOKED** | BURN JAK. | The fire pits in Rock Village do *not* send a burn event.
 | **SAGGING SAILS** | MISS 3 FIVE-POUND FISH. |
@@ -88,7 +88,7 @@
 | **LANDLUBBER** | DO NOT TOUCH THE WATER. | Any contact with water breaks this rule.
 | **TOUCH GRASS** | DO THAT. |
 | **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
-| **QUICK TIME EVENT** | QUICKLY PRESS A FACE BUTTON. |
+| **QUICK TIME EVENT** | QUICKLY PRESS A SPECIFIC FACE BUTTON. | A random face button (X, Circle, Triangle or Square) is chosen. You must press it before time runs out.
 | **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Landing, spinning/kicking, grabbing a ledge, or entering goggles resets the progress.
 
 </details>
@@ -99,38 +99,38 @@
 | :--- | :--- | :--- |
 | **BRITTLE BONES** | EVERY JUMP HAS A 10% CHANCE TO DAMAGE YOU. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
 | **ROTTEN EGGS** | ORBS KILL YOU. |
-| **ECO ALLERGY** | ECO DAMAGES YOU. |
+| **ECO ALLERGY** | ECO DAMAGES YOU. | Collecting eco deals damage.
 | **SIZEABLE CONTRIBUTIONS** | ROLLJUMPS COST 3 ORBS. | Each rolljump subtracts 3 orbs from your current count. Jak cannot rolljump if you cannot afford one.
 | **CUMBERSOME** | ORBS WEIGH JAK DOWN. | The more orbs you have, the slower Jak moves and the shorter rolljumps get.
 | **HEATING BALLOONS** | COOLING BALLOONS MELT YOU. |
 | **DROUGHT** | ALL WATER, LAVA, AND DARK ECO ARE GONE. |
 | **OHKO** | JAK IS LIMITED TO ONE HEALTH. |
-| **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | Currently this only works on open and purchased cells. Turning in tasks still rewards a cell.
+| **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | Currently this only works on open and purchasable cells. Turning in tasks still rewards a cell.
 | **GLARE** | JAK FREEZES WHEN LURKERS SEE HIM. | When a lurker notices Jak, he freezes for exactly 3 seconds.
 | **DISASSOCIATE** | KILLING A LURKER DISMOUNTS FLUT FLUT. |
 | **BUS DRIVER** | ZOOMER EXPLODES IF TOO SLOW. | If you're on the zoomer and your speed goes below 20 meters per second, you explode.
-| **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | Currently, this only works on open and purchased cells. Turning in tasks still rewards a cell.
+| **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | Currently, this only works on open and purchasable cells. Turning in tasks still rewards a cell.
 | **HIDDEN TREASURE** | ORBS ARE INVISIBLE. |
 | **WINGS TIED** | YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT. |
 | **JAK RABBIT** | JUMP HEIGHTS ARE DOUBLED. |
-| **ECO RESERVE** | YELLOW ECO PAUSES TIMER. |
-| **SEEING RED** | RED ECO PAUSES TIMER. |
-| **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Currently, live clusters are not updated. They need to respawn to swap or swap back.
+| **ECO RESERVE** | YELLOW ECO PAUSES TIMER. | The countdown timer is paused as long as you have yellow eco in your meter.
+| **SEEING RED** | RED ECO PAUSES TIMER. | The countdown timer is paused as long as you have red eco in your meter.
+| **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Currently, live clusters are not updated. They need to respawn to swap or swap back. Eco vents will grant the opposite powerup.
 | **BUTTER FINGERS** | JAK CANNOT GRAB LEDGES. |
 | **OVERCLOCK** | CITADEL DISCS ARE FASTER. | The large disc platforms in Citadel (pizzas) rotate faster.
 | **BAD PING** | YOU HAVE 120MS INPUT DELAY. | This is currently disabled until Zed releases his mod.
 | **INVISIBLE MAN** | JAK IS INVISIBLE. |
 | **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is.
-| **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) are doubled.
+| **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) is doubled.
 | **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
 | **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
 | **TWISTED** | A LATER RULE MUST BE BROKEN. | A twisted rule is chosen at random. You must *break* this rule. Rules are colored orange.
 | **VIBE CHECK** | I LIKE YA CUT, G | Jak gets smacked into the air and takes damage.
-| **INCOME TAX** | TIMER INCREMENTS ARE HALVED. |
+| **INCOME TAX** | TIMER INCREMENTS ARE HALVED. | The additional time granted from cells, orbs, and flies is cut in half.
 | **MIRRORED** | THE WORLD IS MIRRORED. |
 | **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
 | **UNBREAKABLE** | SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO. | You will need to use either blue, yellow, or dark eco to break scout fly crates.
-| **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from 10 seconds; if it reaches 0, you die. Grabbing a ledge resets it.
+| **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from X seconds; if it reaches 0, you die. Grabbing a ledge resets it. The time limit scales with your Time Limit Multiplier.
 
 </details>
 
