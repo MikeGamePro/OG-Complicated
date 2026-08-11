@@ -1,48 +1,138 @@
-> [!NOTE]
+ > [!NOTE]
+
 > You can read the original README for the OpenGOAL project [here](https://github.com/open-goal/jak-project/blob/master/README.md).
+
 > In particular you may want to check out the Development Environment setup [here](https://github.com/open-goal/jak-project/blob/master/README.md#setting-up-a-development-environment)
 
-# OpenGoal-Mod-Base
-Serves as a base template for openGOAL mods that will be supported via [OG-ModLauncher](https://github.com/OpenGOAL-Mods/OG-ModLauncher).
 
-- Please ensure you are not committing copyrighted material to your repo (the `.gitignore` should help prevent this). 
-- Generally speaking you should only be updating certain directories/files:
-  - GOAL code (`/goal_src`)
-  - Assets specific to the PC Port (`/game/assets/jak1/`, `/custom_assets/`)
-  - The executable binaries (`/out/build/Release/goalc.exe`, `/out/build/Release/gk.exe`, `/out/build/Release/extractor.exe`)
-  - Decompiler config (`/decompiler/config`)
+# A Complicated Mod
 
-## Custom Navmesh Implementation and Example
 
-LuminarLight made changes that allow placing custom navmesh into Jak 1 levels. This will hopefully become useless one day, if proper navmesh support is ever added to OpenGOAL.
+- **The premise is ~~simple~~ complicated.** You play through the game to defeat Gol and Maia.
+  However, there is a countdown that is always running. If it reaches 0, you lose and the run restarts.
+- Power cells, orbs, and scout flies **increase the timer.**
+- There are also **complications and rules you need to follow.**
+- **Play in speedrunner mode and start a new run** to start the game.
+- Use the **Complicated Options** menu in Game Options to adjust the gameplay to your liking!
 
-The navmesh system in Jak II is more advanced, I haven't managed to figure it out yet.
+---
 
-### Getting Started
+## Conditions: Rules vs. Complications
 
-Please keep in mind that you are expected to be familiar with custom levels and GOAL. Still, I tried to make things as understandable as possible.
+* **Rules:** Restrictions or tasks that require compliance or action. Each one comes with a punishment that takes effect if broken.
+* **Complications:** Modifiers that add a twist or complicate gameplay.
+* **Conditions:** General term for both rules and complications.
 
-I would recommend copying an existing navmesh as a start. You can use the inspect method I made. The actor whose navmesh you want to copy must be loaded. Example:
-`(inspect (-> (the-as entity-actor (entity-by-name "snow-bunny-55")) nav-mesh))`
+---
 
-You should change the origin and bounds, depending on where you want to place your navmesh.
+## Complicated Options (Menu Settings)
+**Options -> Game Options -> Complicated Options**
 
-I usually just remove the nodes, because I do not understand it and things seem fine without it. But keep in mind that every navmesh that is in the game has at least one node.
+| Setting | Description |
+| :--- | :--- |
+| **Preset** | Select a pre-configured difficulty template (see table below), or set to **Custom** for full control. |
+| **Countdown Start Time** | The global countdown's starting time, in seconds. |
+| **Time Limit Multiplier** | A multiplier applied to rules that have time limits. For example, a value of 2.0 doubles the amount of time you have; 0.5 halves. |
+| **Increments** | The amount of time, in seconds, that will be added to the timer for obtaining a Power Cell, Scout Fly, or Precursor Orb. |
+| **Condition Toggles** | Manually choose which conditions can or cannot be rolled. |
+| **Speedrun Timer** | Shows an in-game timer above the global countdown timer, to track your current run's duration. |
+| **Crash Punishment** | Choose whether or not the punishment that crashes your game can be rolled. |
+| **Klaww Assist** | Adds 30 seconds to the countdown timer after each Klaww phase. |
+| **Fish Assist** | Adds 5 seconds to the countdown timer for each five-pound fish. |
 
-We do not understand route, but it is needed - otherwise game will crash. If you copy an existing navmesh, the route data is copied correctly. But since we don't understand it, for fully custom navmesh we can never have proper route data. Correct route data is essential if you want to take advantage of gap triangles (where enemies jump).
+⚠️ **SPOILER WARNING: Below has names of conditions!**
 
-You can make multiple enemies use the same navmesh. To do this, create the navmesh through code for the first actor, like in the example. And for the other actors, add a lump that tells the game to use another actor's navmesh. Reference is by aid. Example: `"nav-mesh-actor": ["uint32", 40000]`. Tip: You can do the same thing with paths, using the `path-actor` lump.
+### Difficulty Presets
 
-If the game crashes when you approach a custom navmesh, make sure you added `:custom-hacky? #t` to your custom navmesh definition. If that is there, then check if the actor has a path. It needs a path.
+| Preset | Start Time | Time Limit Multiplier | Cell | Orb | Fly | Toggles Off
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Simple** | 30 | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Ballons, Hang Time, Quick Time Event, Get a Grip |
+| **Complicated** | 30 | 1.2x | 30.0 | 1.0 | 10.0 | One Frame, Hang Time
+| **Esoteric** | 30 | 1.0x | 20.0 | 1.0 | 8.0 | None
+| **Unfathomable** | 10 | 0.8x | 20.0 | 1.0 | 4.0 | None
 
-If something is still unclear, please look at the code. I added a lot of comments.
+## Condition Index
 
-### Final Words
+<details>
+<summary><b>⚠️ Rules</b></summary>
 
-I am not an expert at decompiling, so my methods were not the most efficient. But with a lot of time, I managed to figure things out. There are probably people who could do this a lot better than me. Hopefully it will happen.
+| ID | Description | Explanation/Notes
+| :--- | :--- | :--- |
+| **GROUNDED** | DO NOT JUMP. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
+| **ANGER MANAGEMENT** | DO NOT PUNCH. | This only applies to punches. Ground pounds and yellow eco shots are allowed.
+| **DIE** | KILL HIM. KILL HIM NOW. | Jak must be killed.
+| **BLOODLUST** | KILL 6 LURKERS. |
+| **HITLSIT** | KILL 3 UNIQUE LURKER TYPES. |
+| **DOUBLE KILL** | KILL 2 LURKERS AT THE SAME TIME. |
+| **SNIPER** | KILL A LURKER FROM AT LEAST 70 METERS AWAY. | Be at least 70 meters from a lurker when it dies, by any means.
+| **BULL AND CHINA** | BREAK 5 CRATES. |
+| **CASH GRAB** | COLLECT 20 ORBS. |
+| **CELL PRESSURE** | COLLECT A POWER CELL. |
+| **BUZZER BEATER** | COLLECT 2 SCOUT FLIES. |
+| **FLOP THIS** | LURKERS MAY ONLY BE KILLED WITH GROUND POUNDS. | Jak's jump dive and Flut Flut's dive attack are the only means allowed.
+| **KEEP IT LOW** | DO NOT JUMP KICK. | Do not kick/spin in the air. Doing it on the ground is allowed.
+| **VENDETTA** | KILL A LURKER WITH RED ECO. |
+| **HANDS ON** | CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK. | Jak must make direct contact with the crate. Using eco, Flut Flut, explosions, or the zoomer breaks this rule.
+| **STEP 1** | STAY ALIVE. | Do not die.
+| **ONE FRAME** | DO A ONE-FRAME. | A one-frame is performed by spinning exactly 15 frames after jumping on a jump pad. This is toggled off for Simple and Complicated difficulties.
+| **SOCIAL DISTANCING** | DO NOT GET WITHIN 8 METERS OF A SCOUT FLY. |
+| **RED LIGHT** | DO NOT MOVE. |
+| **FOR BILLY** | PROTECT FARTHY'S SNACKS. DO NOT LEAVE BOGGY SWAMP. | You must complete the rats minigame, and also not leave Boggy Swamp.
+| **COLD FEET** | KEEP OFF THE ICE. |
+| **SPEED RACER** | REACH A SPEED OF 40 METERS PER SECOND. |
+| **QUICK MATHS** | ANSWER A MATH QUESTION CORRECTLY. |
+| **DON'T KNOW JAK** | ANSWER A TRIVIA QUESTION CORRECTLY. |
+| **GREEN-PILLED** | COLLECT 50 SMALL GREEN ECO PILLS. |
+| **BUTTON PUSHER** | PUSH A BUTTON. |
+| **LOYAL CUSTOMER** | BUY AN ORACLE CELL. |
+| **COOKED** | BURN JAK. | The fire pits in Rock Village do not send a burn event.
+| **SAGGING SAILS** | MISS 3 FIVE-POUND FISH. |
+| **SIDE TO SIDE** | DO NOT TOUCH THE MIDDLE PLATFORM. | Do not touch the middle platform of the three you jump on before the large platform.
+| **LANDLUBBER** | DO NOT TOUCH THE WATER. | Any contact with water breaks this rule.
+| **TOUCH GRASS** | DO THAT. |
+| **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
+| **QUICK TIME EVENT** | QUICKLY PRESS A FACE BUTTON. |
+| **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Spinning/kicking resets the progress.
 
-Also, I know my inspect method is not perfect. But it is very tedious to write such a thing, so I just included what we really need. And I think the nodes part could use a cleanup.
+</details>
+<details>
+<summary><b>⚠️ Complications</b></summary>
 
-I am happy if anyone finds this useful. But I have a request: If you learn more about navmeshes, especially things that would benefit other modders as well, please let me know. And maybe we will add it to this branch.
+| ID | Description | Explanation/Notes
+| :--- | :--- | :--- |
+| **BRITTLE BONES** | EVERY JUMP HAS A 10% CHANCE TO DAMAGE YOU. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
+| **ROTTEN EGGS** | ORBS KILL YOU. |
+| **ECO ALLERGY** | ECO DAMAGES YOU. |
+| **SIZEABLE CONTRIBUTIONS** | ROLLJUMPS COST 3 ORBS. | Each rolljump subtracts 3 orbs from your current count. Jak cannot rolljump if you cannot afford one.
+| **CUMBERSOME** | ORBS WEIGH JAK DOWN. | The more orbs you have, the slower Jak moves and the shorter rolljumps get.
+| **HEATING BALLOONS** | COOLING BALLOONS MELT YOU. |
+| **DROUGHT** | ALL WATER, LAVA, AND DARK ECO ARE GONE. |
+| **OHKO** | JAK IS LIMITED TO ONE HEALTH. |
+| **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | Currently this only works on open and purchased cells. Turning in tasks still rewards a cell.
+| **GLARE** | JAK FREEZES WHEN LURKERS SEE HIM. | When a lurker notices Jak, he freezes for exactly 3 seconds.
+| **DISASSOCIATE** | KILLING A LURKER DISMOUNTS FLUT FLUT. |
+| **BUS DRIVER** | ZOOMER EXPLODES IF TOO SLOW. | If you're on the zoomer and your speed goes below 20 meters per second, you explode.
+| **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | Currently, this only works on open and purchased cells. Turning in tasks still rewards a cell.
+| **HIDDEN TREASURE** | ORBS ARE INVISIBLE. |
+| **WINGS TIED** | YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT. |
+| **JAK RABBIT** | JUMP HEIGHTS ARE DOUBLED. |
+| **ECO RESERVE** | YELLOW ECO PAUSES TIMER. |
+| **SEEING RED** | RED ECO PAUSES TIMER. |
+| **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Currently, live clusters are not updated. They need to respawn to swap or swap back.
+| **BUTTER FINGERS** | JAK CANNOT GRAB LEDGES. |
+| **OVERCLOCK** | CITADEL DISCS ARE FASTER. | The large disc platforms in Citadel (pizzas) rotate faster.
+| **BAD PING** | YOU HAVE 120MS INPUT DELAY. | This is currently disabled until Zed releases his mod.
+| **INVISIBLE MAN** | JAK IS INVISIBLE. |
+| **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is. Going into the stance state mounts it again.
+| **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) are doubled.
+| **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
+| **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
+| **TWISTED** | A LATER RULE MUST BE BROKEN. | A twisted rule is chosen at random. You must *break* this rule. Rules are colored orange.
+| **VIBE CHECK** | I LIKE YA CUT, G | Jak gets smacked into the air and damaged.
+| **INCOME TAX** | TIMER INCREMENTS ARE HALVED. |
+| **MIRRORED** | THE WORLD IS MIRRORED. |
+| **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
+| **UNBREAKABLE** | SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO. | You will need to use either blue, yellow, or dark eco to break scout fly crates.
+| **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from 10 seconds; if it reaches 0, you die. Grabbing a ledge resets it.
 
-*~~Luminar Light*
+</details>
