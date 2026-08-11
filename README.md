@@ -53,7 +53,7 @@
 <details>
 <summary><b>⚠️ Rules</b></summary>
 
-| ID | Description | Explanation/Notes
+| Name | Description | Explanation/Notes
 | :--- | :--- | :--- |
 | **GROUNDED** | DO NOT JUMP. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
 | **ANGER MANAGEMENT** | DO NOT PUNCH. | This only applies to punches. Ground pounds and yellow eco shots are allowed.
@@ -95,7 +95,7 @@
 <details>
 <summary><b>⚠️ Complications</b></summary>
 
-| ID | Description | Explanation/Notes
+| Name | Description | Explanation/Notes
 | :--- | :--- | :--- |
 | **BRITTLE BONES** | EVERY JUMP HAS A 10% CHANCE TO DAMAGE YOU. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
 | **ROTTEN EGGS** | ORBS KILL YOU. |
