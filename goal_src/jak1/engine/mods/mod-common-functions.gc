@@ -1093,7 +1093,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-rotten-eggs) "ORBS KILL YOU.")
     ((eq? id 'complication-eco-allergy) "ECO DAMAGES YOU.")
     ((eq? id 'rule-keep-it-low) "DO NOT JUMP KICK.")
-    ((eq? id 'complication-sizeable) "ROLLJUMPS COST 3 ORBS.")
+    ((eq? id 'complication-sizeable) "ROLLJUMPS COST 2 ORBS.")
     ((eq? id 'complication-cumbersome) "ORBS WEIGH JAK DOWN.")
     ((eq? id 'complication-heating-balloons) "COOLING BALLOONS MELT YOU.")
     ((eq? id 'complication-drought) "ALL WATER, LAVA, AND DARK ECO ARE GONE.")
@@ -1150,7 +1150,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING.")
     ((eq? id 'complication-unbreakable) "SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO.")
     ((eq? id 'complication-get-a-grip)
-     (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 10))) (seconds 1))))
+     (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 12))) (seconds 1))))
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
     (else "NO DESCRIPTION AVAILABLE.")))
 
@@ -1673,10 +1673,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-red-light ()
   (when (mod-rule-active? 'rule-red-light)
-    (when (or (and (not (target-on-racer?))
-                   (or (cpad-pressed? 0 circle)
-                       (cpad-pressed? 0 square)
-                       (cpad-pressed? 0 x)))
+    (when (or (and (not (target-on-racer?)) (or (cpad-pressed? 0 circle) (cpad-pressed? 0 square) (cpad-pressed? 0 x)))
               (cpad-pressed? 0 l1)
               (cpad-pressed? 0 r1)
               (!= (-> *cpad-list* cpads 0 stick0-speed) 0.0)
@@ -1999,14 +1996,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! *global-countdown-active?* #f)
   (set! *global-countdown-lost?* #f)
   (none))
-
-;; (defun mod-rule-random-id ()
-;;   (mod-rule-id-from-index (knuth-rand-int-range 0 *mod-rule-id-count*)))
-
-;; (defun current-level-name ()
-;;   (and *target*
-;;     (-> *target* current-level)
-;;     (-> *target* current-level name)))
 
 (defun mod-format-time-frame ((tf time-frame) (decimal-digits int) (hours-mode symbol))
   (let* ((ticks (max 0 (the int tf)))
@@ -2919,7 +2908,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-sizeable ()
   (if (mod-rule-active? 'complication-sizeable)
-    (if (>= (current-orb-count) 3.0) (begin   (set! (-> *game-info* money) (- (current-orb-count) 3.0))   #t) #f)
+    (if (>= (current-orb-count) 2.0) (begin   (set! (-> *game-info* money) (- (current-orb-count) 2.0))   #t) #f)
     #t))
 
 (defun mod-rule-trigger-ohko ()
@@ -3132,7 +3121,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-hang-time)
            (mod-rule-trigger-red-light)
            (when (mod-rule-active? 'complication-get-a-grip)
-             (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 10)))
+             (when (>= (- (current-time) *get-a-grip-last-grab*) (apply-time-limit-multiplier (seconds 12)))
                (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))
                (set! *get-a-grip-last-grab* (current-time))))
            (when (mod-rule-active? 'complication-cumbersome)
@@ -3217,22 +3206,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   dst)
 
 (defun draw-qte-button ((arg0 dma-buffer) (x int) (y int))
-  (let ((button-text
-          (case *qte-target-button*
-            ((0) (lookup-text! *common-text* (text-id pad-triangle) #f))
-            ((1) (lookup-text! *common-text* (text-id pad-circle) #f))
-            ((2) (lookup-text! *common-text* (text-id pad-x) #f))
-            ((3) (lookup-text! *common-text* (text-id pad-square) #f))
-            (else #f))))
+  (let ((button-text (case *qte-target-button*
+                       ((0) (lookup-text! *common-text* (text-id pad-triangle) #f))
+                       ((1) (lookup-text! *common-text* (text-id pad-circle) #f))
+                       ((2) (lookup-text! *common-text* (text-id pad-x) #f))
+                       ((3) (lookup-text! *common-text* (text-id pad-square) #f))
+                       (else #f))))
     (when button-text
-      (draw-string-xy-scaled
-        (the string button-text)
-        arg0
-        x
-        y
-        (font-color green)
-        (font-flags shadow kerning large)
-        0.65))))
+      (draw-string-xy-scaled (the string button-text) arg0 x y (font-color green) (font-flags shadow kerning large) 0.65))))
 
 (defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
   (let ((idx (mod-rule-find-substr line highlight 0))
@@ -3421,7 +3402,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
       (-! row 2)
       (let* ((elapsed (- (current-time) *get-a-grip-last-grab*))
-             (time-left (max 0 (- (apply-time-limit-multiplier (seconds 10)) elapsed))))
+             (time-left (max 0 (- (apply-time-limit-multiplier (seconds 12)) elapsed))))
         (draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
                                buf
                                66
@@ -3740,7 +3721,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-pending-times-save-value ()
-  ;; Three 10-bit decisecond durations fit in one 32-bit save field.
   (let ((result (the uint 0))
         (slot 0))
     (while (< slot *mod-rule-slot-count*)

@@ -438,13 +438,13 @@
        ;; increment big health if needed
        (when (and (>= (-> this eco-pill) (-> *FACT-bank* eco-pill-max-default))
                   (< (-> this health) (-> this health-max))
-                  (not 
-                  ;; (or 
-                  (mod-rule-timed-punishment-active? 'punishment-ohko)
-                          ;;  (mod-rule-active? 'complication-ohko)
-                          ;;  (mod-rule-active? 'rule-survivor)
-                           ))
-                          ;;  )
+                  (not
+                    ;; (or 
+                    (mod-rule-timed-punishment-active? 'punishment-ohko)
+                    ;;  (mod-rule-active? 'complication-ohko)
+                    ;;  (mod-rule-active? 'rule-survivor)
+                    ))
+         ;;  )
          ;; decrease eco pills
          (set! (-> this eco-pill) (- (-> this eco-pill) (-> *FACT-bank* eco-pill-max-default)))
          ;; get a big health.

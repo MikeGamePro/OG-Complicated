@@ -46,7 +46,7 @@
 | **Simple** | 30 | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Ballons, Hang Time, Quick Time Event, Get a Grip |
 | **Complicated** | 30 | 1.2x | 30.0 | 1.0 | 10.0 | One Frame, Hang Time
 | **Esoteric** | 30 | 1.0x | 20.0 | 1.0 | 8.0 | None
-| **Unfathomable** | 10 | 0.8x | 20.0 | 1.0 | 4.0 | None
+| **Unfathomable** | 10 | 0.8x | 20.0 | 1.0 | 5.0 | None
 
 ## Condition Index
 
@@ -100,7 +100,7 @@
 | **BRITTLE BONES** | EVERY JUMP HAS A 10% CHANCE TO DAMAGE YOU. | Anything that gains height is considered a jump. Yes, uppercuts and rolljumps count.
 | **ROTTEN EGGS** | ORBS KILL YOU. |
 | **ECO ALLERGY** | ECO DAMAGES YOU. | Collecting eco deals damage.
-| **SIZEABLE CONTRIBUTIONS** | ROLLJUMPS COST 3 ORBS. | Each rolljump subtracts 3 orbs from your current count. Jak cannot rolljump if you cannot afford one.
+| **SIZEABLE CONTRIBUTIONS** | ROLLJUMPS COST 2 ORBS. | Each rolljump subtracts 2 orbs from your current count. Jak cannot rolljump if you cannot afford one.
 | **CUMBERSOME** | ORBS WEIGH JAK DOWN. | The more orbs you have, the slower Jak moves and the shorter rolljumps get.
 | **HEATING BALLOONS** | COOLING BALLOONS MELT YOU. |
 | **DROUGHT** | ALL WATER, LAVA, AND DARK ECO ARE GONE. |

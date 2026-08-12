@@ -455,7 +455,7 @@
   (when *complicated-settings*
     (set! (-> *complicated-settings* cell-increment) 20.0)
     (set! (-> *complicated-settings* orb-increment) 1.0)
-    (set! (-> *complicated-settings* fly-increment) 4.0)
+    (set! (-> *complicated-settings* fly-increment) 5.0)
     (set! (-> *complicated-settings* countdown-start-seconds) 10.0)
     (set! (-> *complicated-settings* time-limit-multiplier) 0.8)
     (set! (-> *complicated-settings* rule-one-frame?) #t)
