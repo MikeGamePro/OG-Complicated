@@ -1106,6 +1106,7 @@
       0)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ((-> self state-hook))
       (when (and (not (logtest? (-> self water flags) (water-flags wt10))) (time-elapsed? (-> self water wade-time) (seconds 0.05)))
         (if (logtest? (-> self water flags) (water-flags wt11)) (go target-swim-stance) (go target-stance)))
@@ -1135,6 +1136,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ((-> self state-hook))
       (when (and (not (logtest? (-> self water flags) (water-flags wt10))) (time-elapsed? (-> self water wade-time) (seconds 0.1)))
         (if (logtest? (-> self water flags) (water-flags wt11)) (go target-swim-stance) (go target-stance)))
@@ -1150,6 +1152,7 @@
       (if (can-hands? #t) (go target-running-attack)))
   :code
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (let ((gp-0 105)
             (f30-0 0.0))
         (let ((v1-2 (ja-group)))
@@ -1281,6 +1284,7 @@
         (set! (-> self control override-quat-alpha) 0.0)))
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ((-> self state-hook))
       (if (and (logtest? (-> self control status) (cshape-moving-flags onsurf))
                (not (logtest? (-> self control status) (cshape-moving-flags on-water))))
@@ -1301,6 +1305,7 @@
       (target-swim-tilt (the-as float 0.0) (the-as float 2.0) (the-as float 0.0) (the-as float 1.0)))
   :code
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (let ((v1-2 (ja-group)))
         (cond
           ((or (= v1-2 eichar-swim-up-ja) (= v1-2 eichar-swim-down-to-up-ja))
@@ -1338,6 +1343,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ;; (mod-rule-trigger-failure 'rule-red-light)
       ((-> self state-hook))
       (if (and (logtest? (-> self control status) (cshape-moving-flags onsurf))
@@ -1359,6 +1365,7 @@
       (target-swim-tilt (the-as float 0.0) (the-as float 2.0) (the-as float 0.0) (the-as float 1.0)))
   :code
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (let ((v1-2 (ja-group)))
         (cond
           ((or (= v1-2 eichar-swim-up-ja) (= v1-2 eichar-swim-down-to-up-ja) (= v1-2 eichar-swim-up-to-stance-ja))
@@ -1420,6 +1427,7 @@
         (set! (-> self control override-quat-alpha) 0.0)))
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       ;; (mod-rule-trigger-failure 'rule-red-light)
       (if (time-elapsed? (-> self water swim-time) (seconds 0.5)) (go target-stance))
       (cond
@@ -1433,6 +1441,7 @@
            (target-swim-tilt (the-as float 0.0) (the-as float 2.0) (the-as float -1.0) (the-as float 1.0))))))
   :code
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (let ((gp-0 60)
             (s5-0 3000)
             (f30-0 0.0))
@@ -1506,6 +1515,7 @@
         exit)
   :trans
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (if (and (cpad-pressed? (-> self control cpad number) x)
                (not (logtest? (-> self state-flags) (state-flags prevent-jump)))
                (not (logtest? (-> self water flag) (water-flag head-under-water bouncing))))
@@ -1519,6 +1529,7 @@
       ((-> target-swim-down trans)))
   :code
     (behavior ()
+      (mod-rule-trigger-failure 'rule-landlubber)
       (ja-channel-push! 1 (seconds 0.1))
       (let ((f30-0 1.0))
         (let ((gp-0 #t))

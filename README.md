@@ -85,7 +85,7 @@
 | **COOKED** | BURN JAK. | The fire pits in Rock Village do *not* send a burn event.
 | **SAGGING SAILS** | MISS 3 FIVE-POUND FISH. |
 | **SIDE TO SIDE** | DO NOT TOUCH THE MIDDLE PLATFORM. | During the Klaww fight, do not touch the middle of the three small platforms you jump on.
-| **LANDLUBBER** | DO NOT TOUCH THE WATER. | Any contact with water breaks this rule.
+| **LANDLUBBER** | STAY OUT OF THE WATER, MUD, AND TAR. | You can still drive over water on the zoomer.
 | **TOUCH GRASS** | DO THAT. |
 | **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
 | **QUICK TIME EVENT** | QUICKLY PRESS A SPECIFIC FACE BUTTON. | A random face button (X, Circle, Triangle or Square) is chosen. You must press it before time runs out.

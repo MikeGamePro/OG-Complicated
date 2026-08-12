@@ -401,6 +401,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *get-a-grip-last-grab* 0)
 
+(define *mod-rule-bus-driver-activate-time* 0)
+
+(define *mod-rule-bus-driver-grace-period* (seconds 2))
+
 (define *math-quiz-val1* 0)
 
 (define *math-quiz-val2* 0)
@@ -1131,7 +1135,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-joyride) "HEY! THERE\c12S THE FLUT-FLUT!")
     ((eq? id 'rule-sagging-sails) "MISS 3 FIVE-POUND FISH.")
     ((eq? id 'rule-side-to-side) "DO NOT TOUCH THE MIDDLE PLATFORM.")
-    ((eq? id 'rule-landlubber) "DO NOT TOUCH THE WATER.")
+    ((eq? id 'rule-landlubber) "STAY OUT OF THE WATER, MUD, AND TAR.")
     ((eq? id 'complication-double-aphids) "DOUBLE THE APHIDS.")
     ((eq? id 'complication-invert) "CONTROLS ARE INVERTED.")
     ((eq? id 'complication-loose-pockets) "BONKING OR TAKING DAMAGE DROPS 20 ORBS.")
@@ -1851,12 +1855,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'rule-qte) (set! *qte-target-button* (mod-rand-int-range 0 4)))
-    ((eq? id 'complication-twisted) (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (+ 1 (mod-rand-int-range 1 4)))))
+    ((eq? id 'complication-twisted) (set! *mod-rule-twist-pending-count* (+ *rules-rolled* (mod-rand-int-range 2 4))))
     ((eq? id 'rule-hitlist) (dotimes (slot 3) (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
     ((eq? id 'rule-double-kill) (set! *mod-rule-last-kill-time* 0))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
     ((eq? id 'rule-hang-time) (set! *mod-rule-hang-time-air-start* (current-time)))
     ((eq? id 'complication-get-a-grip) (set! *get-a-grip-last-grab* (current-time)))
+    ((eq? id 'complication-bus-driver) (set! *mod-rule-bus-driver-activate-time* (current-time)))
     ((eq? id 'complication-vibe-check)
      (play-custom-sfx "I like ya cut g.mp3" 30.0)
      (process-spawn-function process
@@ -2208,8 +2213,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (or (eq? level 'beach)
       (eq? level 'village1)
       (eq? level 'training)
+      (eq? level 'misty)
       (eq? level 'jungle)
       (eq? level 'village2)
+      (eq? level 'swamp)
       (eq? level 'sunken)
       (eq? level 'sunkenb)))
 
@@ -2704,7 +2711,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")
-    ((eq? punishment 'punishment-ohko) "ONE-HIT DEATH FOR 2 MINUTES")
+    ((eq? punishment 'punishment-ohko) "ANY DAMAGE OR BONK KILLS FOR 2 MINUTES")
     (else "NONE")))
 
 (defun mod-rule-timed-punishment-name ((punishment symbol))
@@ -2971,7 +2978,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-trigger-bus-driver ()
-  (when (mod-rule-active? 'complication-bus-driver)
+  (when (and (mod-rule-active? 'complication-bus-driver)
+             (>= (- (current-time) *mod-rule-bus-driver-activate-time*) *mod-rule-bus-driver-grace-period*))
     (when (not (movie?))
       (target-attack-up *target* 'attack 'explode)))
   (none))
@@ -3099,6 +3107,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! (-> *mod-rule-timed-punishment-next-ticks* slot) (+ (-> *mod-rule-timed-punishment-next-ticks* slot) elapsed))))
   (set! *mod-rule-hang-time-air-start* (+ *mod-rule-hang-time-air-start* elapsed))
   (set! *get-a-grip-last-grab* (+ *get-a-grip-last-grab* elapsed))
+  (set! *mod-rule-bus-driver-activate-time* (+ *mod-rule-bus-driver-activate-time* elapsed))
   (none))
 
 (defbehavior mod-rule-manager-proc process ()
