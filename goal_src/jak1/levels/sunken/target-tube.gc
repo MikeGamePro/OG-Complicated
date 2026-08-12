@@ -507,7 +507,7 @@
         event)
   :enter
     (behavior ((arg0 symbol) (arg1 attack-info))
-      (mod-rule-trigger-loose-pockets)
+      (mod-rule-on-damage)
       (send-event (handle->process (-> self tube tube))
                   'update
                   (-> self tube centertube)

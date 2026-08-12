@@ -472,7 +472,7 @@
         event)
   :enter
     (behavior ((arg0 float) (arg1 symbol))
-      (mod-rule-trigger-loose-pockets)
+      (mod-rule-on-damage)
       (sound-play "smack-surface")
       (cpad-set-buzz! (-> *cpad-list* cpads 0) 1 255 (seconds 0.5))
       (set! (-> self racer heavy) arg1)
@@ -543,7 +543,7 @@
   :event target-generic-event-handler
   :enter
     (behavior ((arg0 handle) (arg1 attack-info))
-      (mod-rule-trigger-loose-pockets)
+      (mod-rule-on-damage)
       (let ((v1-0 (-> self attack-info)))
         (set! (-> v1-0 attacker) arg0)
         (set! (-> v1-0 mode) 'generic)

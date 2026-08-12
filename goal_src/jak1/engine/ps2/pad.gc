@@ -17,6 +17,8 @@
 
 (define-extern mod-rule-active? (function symbol symbol))
 
+(define-extern mod-rule-timed-punishment-active? (function symbol symbol))
+
 (#when PC_PORT
   ;;;;;;;;;;;;;;;;;;;;;;
   ;; opengoal territory override
@@ -532,14 +534,21 @@
              ;; check if controller is a valid dualshock 2
              ((= (shr (-> pad status) 4) 7)
               ;; invert analogs if mirrored mode. trust me, you'll need this.
-              (#when PC_PORT
+(#when PC_PORT
                 (let ((invert-comp? (mod-rule-active? 'complication-invert))
-                      (mirror-cheat? (or (pc-cheats? (-> *pc-settings* cheats) mirror) *mod-mirror-active?*)))
+                      (mirror-cheat? (or (pc-cheats? (-> *pc-settings* cheats) mirror) *mod-mirror-active?*))
+                      (camera-punish? (mod-rule-timed-punishment-active? 'punishment-camera)))
+                  ;; base invert/mirror logic for x-axis (both sticks)
                   (when (or (and invert-comp? (not mirror-cheat?)) (and (not invert-comp?) mirror-cheat?))
                     (set! (-> pad leftx) (- 255 (-> pad leftx)))
                     (set! (-> pad rightx) (- 255 (-> pad rightx))))
+                  ;; base invert logic for y (both sticks)
                   (when invert-comp?
                     (set! (-> pad lefty) (- 255 (-> pad lefty)))
+                    (set! (-> pad righty) (- 255 (-> pad righty))))
+                  ;; camera punishment
+                  (when camera-punish?
+                    (set! (-> pad rightx) (- 255 (-> pad rightx)))
                     (set! (-> pad righty) (- 255 (-> pad righty))))))
               ;; compute speed and direction, with deadband.
               (let ((f30-0 (* 0.0078125 (the float (+ (-> pad leftx) -128))))

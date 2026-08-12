@@ -220,7 +220,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'punishment-crash
        'punishment-delay
        'punishment-blind
-       'punishment-iframes))
+       'punishment-iframes
+       'punishment-camera
+       'punishment-ohko))
 
 (define *mod-rule-punishment-id-count* (length *mod-rule-punishment-ids*))
 
@@ -1422,6 +1424,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge) (seconds 240))
     ((eq? punishment 'punishment-delay) (seconds 60))
     ((eq? punishment 'punishment-iframes) (seconds 180))
+    ((eq? punishment 'punishment-camera) (seconds 120))
+    ((eq? punishment 'punishment-ohko) (seconds 120))
     (else 0)))
 
 (defun mod-rule-find-timed-punishment-slot ((punishment symbol))
@@ -1794,6 +1798,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-iframes)))))
+    (when (mod-rule-punishment-rollable? 'punishment-camera)
+      (let ((w 0)) ;; disabled
+        (when (> w 0)
+          (+! running-total w)
+          (when (< (mod-rand-punish-int-range 0 running-total) w)
+            (set! selected 'punishment-camera)))))
+    (when (mod-rule-punishment-rollable? 'punishment-ohko)
+      (let ((w 100))
+        (when (> w 0)
+          (+! running-total w)
+          (when (< (mod-rand-punish-int-range 0 running-total) w)
+            (set! selected 'punishment-ohko)))))
     selected))
 
 (defun play-custom-sfx ((filename string) (base-volume float))
@@ -2698,6 +2714,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
+    ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")
+    ((eq? punishment 'punishment-ohko) "ONE-HIT DEATH FOR 2 MINUTES")
     (else "NONE")))
 
 (defun mod-rule-timed-punishment-name ((punishment symbol))
@@ -2707,6 +2725,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge) "LEDGE GRAB")
     ((eq? punishment 'punishment-delay) "INPUT DELAY")
     ((eq? punishment 'punishment-iframes) "I-FRAMES")
+    ((eq? punishment 'punishment-camera) "CAMERA")
+    ((eq? punishment 'punishment-ohko) "OHKO")
     (else (mod-rule-punishment-name punishment))))
 
 (defun mod-rule-apply-extra-rule-punishment ((failed-slot int))
@@ -2745,6 +2765,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-trip) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-edge) (none) (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-camera) (none) (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-ohko) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-delay) (input-delay-enable! #t 0.2) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-iframes)
      (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0))
@@ -2976,6 +2998,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (mod-rule-active? 'rule-hang-time)
     (let ((slot (mod-rule-find-active-slot 'rule-hang-time))) (when (>= slot 0) (set! (-> *mod-rule-slot-progress* slot) 0))))
   (set! *mod-rule-hang-time-air-start* (current-time))
+  (none))
+
+(defun mod-rule-on-damage ()
+  (mod-rule-trigger-loose-pockets)
+  (if (mod-rule-timed-punishment-active? 'punishment-ohko)
+    (pickup-collectable! (-> *target* fact) (pickup-type eco-green) (the-as float -1000.0) (the-as handle #f)))
   (none))
 
 (defun global-countdown-paused? ()

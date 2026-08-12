@@ -9,7 +9,7 @@
 ;; DECOMP BEGINS
 (define *last-launch-time* 0)
 
-(define-extern mod-rule-trigger-loose-pockets (function none))
+(define-extern mod-rule-on-damage (function none))
 
 (define-extern mod-rule-trigger-get-a-grip (function none))
 
@@ -1625,7 +1625,7 @@
   :event target-standard-event-handler
   :enter
     (behavior ((arg0 float))
-      (mod-rule-trigger-loose-pockets)
+      (mod-rule-on-damage)
       (set! (-> self control unknown-dword31) 0)
       (set! (-> self control last-attack-end-time) 0)
       (set-forward-vel (the-as float 0.0))
