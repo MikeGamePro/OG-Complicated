@@ -287,6 +287,7 @@
   "progress-draw.o"
   "progress.o"
   "progress-pc.o" ;; added
+  "mod-banks.o" ;; added
   "credits.o"
   "projectiles.o"
   "ocean.o"

@@ -10,17 +10,13 @@
 
 (define-extern mod-game-beaten-resume-from-save (function int none))
 
-(define-extern *mod-game-beaten?* (symbol))
-
 (define-extern global-countdown-reset (function none))
 
 (define-extern global-countdown-freeze-for-game-beaten (function none))
 
-(define-extern *global-countdown-remaining-time* int)
+(define-extern mod-rule-finalize-run-stats! (function none))
 
-(define-extern *global-countup-timer* int)
-
-(define-extern mod-calc-run-score (function float))
+(define-extern mod-game-beaten-set! (function symbol none))
 
 (defmethod ease-loc-t ((this robotboss))
   (parameter-ease-sin-clamp (-> this loc-t)))
@@ -313,10 +309,8 @@
     (behavior ((proc process) (argc int) (message symbol) (block event-message-block))
       (case message
         (('white-eco-picked-up)
-         (set! *mod-game-beaten?* #t)
-         (set! *final-remaining-time* *global-countdown-remaining-time*)
-         (set! *final-time* *global-countup-timer*)
-         (set! *final-score* (the int (mod-calc-run-score)))
+         (mod-game-beaten-set! #t)
+         (mod-rule-finalize-run-stats!)
          ;; mod: game is beaten, stop the countdown/rules for this file right now.
          (global-countdown-freeze-for-game-beaten)
          (close-specific-task! (game-task finalboss-movies) (task-status unknown))

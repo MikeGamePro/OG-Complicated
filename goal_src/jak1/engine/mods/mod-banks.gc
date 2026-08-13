@@ -1,0 +1,79 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; name: mod-banks.gc
+;; name in dgo: mod-banks
+;; dgos: TODO
+
+#|
+ This file contains ONLY the deftype declarations for the mod's bank
+ structures (mod-countdown-bank, mod-rule-context-bank, mod-rng-bank,
+ mod-quiz-bank, mod-stats-bank, etc). No instances, no logic.
+
+ It exists so any file that needs to read/write fields on a bank (e.g.
+ credits.gc pulling *MOD-stats-bank* rules-broken) can (require
+ "engine/mods/mod-banks.gc") and get the full field layout, instead of
+ just a name via declare-type. declare-type alone tells the compiler a
+ type exists but not what's in it, so field access (-> *bank* field)
+ will fail to compile without this file.
+
+ The actual bank instances (*MOD-countdown-bank*, *MOD-stats-bank*, etc)
+ and their initial values still live in mod-common-functions.gc. This
+ file should stay type-only.
+
+ When you add a new bank, add its deftype here first, then define/init
+ the instance in mod-common-functions.gc as usual. Any other file that
+ needs to read that bank's fields should (require "engine/mods/mod-banks.gc").
+|#
+
+(deftype mod-countdown-bank (structure)
+  ((active?                  symbol)
+   (lost?                    symbol)
+   (remaining-time           int32)
+   (last-update-time         time-frame)
+   (last-warn-second         int32)
+   (saved-remaining-time     int32)
+   (countup-timer            int32)
+   (countup-last-update-time time-frame)
+   (countup-saved-time       int32)))
+
+(deftype mod-rule-context-bank (structure)
+  ((last-update-time         time-frame)
+   (current-slot              int32)
+   (last-reverted-cell-task   int32)
+   (last-reverted-cell-until  int32)
+   (last-outcome              symbol)
+   (last-kill-time            time-frame)
+   (mean-look-clear-time      time-frame)
+   (qte-target-button         int32)
+   (hang-time-air-start       time-frame)
+   (game-beaten?              symbol)
+   (twist-pending-count       int32)
+   (twist-marked-slot         int32)
+   (get-a-grip-last-grab      time-frame)
+   (bus-driver-activate-time  time-frame)
+   (bus-driver-grace-period   time-frame)))
+
+(deftype mod-rng-bank (structure)
+  ((content-state uint)
+   (punish-state  uint)
+   (seed-display  uint)))
+
+(deftype mod-quiz-bank (structure)
+  ((math-val1                   int32)
+   (math-val2                   int32)
+   (math-op                     int32) ;; + - *
+   (math-answer                 int32)
+   (math-current-guess          int32)
+   (trivia-current-question     int32)
+   (trivia-current-guess        int32)
+   (trivia-last-tracked-question int32)))
+
+(deftype mod-stats-bank (structure)
+  ((rules-rolled          int32)
+   (rules-broken           int32)
+   (rules-followed         int32)
+   (complications-rolled   int32)
+   (final-remaining-time   int32)
+   (final-time             int32)
+   (final-score            int32)))

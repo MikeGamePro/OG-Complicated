@@ -2,21 +2,10 @@
 (in-package goal)
 (bundles "ENGINE.CGO" "GAME.CGO")
 (require "engine/ui/text.gc")
+(require "engine/mods/mod-banks.gc")
 
 ;; DECOMP BEGINS
-(define-extern *rules-broken* int)
-
-(define-extern *rules-rolled* int)
-
-(define-extern *rules-followed* int)
-
-(define-extern *complications-rolled* int)
-
-(define-extern *final-remaining-time* int)
-
-(define-extern *final-time* int)
-
-(define-extern *final-score* int)
+(define-extern *MOD-stats-bank* mod-stats-bank)
 
 (define-extern mod-format-time-frame (function time-frame int symbol string))
 
@@ -81,20 +70,20 @@
   (clear *tmp-cred-str*)
   (case line-num
     ((0) (format *tmp-cred-str* "~33LFINAL TIME"))
-    ((1) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-time* 3 'always)))
+    ((1) (format *tmp-cred-str* "~S" (mod-format-time-frame (-> *MOD-stats-bank* final-time) 3 'always)))
     ((3) (format *tmp-cred-str* "~33LFINAL SCORE"))
-    ((4) (format *tmp-cred-str* "~D" *final-score*))
+    ((4) (format *tmp-cred-str* "~D" (-> *MOD-stats-bank* final-score)))
     ((6) (format *tmp-cred-str* "~33LA COMPLICATED MOD"))
     ((7) (format *tmp-cred-str* "~33LBY"))
     ((8) (format *tmp-cred-str* "MIKEGAMEPRO"))
     ((10) (format *tmp-cred-str* "~33LRULES BROKEN"))
-    ((11) (format *tmp-cred-str* "~D" *rules-broken*))
+    ((11) (format *tmp-cred-str* "~D" (-> *MOD-stats-bank* rules-broken)))
     ((13) (format *tmp-cred-str* "~33LRULES FOLLOWED"))
-    ((14) (format *tmp-cred-str* "~D" *rules-followed*))
+    ((14) (format *tmp-cred-str* "~D" (-> *MOD-stats-bank* rules-followed)))
     ((16) (format *tmp-cred-str* "~33LCOMPLICATIONS ENDURED"))
-    ((17) (format *tmp-cred-str* "~D" *complications-rolled*))
+    ((17) (format *tmp-cred-str* "~D" (-> *MOD-stats-bank* complications-rolled)))
     ((19) (format *tmp-cred-str* "~33LTIME REMAINING"))
-    ((20) (format *tmp-cred-str* "~S" (mod-format-time-frame *final-remaining-time* 3 'always)))
+    ((20) (format *tmp-cred-str* "~S" (mod-format-time-frame (-> *MOD-stats-bank* final-remaining-time) 3 'always)))
     ((22) (format *tmp-cred-str* "JAK AND DAXTER:"))
     ((23) (format *tmp-cred-str* "THE PRECURSOR LEGACY"))
     (else (return (the-as string #f))))

@@ -33733,6 +33733,15 @@
     plunger-lurker-plunge)
   )
 
+(deftype mod-stats-bank (structure)
+  ((rules-rolled          int32)
+   (rules-broken           int32)
+   (rules-followed         int32)
+   (complications-rolled   int32)
+   (final-remaining-time   int32)
+   (final-time             int32)
+   (final-score            int32)))
+
 (deftype flying-lurker (process-drawable)
   ((curve-position    float          :offset-assert 176)
    (speed             float          :offset-assert 180)
