@@ -330,7 +330,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
 
-;; test seed
 (define *MOD-rng-bank* (new 'global 'mod-rng-bank))
 
 (set! (-> *MOD-rng-bank* content-state) (the uint 1))
@@ -1859,7 +1858,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-reapply-slot-visual-effect ((id symbol))
   (cond
     ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #t))
-    ((eq? id 'rule-hidden-treasure) (refresh-money-actors))
+    ((eq? id 'complication-hidden-treasure) (refresh-money-actors))
     ((eq? id 'complication-cumbersome) (orb-weight-apply!))
     ((eq? id 'complication-invisible-man)
      (target-mesh-invis-set! #t)
@@ -2032,11 +2031,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* last-kill-time) 0)
   (set! (-> *MOD-rule-context-bank* twist-pending-count) -1)
   (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
+  (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
+  (set! (-> *MOD-rule-context-bank* qte-target-button) 0)
+  (set! (-> *MOD-rule-context-bank* hang-time-air-start) 0)
+  (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) 0)
+  (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) 0)
+  (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
+  (set! (-> *MOD-rule-context-bank* last-reverted-cell-task) 0)
+  (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) 0)
   (none))
 
 (defun mod-rules-reset ()
   (mod-rules-reset-core)
-  ;; a fresh run means a fresh set of stats
   (mod-stats-reset!)
   (none))
 
@@ -2224,7 +2230,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (eq? level 'sunkenb)
       (eq? level 'snow)
       (eq? level 'maincave)
-      (eq? level 'robocave)))
+      (eq? level 'robocave)
+      (or (string= (current-checkpoint-name) "citadel-start")
+          (string= (current-checkpoint-name) "citadel-launch-start")
+          (string= (current-checkpoint-name) "citadel-launch-end"))))
 
 (defun sole-zoomer-level? ((level symbol))
   (or (string= (current-checkpoint-name) "firecanyon-start")
@@ -2373,7 +2382,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
              ((eq? id 'complication-glare) 8)
              ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
-             (else 7)))
+             (else 8)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 7))
           ((eq? id 'rule-double-kill)
            (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
