@@ -459,7 +459,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHAT DO KNOTS MEASURE?"
        "WHAT COLOR IS THE CROSS ON FINLAND\c12S FLAG?"
        "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
-       "ACROPHOBIA IS THE FEAR OF WHAT?"))
+       "ACROPHOBIA IS THE FEAR OF WHAT?"
+       "HOW MANY TIMES HAVE YOU DIED THIS RUN?"
+       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
+       ))
 
 (define *trivia-choices*
   (new 'static
@@ -633,22 +636,31 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
+(define *trivia-dynamic-seed* 0)
+
 (defun mod-rule-clear-trivia-used ()
   (let ((i 0)) (while (< i (length *trivia-questions*)) (set! (-> *trivia-questions-used* i) #f) (+! i 1)))
   (none))
+
+(defun mod-rule-trivia-question-valid? ((idx int))
+  (cond
+    ((= idx 41) (> *rules-broken* 0))
+    (else #t)))
 
 (defun mod-rule-trivia-pick-question ()
   (let ((count (length *trivia-questions*))
         (all-used? #t)
         (i 0))
     (while (< i count)
-      (when (not (-> *trivia-questions-used* i))
+      (when (and (not (-> *trivia-questions-used* i))
+                 (mod-rule-trivia-question-valid? i))
         (set! all-used? #f))
       (+! i 1))
     (when all-used?
       (mod-rule-clear-trivia-used))
     (let ((idx (mod-rand-int-range 0 count)))
-      (while (-> *trivia-questions-used* idx)
+      (while (or (-> *trivia-questions-used* idx)
+                 (not (mod-rule-trivia-question-valid? idx)))
         (set! idx (mod-rand-int-range 0 count)))
       (set! (-> *trivia-questions-used* idx) #t)
       idx)))
@@ -1870,7 +1882,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (if (and (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) (target-on-racer?))
            (target-attack-up *target* 'attack 'explode)
            (send-event *target* 'attack #f (static-attack-info ((shove-back (meters 999)) (shove-up (meters 20)))))))))
-    ((eq? id 'rule-trivia) (set! *trivia-current-question* (mod-rule-trivia-pick-question)) (set! *trivia-current-guess* -1))
+    ((eq? id 'rule-trivia)
+     (set! *trivia-current-question* (mod-rule-trivia-pick-question))
+     (set! *trivia-current-guess* -1)
+     (set! *trivia-dynamic-seed* (mod-rand-int-range 0 4096)))
     ((eq? id 'rule-math-quiz)
      (set! *math-quiz-op* (mod-rand-int-range 0 3))
      (let ((min-val (if (= *math-quiz-op* 2) 2 10))
@@ -3011,10 +3026,48 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *trivia-shuffle-map* (new 'static 'boxed-array :type int32 0 1 2 3))
 
+(define *trivia-dynamic-str* (new 'global 'string 16 (the-as string #f)))
+
+(defun trivia-dynamic-dedup ((val int) (answer int) (other1 int) (other2 int) (step int))
+  (while (or (= val answer) (= val other1) (= val other2))
+    (set! val (+ val step)))
+  val)
+
+(defun trivia-dynamic-delta ((base int) (mag int) (sign int))
+  (if (= sign 0) (if (>= (- base mag) 0) (- base mag) (+ base mag)) (+ base mag)))
+
+(defun trivia-dynamic-offset ((base int) (seed int) (shift int) (step int) (count int))
+  (let* ((bits (shr seed shift))
+         (mag (* step (+ 1 (mod (logand bits 7) count))))
+         (sign (logand (shr bits 3) 1)))
+    (trivia-dynamic-delta base mag sign)))
+
+(defun trivia-dynamic-choice-str ((answer int) (shuffled-idx int) (count int))
+  (let* ((seed *trivia-dynamic-seed*)
+         (step-percentage 15)
+         (scaled-step (if (<= (/ answer step-percentage) 0) 1 (/ answer step-percentage)))
+         (v1 (trivia-dynamic-offset answer seed 0 scaled-step count))
+         (v2 (trivia-dynamic-offset answer seed 4 scaled-step count))
+         (v3 (trivia-dynamic-offset answer seed 8 scaled-step count)))
+    (set! v1 (trivia-dynamic-dedup v1 answer answer answer scaled-step))
+    (set! v2 (trivia-dynamic-dedup v2 answer v1 v1 scaled-step))
+    (set! v3 (trivia-dynamic-dedup v3 answer v1 v2 scaled-step))
+    (format (clear *trivia-dynamic-str*)
+            "~D"
+            (cond
+              ((= shuffled-idx 0) answer)
+              ((= shuffled-idx 1) v1)
+              ((= shuffled-idx 2) v2)
+              (else v3)))
+    *trivia-dynamic-str*))
+
 (defun get-trivia-choice-str ((q-idx int) (guess-idx int))
   (let ((shuffled-idx (-> *trivia-shuffle-map* guess-idx)))
     (cond
       ;; Dynamic questions here
+      ((= q-idx 40) (trivia-dynamic-choice-str (-> *game-info* total-deaths) shuffled-idx 4))
+      ;; ((= q-idx 9999) (trivia-dynamic-choice-str (the int (-> *game-info* money)) shuffled-idx 6))
+      ((= q-idx 41) (trivia-dynamic-choice-str *rules-broken* shuffled-idx 4))
       (else (-> *trivia-choices* (+ (* q-idx 4) shuffled-idx))))))
 
 (define *trivia-last-tracked-question* -1)
@@ -3808,7 +3861,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (shl (the uint (-> *trivia-shuffle-map* 0)) 11)
                (shl (the uint (-> *trivia-shuffle-map* 1)) 13)
                (shl (the uint (-> *trivia-shuffle-map* 2)) 15)
-               (shl (the uint (-> *trivia-shuffle-map* 3)) 17))))
+               (shl (the uint (-> *trivia-shuffle-map* 3)) 17)
+               (shl (the uint *trivia-dynamic-seed*) 19))))
 
 (defun mod-rule-trivia-state-resume-from-save ((val int))
   (let ((bits (the uint val)))
@@ -3816,6 +3870,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! *trivia-current-guess* (- (the int (logand (shr bits 8) (the uint #x7))) 1))
     (dotimes (i 4)
       (set! (-> *trivia-shuffle-map* i) (the int (logand (shr bits (+ 11 (* i 2))) (the uint #x3)))))
+    (set! *trivia-dynamic-seed* (the int (logand (shr bits 19) (the uint #xfff))))
     (set! *trivia-last-tracked-question* *trivia-current-question*))
   (none))
 
