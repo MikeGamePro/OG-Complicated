@@ -5,6 +5,66 @@
 ;; name in dgo: mod-banks
 ;; dgos: TODO
 
+(deftype mod-tuning-bank (structure)
+  ((roll-buffer-time                time-frame)
+   (countdown-punishment-baseline-inc-total float)
+   (countdown-punishment-baseline-seconds   float)))
+
+(define *MOD-tuning-bank*
+  (new 'static
+       'mod-tuning-bank
+       :roll-buffer-time (seconds 5)
+       :countdown-punishment-baseline-inc-total 4916.0
+       :countdown-punishment-baseline-seconds 30.0))
+
+(deftype mod-rule-punishment-bank (structure)
+  ((timed-punishments    (array symbol))
+   (timed-end-times      (array time-frame))
+   (timed-next-ticks     (array time-frame))
+   (timed-saved-ids      (array symbol))
+   (timed-saved-tenths   (array int32))))
+
+(define *MOD-rule-punishment-bank*
+  (new 'static
+       'mod-rule-punishment-bank
+       :timed-punishments (new 'static 'boxed-array :type symbol :length 8 :allocated-length 8)
+       :timed-end-times (new 'static 'boxed-array :type time-frame :length 8 :allocated-length 8)
+       :timed-next-ticks (new 'static 'boxed-array :type time-frame :length 8 :allocated-length 8)
+       :timed-saved-ids (new 'static 'boxed-array :type symbol :length 8 :allocated-length 8)
+       :timed-saved-tenths (new 'static 'boxed-array :type int32 :length 8 :allocated-length 8)))
+
+(deftype mod-rule-slot-bank (structure)
+  ((active-slots           (array symbol))
+   (pending-slots          (array symbol))
+   (slot-end-times         (array time-frame))
+   (saved-remaining-times  (array int32))
+   (saved-punishments      (array symbol))
+   (saved-pending          (array symbol))
+   (saved-roll-tenths      (array int32))
+   (roll-ready-times       (array time-frame))
+   (roll-last-warn-second  (array int32))
+   (slot-punishments       (array symbol))
+   (slot-goals             (array int32))
+   (slot-progress          (array int32))
+   (slot-grace-periods     (array time-frame))))
+
+(define *MOD-rule-slot-bank*
+  (new 'static
+       'mod-rule-slot-bank
+       :active-slots (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       :pending-slots (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       :slot-end-times (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)
+       :saved-remaining-times (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       :saved-punishments (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       :saved-pending (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       :saved-roll-tenths (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       :roll-ready-times (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)
+       :roll-last-warn-second (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       :slot-punishments (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       :slot-goals (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       :slot-progress (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       :slot-grace-periods (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)))
+
 (deftype mod-countdown-bank (structure)
   ((active?                  symbol)
    (lost?                    symbol)
@@ -93,7 +153,11 @@
        :math-current-guess 0
        :trivia-current-question 0
        :trivia-current-guess 0
-       :trivia-last-tracked-question -1))
+       :trivia-last-tracked-question -1
+       :trivia-shuffle-map (new 'static 'boxed-array :type int32 0 1 2 3)
+       :trivia-dynamic-seed 0))
+
+(set! (-> *MOD-quiz-bank* trivia-dynamic-str) (new 'global 'string 16 (the-as string #f)))
 
 (deftype mod-stats-bank (structure)
   ((rules-rolled         int32)
@@ -151,6 +215,12 @@
   ((wrap-line-1        string)
    (wrap-line-2        string)
    (highlight-line-buf string)))
+
+(define *MOD-rule-display-bank* (new 'static 'mod-rule-display-bank))
+
+(set! (-> *MOD-rule-display-bank* wrap-line-1) (new 'global 'string 128 (the-as string #f)))
+(set! (-> *MOD-rule-display-bank* wrap-line-2) (new 'global 'string 128 (the-as string #f)))
+(set! (-> *MOD-rule-display-bank* highlight-line-buf) (new 'global 'string 128 (the-as string #f)))
 
 (deftype mod-rule-hit-bank (structure)
   ((player-hit-handles   (array handle))
