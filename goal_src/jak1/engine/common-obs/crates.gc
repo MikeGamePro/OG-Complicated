@@ -455,13 +455,11 @@
      (let ((s4-0 (-> arg3 param 2))
            (s5-0 (-> arg3 param 3))
            (attack-type (-> arg3 param 1))) ; Capture the attack/event type
-      (case attack-type
-        (('explode)
-          (if (not (and *target* (or (= (-> *target* state name) 'target-tube)
-                                    (= (-> *target* state name) 'target-tube-jump))))
+       (case attack-type
+         (('explode)
+          (if (not (and *target* (or (= (-> *target* state name) 'target-tube) (= (-> *target* state name) 'target-tube-jump))))
             (mod-rule-trigger-failure 'rule-hands-on)))
-        (('eco-yellow 'darkeco 'flut-bonk 'flut-attack 'racer) 
-          (mod-rule-trigger-failure 'rule-hands-on)))
+         (('eco-yellow 'darkeco 'flut-bonk 'flut-attack 'racer) (mod-rule-trigger-failure 'rule-hands-on)))
        (case (-> self defense)
          (('iron)
           (case (if
@@ -472,7 +470,7 @@
              (if (and (logtest? (-> self fact options) (fact-options require-zoomer))
                       *target*
                       (not (logtest? (-> *target* control root-prim prim-core action) (collide-action racer))))
-              (return #f))
+               (return #f))
              (increment-success-for-hint (text-id sidekick-hint-crate-iron))
              (increment-success-for-hint (text-id training-ironcrate))
              (send-event arg0 'get-attack-count 1)
@@ -500,15 +498,15 @@
              (when (logtest? (-> self draw status) (draw-status was-drawn))
                (increment-success-for-hint (text-id sidekick-hint-crate-steel))
                (level-hint-spawn (text-id sidekick-hint-crate-steel-break1)
-                              "sksp0004"
-                              (the-as entity #f)
-                              *entity-pool*
-                              (game-task none))
+                                 "sksp0004"
+                                 (the-as entity #f)
+                                 *entity-pool*
+                                 (game-task none))
                (level-hint-spawn (text-id sidekick-hint-crate-steel-break2)
-                              "sksp009b"
-                              (the-as entity #f)
-                              *entity-pool*
-                              (game-task none)))
+                                 "sksp009b"
+                                 (the-as entity #f)
+                                 *entity-pool*
+                                 (game-task none)))
              ;; Print when steel crate breaks
              (format #t "Crate broken by steel defense attack: ~A~%" attack-type)
              (go-virtual die #f (the-as int s5-0)))
@@ -528,18 +526,18 @@
             (case (-> (level-get-target-inside *level*) name)
               (('rolling)
                (level-hint-spawn (text-id sidekick-hint-crate-darkeco-rolling)
-                              "sksp0110"
-                              (the-as entity #f)
-                              *entity-pool*
-                              (game-task none)))
+                                 "sksp0110"
+                                 (the-as entity #f)
+                                 *entity-pool*
+                                 (game-task none)))
               (('firecanyon)
                (level-hint-spawn (text-id firecanyon-crate-darkeco2) "sksp0082" (the-as entity #f) *entity-pool* (game-task none))
                (level-hint-spawn (text-id firecanyon-crate-darkeco1) "sksp0081" (the-as entity #f) *entity-pool* (game-task none)))))
           ;; Print when darkeco crate triggers death
           (format #t "Crate broken by darkeco defense attack: ~A~%" attack-type)
           (go-virtual die #f (the-as int s5-0)))
-         (else 
-          (send-event arg0 'get-attack-count 1) 
+         (else
+          (send-event arg0 'get-attack-count 1)
           ;; Print when a standard/default crate breaks
           (format #t "Crate broken by standard attack: ~A~%" attack-type)
           (go-virtual die #f (the-as int s5-0))))))
@@ -558,7 +556,7 @@
      (if (not (or (= (-> self defense) 'darkeco)
                   (or (= (-> self next-state name) 'notice-blue) (= (-> self next-state name) 'die))
                   (!= (-> self root trans y) (-> self base y))))
-      (go-virtual notice-blue (process->handle arg0))))))
+       (go-virtual notice-blue (process->handle arg0))))))
 
 (defstate wait (crate)
   :virtual #t

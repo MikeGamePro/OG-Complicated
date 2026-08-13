@@ -125,13 +125,21 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *MOD-countdown-bank* (new 'global 'mod-countdown-bank))
 
 (set! (-> *MOD-countdown-bank* active?) #f)
+
 (set! (-> *MOD-countdown-bank* lost?) #f)
+
 (set! (-> *MOD-countdown-bank* remaining-time) 0)
+
 (set! (-> *MOD-countdown-bank* last-update-time) 0)
+
 (set! (-> *MOD-countdown-bank* last-warn-second) -1)
+
 (set! (-> *MOD-countdown-bank* saved-remaining-time) -1)
+
 (set! (-> *MOD-countdown-bank* countup-timer) 0)
+
 (set! (-> *MOD-countdown-bank* countup-last-update-time) 0)
+
 (set! (-> *MOD-countdown-bank* countup-saved-time) -1)
 
 (define *mod-rule-slot-count* 3)
@@ -169,19 +177,33 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *MOD-rule-context-bank* (new 'global 'mod-rule-context-bank))
 
 (set! (-> *MOD-rule-context-bank* last-update-time) 0)
+
 (set! (-> *MOD-rule-context-bank* current-slot) 0)
+
 (set! (-> *MOD-rule-context-bank* last-reverted-cell-task) 0)
+
 (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) 0)
+
 (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
+
 (set! (-> *MOD-rule-context-bank* last-kill-time) 0)
+
 (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
+
 (set! (-> *MOD-rule-context-bank* qte-target-button) 0)
+
 (set! (-> *MOD-rule-context-bank* hang-time-air-start) 0)
+
 (set! (-> *MOD-rule-context-bank* game-beaten?) #f)
+
 (set! (-> *MOD-rule-context-bank* twist-pending-count) -1)
+
 (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
+
 (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) 0)
+
 (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) 0)
+
 (set! (-> *MOD-rule-context-bank* bus-driver-grace-period) (seconds 2))
 
 (define *mod-rule-player-hit-handles* (new 'global 'boxed-array handle 64))
@@ -312,7 +334,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *MOD-rng-bank* (new 'global 'mod-rng-bank))
 
 (set! (-> *MOD-rng-bank* content-state) (the uint 1))
+
 (set! (-> *MOD-rng-bank* punish-state) (the uint 1))
+
 (set! (-> *MOD-rng-bank* seed-display) (the uint 0))
 
 (defun mod-rng-hash-u32 ((x uint))
@@ -393,12 +417,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *MOD-quiz-bank* (new 'global 'mod-quiz-bank))
 
 (set! (-> *MOD-quiz-bank* math-val1) 0)
+
 (set! (-> *MOD-quiz-bank* math-val2) 0)
+
 (set! (-> *MOD-quiz-bank* math-op) 0)
+
 (set! (-> *MOD-quiz-bank* math-answer) 0)
+
 (set! (-> *MOD-quiz-bank* math-current-guess) 0)
+
 (set! (-> *MOD-quiz-bank* trivia-current-question) 0)
+
 (set! (-> *MOD-quiz-bank* trivia-current-guess) 0)
+
 (set! (-> *MOD-quiz-bank* trivia-last-tracked-question) -1)
 
 (define *trivia-questions*
@@ -446,8 +477,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHAT COLOR IS THE CROSS ON FINLAND\c12S FLAG?"
        "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
        "ACROPHOBIA IS THE FEAR OF WHAT?"
-       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
-       ))
+       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"))
 
 (define *trivia-choices*
   (new 'static
@@ -618,11 +648,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *MOD-stats-bank* (new 'global 'mod-stats-bank))
 
 (set! (-> *MOD-stats-bank* rules-rolled) 0)
+
 (set! (-> *MOD-stats-bank* rules-broken) 0)
+
 (set! (-> *MOD-stats-bank* rules-followed) 0)
+
 (set! (-> *MOD-stats-bank* complications-rolled) 0)
+
 (set! (-> *MOD-stats-bank* final-remaining-time) 0)
+
 (set! (-> *MOD-stats-bank* final-time) 0)
+
 (set! (-> *MOD-stats-bank* final-score) 0)
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
@@ -644,15 +680,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (all-used? #t)
         (i 0))
     (while (< i count)
-      (when (and (not (-> *trivia-questions-used* i))
-                 (mod-rule-trivia-question-valid? i))
+      (when (and (not (-> *trivia-questions-used* i)) (mod-rule-trivia-question-valid? i))
         (set! all-used? #f))
       (+! i 1))
     (when all-used?
       (mod-rule-clear-trivia-used))
     (let ((idx (mod-rand-int-range 0 count)))
-      (while (or (-> *trivia-questions-used* idx)
-                 (not (mod-rule-trivia-question-valid? idx)))
+      (while (or (-> *trivia-questions-used* idx) (not (mod-rule-trivia-question-valid? idx)))
         (set! idx (mod-rand-int-range 0 count)))
       (set! (-> *trivia-questions-used* idx) #t)
       idx)))
@@ -1859,7 +1893,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'rule-qte) (set! (-> *MOD-rule-context-bank* qte-target-button) (mod-rand-int-range 0 4)))
-    ((eq? id 'complication-twisted) (set! (-> *MOD-rule-context-bank* twist-pending-count) (+ (-> *MOD-stats-bank* rules-rolled) (mod-rand-int-range 2 4))))
+    ((eq? id 'complication-twisted)
+     (set! (-> *MOD-rule-context-bank* twist-pending-count) (+ (-> *MOD-stats-bank* rules-rolled) (mod-rand-int-range 2 4))))
     ((eq? id 'rule-hitlist) (dotimes (slot 3) (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
     ((eq? id 'rule-double-kill) (set! (-> *MOD-rule-context-bank* last-kill-time) 0))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
@@ -1886,9 +1921,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (set! (-> *MOD-quiz-bank* math-val2) (mod-rand-int-range min-val max-val)))
      (set! (-> *MOD-quiz-bank* math-current-guess) 0)
      (cond
-       ((= (-> *MOD-quiz-bank* math-op) 0) (set! (-> *MOD-quiz-bank* math-answer) (+ (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
-       ((= (-> *MOD-quiz-bank* math-op) 1) (set! (-> *MOD-quiz-bank* math-answer) (- (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
-       ((= (-> *MOD-quiz-bank* math-op) 2) (set! (-> *MOD-quiz-bank* math-answer) (* (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))))
+       ((= (-> *MOD-quiz-bank* math-op) 0)
+        (set! (-> *MOD-quiz-bank* math-answer) (+ (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
+       ((= (-> *MOD-quiz-bank* math-op) 1)
+        (set! (-> *MOD-quiz-bank* math-answer) (- (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
+       ((= (-> *MOD-quiz-bank* math-op) 2)
+        (set! (-> *MOD-quiz-bank* math-answer) (* (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))))
     (else (none)))
   (mod-rule-reapply-slot-visual-effect id)
   (none))
@@ -2266,7 +2304,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                               (string= (current-checkpoint-name) "lavatube-middle")
                               (string= (current-checkpoint-name) "lavatube-after-ribbon")))
           (deep-lavatube (or (string= (current-checkpoint-name) "lavatube-middle") (string= (current-checkpoint-name) "lavatube-after-ribbon"))))
-      (if (and (eq? (mod-rule-type id) 'rule) (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted)))
+      (if (and (eq? (mod-rule-type id) 'rule)
+               (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted)))
         0
         (cond
           ;; Resources
@@ -2533,7 +2572,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (is-minigame 0)
              (else 8)))
           ((eq? id 'complication-twisted)
-           (if (or (>= (-> *MOD-rule-context-bank* twist-pending-count) 0) (mod-rule-any-rule-active?) (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0)) 0 4))
+           (if (or (>= (-> *MOD-rule-context-bank* twist-pending-count) 0)
+                   (mod-rule-any-rule-active?)
+                   (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0))
+             0
+             4))
           ((eq? id 'rule-qte)
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           (else 6))))))
@@ -2740,8 +2783,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-apply-punishment ((punishment symbol))
   (cond
-    ((eq? punishment 'punishment-money)
-     (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0))))
+    ((eq? punishment 'punishment-money) (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0))))
     ((eq? punishment 'punishment-crash)
      (process-spawn-function process
        (lambda ()
@@ -2757,7 +2799,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (initialize! *game-info* 'die (the-as game-save #f) (the-as string #f)))))
     ((eq? punishment 'punishment-countdown)
      (when (-> *MOD-countdown-bank* active?)
-       (set! (-> *MOD-countdown-bank* remaining-time) (- (-> *MOD-countdown-bank* remaining-time) (mod-rule-countdown-punishment-ticks)))))
+       (set! (-> *MOD-countdown-bank* remaining-time)
+             (- (-> *MOD-countdown-bank* remaining-time) (mod-rule-countdown-punishment-ticks)))))
     ((eq? punishment 'punishment-revert-cell) (mod-rule-revert-random-collected-cell))
     ((eq? punishment 'punishment-blind) (set-blackout-frames (seconds 10)) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-fall-damage)
@@ -2807,7 +2850,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-twist-check-and-mark! ((slot int) (id symbol))
-  (when (and (>= (-> *MOD-rule-context-bank* twist-pending-count) 0) (= (-> *MOD-stats-bank* rules-rolled) (-> *MOD-rule-context-bank* twist-pending-count)))
+  (when (and (>= (-> *MOD-rule-context-bank* twist-pending-count) 0)
+             (= (-> *MOD-stats-bank* rules-rolled) (-> *MOD-rule-context-bank* twist-pending-count)))
     (set! (-> *MOD-rule-context-bank* twist-marked-slot) slot)
     (set! (-> *MOD-rule-context-bank* twist-pending-count) -1))
   (none))
@@ -2851,7 +2895,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (when (>= slot 0)
         (let ((time-left (- (-> *mod-rule-slot-end-times* slot) (current-time))))
           (when (<= time-left 0)
-            (mod-rule-resolve! slot (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed) #t)
+            (mod-rule-resolve! slot
+                               (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
+                               #t)
             (none))
           (when (cpad-pressed? 0 up)
             (+! (-> *MOD-quiz-bank* math-current-guess) 1)
@@ -2866,7 +2912,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (-! (-> *MOD-quiz-bank* math-current-guess) 5)
             (sound-play "cursor-up-down"))
           (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
-            (mod-rule-resolve! slot (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed) #t)
+            (mod-rule-resolve! slot
+                               (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
+                               #t)
             (none))))))
   (none))
 
@@ -2945,7 +2993,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-trigger-double-kill ()
   (when (mod-rule-active? 'rule-double-kill)
     (let ((now (current-time)))
-      (if (and (> (-> *MOD-rule-context-bank* last-kill-time) 0) (<= (- now (-> *MOD-rule-context-bank* last-kill-time)) (seconds 0.15)))
+      (if (and (> (-> *MOD-rule-context-bank* last-kill-time) 0)
+               (<= (- now (-> *MOD-rule-context-bank* last-kill-time)) (seconds 0.15)))
         (begin
           (mod-rule-counter-add-progress 'rule-double-kill 1)
           (set! (-> *MOD-rule-context-bank* last-kill-time) 0))
@@ -2986,7 +3035,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-bus-driver ()
   (when (and (mod-rule-active? 'complication-bus-driver)
-             (>= (- (current-time) (-> *MOD-rule-context-bank* bus-driver-activate-time)) (-> *MOD-rule-context-bank* bus-driver-grace-period)))
+             (>= (- (current-time) (-> *MOD-rule-context-bank* bus-driver-activate-time))
+                 (-> *MOD-rule-context-bank* bus-driver-grace-period)))
     (when (not (movie?))
       (target-attack-up *target* 'attack 'explode)))
   (none))
@@ -3150,7 +3200,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! (-> *mod-rule-timed-punishment-next-ticks* slot) (+ (-> *mod-rule-timed-punishment-next-ticks* slot) elapsed))))
   (set! (-> *MOD-rule-context-bank* hang-time-air-start) (+ (-> *MOD-rule-context-bank* hang-time-air-start) elapsed))
   (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (+ (-> *MOD-rule-context-bank* get-a-grip-last-grab) elapsed))
-  (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (+ (-> *MOD-rule-context-bank* bus-driver-activate-time) elapsed))
+  (set! (-> *MOD-rule-context-bank* bus-driver-activate-time)
+        (+ (-> *MOD-rule-context-bank* bus-driver-activate-time) elapsed))
   (none))
 
 (defbehavior mod-rule-manager-proc process ()
@@ -3164,7 +3215,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((global-countdown-paused?) (when (> elapsed 0) (mod-rule-shift-all-timers! elapsed)))
           (else
            ;; (+! (-> *MOD-countdown-bank* countup-timer) elapsed)
-           (when (and (> (-> *MOD-rule-context-bank* mean-look-clear-time) 0) (>= (current-time) (-> *MOD-rule-context-bank* mean-look-clear-time)))
+           (when (and (> (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
+                      (>= (current-time) (-> *MOD-rule-context-bank* mean-look-clear-time)))
              (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
              (logclear! (-> *target* mask) (process-mask sleep)))
            (mod-rule-update-timed-punishments)
@@ -3353,7 +3405,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when show-progress?
       (draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
       (if (eq? id 'rule-hang-time)
-        (let* ((elapsed (min (seconds (mod-rule-counter-goal 'rule-hang-time)) (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start))))
+        (let* ((elapsed (min (seconds (mod-rule-counter-goal 'rule-hang-time))
+                             (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start))))
                (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
           (draw-string-xy-scaled (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal)
                                  buf
@@ -3413,12 +3466,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                          ((= (-> *MOD-quiz-bank* math-op) 0) "+")
                          ((= (-> *MOD-quiz-bank* math-op) 1) "-")
                          (else "*"))))
-        (format (clear *temp-string*) "~D ~S ~D = ~1L~D" (-> *MOD-quiz-bank* math-val1) op-string (-> *MOD-quiz-bank* math-val2) (-> *MOD-quiz-bank* math-current-guess))
+        (format (clear *temp-string*)
+                "~D ~S ~D = ~1L~D"
+                (-> *MOD-quiz-bank* math-val1)
+                op-string
+                (-> *MOD-quiz-bank* math-val2)
+                (-> *MOD-quiz-bank* math-current-guess))
         (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)
         (+! row 12)))
     (when (eq? id 'rule-trivia)
       (let* ((q-idx (-> *MOD-quiz-bank* trivia-current-question))
-             (choice-str (if (= (-> *MOD-quiz-bank* trivia-current-guess) -1) "USE D-PAD" (get-trivia-choice-str q-idx (-> *MOD-quiz-bank* trivia-current-guess)))))
+             (choice-str (if (= (-> *MOD-quiz-bank* trivia-current-guess) -1)
+                           "USE D-PAD"
+                           (get-trivia-choice-str q-idx (-> *MOD-quiz-bank* trivia-current-guess)))))
         (format (clear *temp-string*) "~S" (-> *trivia-questions* q-idx))
         (let ((quiz-break-idx (mod-rule-wrap-point *temp-string* 27)))
           (if (>= quiz-break-idx (length *temp-string*))
@@ -3567,7 +3627,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (else (mod-rule-draw-rolling-slot global-buf) (mod-rule-draw-last-outcome global-buf 51)))
          (when (and #t ;; *debug-segment*
                     (> (-> *MOD-rule-context-bank* last-reverted-cell-until) (current-time)))
-           (draw-string-xy-scaled (string-format "Reverted: ~A" (enum->string game-task (the game-task (-> *MOD-rule-context-bank* last-reverted-cell-task))))
+           (draw-string-xy-scaled (string-format "Reverted: ~A"
+                                                 (enum->string game-task (the game-task (-> *MOD-rule-context-bank* last-reverted-cell-task))))
                                   global-buf
                                   10
                                   reverted-y
@@ -3669,7 +3730,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rules-reset)
   (set! (-> *MOD-countdown-bank* active?) #f)
   (set! (-> *MOD-countdown-bank* lost?) #f)
-  (set! (-> *MOD-countdown-bank* remaining-time) (the int (* (countdown-start-seconds-value) (the float TICKS_PER_SECOND)))) ;; global countdown start
+  (set! (-> *MOD-countdown-bank* remaining-time)
+        (the int (* (countdown-start-seconds-value) (the float TICKS_PER_SECOND)))) ;; global countdown start
   (set! (-> *MOD-countdown-bank* countup-timer) 0)
   (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
   (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time))
@@ -3826,7 +3888,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-slot-progress-resume-from-save 1 val))
 
 (defun mod-rule-math-quiz-state-save-value ()
-  (the int (logior (the uint (-> *MOD-quiz-bank* math-val1)) (shl (the uint (-> *MOD-quiz-bank* math-val2)) 8) (shl (the uint (-> *MOD-quiz-bank* math-op)) 16))))
+  (the int
+       (logior (the uint (-> *MOD-quiz-bank* math-val1))
+               (shl (the uint (-> *MOD-quiz-bank* math-val2)) 8)
+               (shl (the uint (-> *MOD-quiz-bank* math-op)) 16))))
 
 (defun mod-rule-math-quiz-state-resume-from-save ((val int))
   (let ((bits (the uint val)))
@@ -3834,9 +3899,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *MOD-quiz-bank* math-val2) (the int (logand (shr bits 8) (the uint #xff))))
     (set! (-> *MOD-quiz-bank* math-op) (the int (logand (shr bits 16) (the uint #x3))))
     (cond
-      ((= (-> *MOD-quiz-bank* math-op) 0) (set! (-> *MOD-quiz-bank* math-answer) (+ (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
-      ((= (-> *MOD-quiz-bank* math-op) 1) (set! (-> *MOD-quiz-bank* math-answer) (- (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
-      ((= (-> *MOD-quiz-bank* math-op) 2) (set! (-> *MOD-quiz-bank* math-answer) (* (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))))
+      ((= (-> *MOD-quiz-bank* math-op) 0)
+       (set! (-> *MOD-quiz-bank* math-answer) (+ (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
+      ((= (-> *MOD-quiz-bank* math-op) 1)
+       (set! (-> *MOD-quiz-bank* math-answer) (- (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))
+      ((= (-> *MOD-quiz-bank* math-op) 2)
+       (set! (-> *MOD-quiz-bank* math-answer) (* (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2))))))
   (none))
 
 (defun mod-rule-math-quiz-guess-save-value ()

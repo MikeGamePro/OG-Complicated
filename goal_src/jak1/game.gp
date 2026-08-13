@@ -2008,11 +2008,6 @@
  ("$OUT/obj/main.o"
   "$OUT/obj/video.o")
 
- ;; bank deftypes only (mod-countdown-bank, mod-rule-context-bank, mod-rng-bank,
- ;; mod-quiz-bank, mod-stats-bank, etc) - required by credits.gc later in this
- ;; sequence, and by mods/mod-common-functions.gc in a later sequence (see its
- ;; :deps below). Listed first here so the sequence chain forces it to compile
- ;; before everything after it, including credits.gc.
  "mods/mod-banks.gc"
 
  "collide/collide-cache.gc"
