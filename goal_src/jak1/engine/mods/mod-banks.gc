@@ -16,6 +16,19 @@
    (countup-last-update-time time-frame)
    (countup-saved-time       int32)))
 
+(define *MOD-countdown-bank*
+  (new 'static
+       'mod-countdown-bank
+       :active? #f
+       :lost? #f
+       :remaining-time 0
+       :last-update-time 0
+       :last-warn-second -1
+       :saved-remaining-time -1
+       :countup-timer 0
+       :countup-last-update-time 0
+       :countup-saved-time -1))
+
 (deftype mod-rule-context-bank (structure)
   ((last-update-time         time-frame)
    (current-slot             int32)
@@ -33,6 +46,25 @@
    (bus-driver-activate-time time-frame)
    (bus-driver-grace-period  time-frame)))
 
+(define *MOD-rule-context-bank*
+  (new 'static
+       'mod-rule-context-bank
+       :last-update-time 0
+       :current-slot 0
+       :last-reverted-cell-task 0
+       :last-reverted-cell-until 0
+       :last-outcome 'none
+       :last-kill-time 0
+       :mean-look-clear-time 0
+       :qte-target-button 0
+       :hang-time-air-start 0
+       :game-beaten? #f
+       :twist-pending-count -1
+       :twist-marked-slot -1
+       :get-a-grip-last-grab 0
+       :bus-driver-activate-time 0
+       :bus-driver-grace-period (seconds 2)))
+
 (deftype mod-rng-bank (structure)
   ((content-state uint)
    (punish-state  uint)
@@ -46,7 +78,22 @@
    (math-current-guess           int32)
    (trivia-current-question      int32)
    (trivia-current-guess         int32)
-   (trivia-last-tracked-question int32)))
+   (trivia-last-tracked-question int32)
+   (trivia-shuffle-map           (array int32))
+   (trivia-dynamic-str           string)
+   (trivia-dynamic-seed          int32)))
+
+(define *MOD-quiz-bank*
+  (new 'static
+       'mod-quiz-bank
+       :math-val1 0
+       :math-val2 0
+       :math-op 0
+       :math-answer 0
+       :math-current-guess 0
+       :trivia-current-question 0
+       :trivia-current-guess 0
+       :trivia-last-tracked-question -1))
 
 (deftype mod-stats-bank (structure)
   ((rules-rolled         int32)
@@ -56,3 +103,56 @@
    (final-remaining-time int32)
    (final-time           int32)
    (final-score          int32)))
+
+(define *MOD-stats-bank*
+  (new 'static
+       'mod-stats-bank
+       :rules-rolled 0
+       :rules-broken 0
+       :rules-followed 0
+       :complications-rolled 0
+       :final-remaining-time 0
+       :final-time 0
+       :final-score 0))
+
+(deftype mod-orb-weight-bank (structure)
+  ((base-walk-speed              float)
+   (base-double-jump-speed       float)
+   (base-jump-speed              float)
+   (base-attack-speed            float)
+   (base-smack-jump-speed        float)
+   (base-forward-high-jump-speed float)
+   (base-jump-attack-speed       float)
+   (base-wheel-flip-dist         float)
+   (base-wheel-flip-height       float)
+   (base-flip-jump-speed         float)
+   (last-applied-orbs            float)))
+
+(define *MOD-orb-weight-bank*
+  (new 'static
+       'mod-orb-weight-bank
+       :base-walk-speed 40960.0
+       :base-double-jump-speed 32768.0
+       :base-jump-speed 40960.0
+       :base-attack-speed 40960.0
+       :base-smack-jump-speed 40960.0
+       :base-forward-high-jump-speed 45056.0
+       :base-jump-attack-speed 24576.0
+       :base-wheel-flip-dist (meters 17.3)
+       :base-wheel-flip-height (meters 3.52)
+       :base-flip-jump-speed 51200.0
+       :last-applied-orbs -1.0))
+
+(deftype mod-target-mesh-bank (structure)
+  ((envmap-save   (array int32))
+   (invis-active? symbol)))
+
+(deftype mod-rule-display-bank (structure)
+  ((wrap-line-1        string)
+   (wrap-line-2        string)
+   (highlight-line-buf string)))
+
+(deftype mod-rule-hit-bank (structure)
+  ((player-hit-handles   (array handle))
+   (player-hit-modes     (array symbol))
+   (player-hit-write-idx int32)))

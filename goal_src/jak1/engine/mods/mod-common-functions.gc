@@ -122,26 +122,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-look-around)
                   (= state-name 'target-attack-air))))))
 
-(define *MOD-countdown-bank* (new 'global 'mod-countdown-bank))
-
-(set! (-> *MOD-countdown-bank* active?) #f)
-
-(set! (-> *MOD-countdown-bank* lost?) #f)
-
-(set! (-> *MOD-countdown-bank* remaining-time) 0)
-
-(set! (-> *MOD-countdown-bank* last-update-time) 0)
-
-(set! (-> *MOD-countdown-bank* last-warn-second) -1)
-
-(set! (-> *MOD-countdown-bank* saved-remaining-time) -1)
-
-(set! (-> *MOD-countdown-bank* countup-timer) 0)
-
-(set! (-> *MOD-countdown-bank* countup-last-update-time) 0)
-
-(set! (-> *MOD-countdown-bank* countup-saved-time) -1)
-
 (define *mod-rule-slot-count* 3)
 
 (define *mod-rule-active-slots* (new 'global 'boxed-array symbol *mod-rule-slot-count*))
@@ -174,43 +154,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-roll-buffer-time* (seconds 5))
 
-(define *MOD-rule-context-bank* (new 'global 'mod-rule-context-bank))
-
-(set! (-> *MOD-rule-context-bank* last-update-time) 0)
-
-(set! (-> *MOD-rule-context-bank* current-slot) 0)
-
-(set! (-> *MOD-rule-context-bank* last-reverted-cell-task) 0)
-
-(set! (-> *MOD-rule-context-bank* last-reverted-cell-until) 0)
-
-(set! (-> *MOD-rule-context-bank* last-outcome) 'none)
-
-(set! (-> *MOD-rule-context-bank* last-kill-time) 0)
-
-(set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
-
-(set! (-> *MOD-rule-context-bank* qte-target-button) 0)
-
-(set! (-> *MOD-rule-context-bank* hang-time-air-start) 0)
-
-(set! (-> *MOD-rule-context-bank* game-beaten?) #f)
-
-(set! (-> *MOD-rule-context-bank* twist-pending-count) -1)
-
-(set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
-
-(set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) 0)
-
-(set! (-> *MOD-rule-context-bank* bus-driver-activate-time) 0)
-
-(set! (-> *MOD-rule-context-bank* bus-driver-grace-period) (seconds 2))
-
-(define *mod-rule-player-hit-handles* (new 'global 'boxed-array handle 64))
-
-(define *mod-rule-player-hit-modes* (new 'global 'boxed-array symbol 64))
-
-(define *mod-rule-player-hit-write-idx* 0)
+(define *MOD-rule-hit-bank*
+  (new 'static
+       'mod-rule-hit-bank
+       :player-hit-handles
+       (new 'static 'boxed-array :type handle :length 64 :allocated-length 64)
+       :player-hit-modes
+       (new 'static 'boxed-array :type symbol :length 64 :allocated-length 64)
+       :player-hit-write-idx 0))
 
 (define *mod-rule-timed-punishment-slot-count* 8)
 
@@ -326,17 +277,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-unbreakable
        'complication-get-a-grip))
 
+(define *MOD-rng-bank* (new 'static 'mod-rng-bank :content-state 1 :punish-state 1 :seed-display 0))
+
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
 (define *mod-rule-slot-grace-periods* (new 'global 'boxed-array time-frame 3))
-
-(define *MOD-rng-bank* (new 'global 'mod-rng-bank))
-
-(set! (-> *MOD-rng-bank* content-state) (the uint 1))
-
-(set! (-> *MOD-rng-bank* punish-state) (the uint 1))
-
-(set! (-> *MOD-rng-bank* seed-display) (the uint 0))
 
 (defun mod-rng-hash-u32 ((x uint))
   (set! x (logxor x (shr x 16)))
@@ -350,7 +295,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rng-hash-u32 (the uint (current-time))))
 
 (defun mod-rng-active-seed ()
-  (let ((imgui-seed (the uint (complicated-get-seed)))) (if (!= imgui-seed 0) imgui-seed (mod-rng-random-seed))))
+  (let ((imgui-seed (the uint (complicated-get-seed))))
+    (if (!= imgui-seed 0)
+        (logand imgui-seed (the uint #x7fffffff))
+        (logand (mod-rng-random-seed) (the uint #x7fffffff)))))
 
 (defun mod-rng-seed-all! ((master-seed uint))
   (let ((content-hash (mod-rng-hash-u32 (+ master-seed (the uint 1))))
@@ -390,46 +338,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< r threshold)
       (set! r (mod-rng-punish-next-u32)))
     (+ lo (the int (mod r bound)))))
-
-(define *orb-weight-base-walk-speed* 40960.0)
-
-(define *orb-weight-base-double-jump-speed* 32768.0)
-
-(define *orb-weight-base-jump-speed* 40960.0)
-
-(define *orb-weight-base-attack-speed* 40960.0)
-
-(define *orb-weight-base-smack-jump-speed* 40960.0)
-
-(define *orb-weight-base-forward-high-jump-speed* 45056.0)
-
-(define *orb-weight-base-jump-attack-speed* 24576.0)
-
-(define *orb-weight-base-wheel-flip-dist* (meters 17.3))
-
-(define *orb-weight-base-wheel-flip-height* (meters 3.52))
-
-(define *orb-weight-base-flip-jump-speed* 51200.0)
-
-(define *orb-weight-last-applied-orbs* -1.0)
-
-(define *MOD-quiz-bank* (new 'global 'mod-quiz-bank))
-
-(set! (-> *MOD-quiz-bank* math-val1) 0)
-
-(set! (-> *MOD-quiz-bank* math-val2) 0)
-
-(set! (-> *MOD-quiz-bank* math-op) 0)
-
-(set! (-> *MOD-quiz-bank* math-answer) 0)
-
-(set! (-> *MOD-quiz-bank* math-current-guess) 0)
-
-(set! (-> *MOD-quiz-bank* trivia-current-question) 0)
-
-(set! (-> *MOD-quiz-bank* trivia-current-guess) 0)
-
-(set! (-> *MOD-quiz-bank* trivia-last-tracked-question) -1)
 
 (define *trivia-questions*
   (new 'static
@@ -644,22 +552,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "FLYING"
        "CROWDS"))
 
-(define *MOD-stats-bank* (new 'global 'mod-stats-bank))
-
-(set! (-> *MOD-stats-bank* rules-rolled) 0)
-
-(set! (-> *MOD-stats-bank* rules-broken) 0)
-
-(set! (-> *MOD-stats-bank* rules-followed) 0)
-
-(set! (-> *MOD-stats-bank* complications-rolled) 0)
-
-(set! (-> *MOD-stats-bank* final-remaining-time) 0)
-
-(set! (-> *MOD-stats-bank* final-time) 0)
-
-(set! (-> *MOD-stats-bank* final-score) 0)
-
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
 (define *trivia-dynamic-seed* 0)
@@ -695,33 +587,33 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun orb-weight-apply! ()
   (let ((orbs (current-orb-count)))
-    (when (!= orbs *orb-weight-last-applied-orbs*)
+    (when (!= orbs (-> *MOD-orb-weight-bank* last-applied-orbs))
       (let ((mult (orb-weight-multiplier)))
-        (set! (-> *walk-mods* target-speed) (* *orb-weight-base-walk-speed* mult))
-        (set! (-> *double-jump-mods* target-speed) (* *orb-weight-base-double-jump-speed* mult))
-        (set! (-> *jump-mods* target-speed) (* *orb-weight-base-jump-speed* mult))
-        (set! (-> *attack-mods* target-speed) (* *orb-weight-base-attack-speed* mult))
-        (set! (-> *smack-jump-mods* target-speed) (* *orb-weight-base-smack-jump-speed* mult))
-        (set! (-> *forward-high-jump-mods* target-speed) (* *orb-weight-base-forward-high-jump-speed* mult))
-        (set! (-> *jump-attack-mods* target-speed) (* *orb-weight-base-jump-attack-speed* mult))
-        (set! (-> *TARGET-bank* wheel-flip-dist) (* *orb-weight-base-wheel-flip-dist* mult))
-        (set! (-> *TARGET-bank* wheel-flip-height) (* *orb-weight-base-wheel-flip-height* mult))
-        (set! (-> *flip-jump-mods* target-speed) (* *orb-weight-base-flip-jump-speed* mult)))
-      (set! *orb-weight-last-applied-orbs* orbs)))
+        (set! (-> *walk-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-walk-speed) mult))
+        (set! (-> *double-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-double-jump-speed) mult))
+        (set! (-> *jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-jump-speed) mult))
+        (set! (-> *attack-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-attack-speed) mult))
+        (set! (-> *smack-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-smack-jump-speed) mult))
+        (set! (-> *forward-high-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-forward-high-jump-speed) mult))
+        (set! (-> *jump-attack-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-jump-attack-speed) mult))
+        (set! (-> *TARGET-bank* wheel-flip-dist) (* (-> *MOD-orb-weight-bank* base-wheel-flip-dist) mult))
+        (set! (-> *TARGET-bank* wheel-flip-height) (* (-> *MOD-orb-weight-bank* base-wheel-flip-height) mult))
+        (set! (-> *flip-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-flip-jump-speed) mult)))
+      (set! (-> *MOD-orb-weight-bank* last-applied-orbs) orbs)))
   (none))
 
 (defun orb-weight-reset! ()
-  (set! (-> *walk-mods* target-speed) *orb-weight-base-walk-speed*)
-  (set! (-> *double-jump-mods* target-speed) *orb-weight-base-double-jump-speed*)
-  (set! (-> *jump-mods* target-speed) *orb-weight-base-jump-speed*)
-  (set! (-> *attack-mods* target-speed) *orb-weight-base-attack-speed*)
-  (set! (-> *smack-jump-mods* target-speed) *orb-weight-base-smack-jump-speed*)
-  (set! (-> *forward-high-jump-mods* target-speed) *orb-weight-base-forward-high-jump-speed*)
-  (set! (-> *jump-attack-mods* target-speed) *orb-weight-base-jump-attack-speed*)
-  (set! (-> *TARGET-bank* wheel-flip-dist) *orb-weight-base-wheel-flip-dist*)
-  (set! (-> *TARGET-bank* wheel-flip-height) *orb-weight-base-wheel-flip-height*)
-  (set! (-> *flip-jump-mods* target-speed) *orb-weight-base-flip-jump-speed*)
-  (set! *orb-weight-last-applied-orbs* -1.0)
+  (set! (-> *walk-mods* target-speed) (-> *MOD-orb-weight-bank* base-walk-speed))
+  (set! (-> *double-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-double-jump-speed))
+  (set! (-> *jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-jump-speed))
+  (set! (-> *attack-mods* target-speed) (-> *MOD-orb-weight-bank* base-attack-speed))
+  (set! (-> *smack-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-smack-jump-speed))
+  (set! (-> *forward-high-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-forward-high-jump-speed))
+  (set! (-> *jump-attack-mods* target-speed) (-> *MOD-orb-weight-bank* base-jump-attack-speed))
+  (set! (-> *TARGET-bank* wheel-flip-dist) (-> *MOD-orb-weight-bank* base-wheel-flip-dist))
+  (set! (-> *TARGET-bank* wheel-flip-height) (-> *MOD-orb-weight-bank* base-wheel-flip-height))
+  (set! (-> *flip-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-flip-jump-speed))
+  (set! (-> *MOD-orb-weight-bank* last-applied-orbs) -1.0)
   (none))
 
 (defun refresh-money-actors ()
@@ -1722,13 +1614,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (mod-rule-trigger-failure 'rule-red-light)))
   (none))
 
-(define *target-mesh-envmap-save* (new 'global 'boxed-array int32 512))
-
-(define *target-mesh-invis-active?* #f)
+(define *MOD-target-mesh-bank*
+  (new 'static
+       'mod-target-mesh-bank
+       :envmap-save
+       (new 'static 'boxed-array :type int32 :length 512 :allocated-length 512)
+       :invis-active? #f))
 
 (defun target-mesh-invis-set! ((on symbol))
-  (when (and on (not *target-mesh-invis-active?*))
-    (set! *target-mesh-invis-active?* #t)
+  (when (and on (not (-> *MOD-target-mesh-bank* invis-active?)))
+    (set! (-> *MOD-target-mesh-bank* invis-active?) #t)
     (let* ((lods (-> *target* draw lod-set))
            (max-lod (-> lods max-lod))
            (idx 0))
@@ -1737,11 +1632,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (effect-count (-> ctrl header effect-count)))
           (dotimes (j effect-count)
             (let ((eff (-> ctrl effect j)))
-              (set! (-> *target-mesh-envmap-save* idx) (the-as int (-> eff envmap-usage)))
+              (set! (-> *MOD-target-mesh-bank* envmap-save idx) (the-as int (-> eff envmap-usage)))
               (set! (-> eff envmap-usage) 0))
             (set! idx (+ idx 1)))))))
-  (when (and (not on) *target-mesh-invis-active?*)
-    (set! *target-mesh-invis-active?* #f)
+  (when (and (not on) (-> *MOD-target-mesh-bank* invis-active?))
+    (set! (-> *MOD-target-mesh-bank* invis-active?) #f)
     (let* ((lods (-> *target* draw lod-set))
            (max-lod (-> lods max-lod))
            (idx 0))
@@ -1749,7 +1644,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let* ((ctrl (-> lods lod i geo))
                (effect-count (-> ctrl header effect-count)))
           (dotimes (j effect-count)
-            (let ((eff (-> ctrl effect j))) (set! (-> eff envmap-usage) (the-as uint8 (-> *target-mesh-envmap-save* idx))))
+            (let ((eff (-> ctrl effect j))) (set! (-> eff envmap-usage) (the-as uint8 (-> *MOD-target-mesh-bank* envmap-save idx))))
             (set! idx (+ idx 1)))))))
   (none))
 
@@ -2008,9 +1903,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-clear-player-hit-cache ()
   (dotimes (idx 64)
-    (set! (-> *mod-rule-player-hit-handles* idx) (the-as handle #f))
-    (set! (-> *mod-rule-player-hit-modes* idx) #f))
-  (set! *mod-rule-player-hit-write-idx* 0)
+    (set! (-> *MOD-rule-hit-bank* player-hit-handles idx) (the-as handle #f))
+    (set! (-> *MOD-rule-hit-bank* player-hit-modes idx) #f))
+  (set! (-> *MOD-rule-hit-bank* player-hit-write-idx) 0)
   (none))
 
 (defun mod-rule-clear-recent-rolls ()
@@ -2501,15 +2396,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-rule-timed-punishment-active? 'punishment-edge)
                    (target-on-racer-or-flut?))
              0
-             5))
+             6))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
                    is-minigame
                    (eq? level-name 'finalboss)
                    (and (mod-rule-active? 'rule-button-pusher) (or (eq? level-name 'sunken) (eq? level-name 'sunkenb)))
-                   ;;  (eq? level-name 'swamp)
-                   ;;  (eq? level-name 'snow)
                    (string= (current-checkpoint-name) "firecanyon-start")
                    (eq? level-name 'lavatube))
              0
@@ -2693,10 +2586,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-record-player-hit ((enemy process) (attack-mode symbol))
   (when (and enemy attack-mode)
-    (let ((idx *mod-rule-player-hit-write-idx*))
-      (set! (-> *mod-rule-player-hit-handles* idx) (process->handle enemy))
-      (set! (-> *mod-rule-player-hit-modes* idx) attack-mode)
-      (set! *mod-rule-player-hit-write-idx* (mod (+ idx 1) 64))))
+    (let ((idx (-> *MOD-rule-hit-bank* player-hit-write-idx)))
+      (set! (-> (-> *MOD-rule-hit-bank* player-hit-handles) idx) (process->handle enemy))
+      (set! (-> (-> *MOD-rule-hit-bank* player-hit-modes) idx) attack-mode)
+      (set! (-> *MOD-rule-hit-bank* player-hit-write-idx) (mod (+ idx 1) 64))))
   (none))
 
 (defun mod-rule-last-player-hit-mode ((enemy process-drawable))
@@ -2704,10 +2597,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ;; (format #t "[DEBUG] Looking up handle ~A for enemy ~A~%" enemy-handle (-> enemy type))
     (when enemy-handle
       (let ((count 0)
-            (idx (mod (+ *mod-rule-player-hit-write-idx* 63) 64)))
+            (idx (mod (+ (-> *MOD-rule-hit-bank* player-hit-write-idx) 63) 64)))
         (while (< count 64)
-          (when (= (-> *mod-rule-player-hit-handles* idx) enemy-handle)
-            (let ((mode (-> *mod-rule-player-hit-modes* idx)))
+          (when (= (-> (-> *MOD-rule-hit-bank* player-hit-handles) idx) enemy-handle)
+            (let ((mode (-> (-> *MOD-rule-hit-bank* player-hit-modes) idx)))
               ;; (format #t "[DEBUG] Found hit-mode: ~A~%" mode)
               (return mode)))
           (set! idx (if (= idx 0) 63 (- idx 1)))
