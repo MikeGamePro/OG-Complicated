@@ -460,7 +460,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHAT COLOR IS THE CROSS ON FINLAND\c12S FLAG?"
        "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
        "ACROPHOBIA IS THE FEAR OF WHAT?"
-       "HOW MANY TIMES HAVE YOU DIED THIS RUN?"
        "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
        ))
 
@@ -644,8 +643,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trivia-question-valid? ((idx int))
   (cond
-    ((= idx 40) (> (-> *game-info* total-deaths) 0))
-    ((= idx 41) (> *rules-broken* 0))
+    ;; ((= idx 999) (> (-> *game-info* total-deaths) 0))
+    ((= idx 40) (> *rules-broken* 0))
     (else #t)))
 
 (defun mod-rule-trivia-pick-question ()
@@ -2750,10 +2749,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-apply-punishment ((punishment symbol))
   (cond
     ((eq? punishment 'punishment-money)
-     (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0)))
-     (auto-save-command 'auto-save 0 0 *default-pool*))
+     (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0))))
     ((eq? punishment 'punishment-crash)
-     (auto-save-command 'auto-save 0 0 *default-pool*)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1)) (suspend)))
@@ -2800,12 +2797,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (sound-play "buzzer-pickup")
          (set! *mod-rule-last-outcome* (if twisted? 'twisted-success 'success))
          (+! *rules-followed* 1)
+         (auto-save-command 'auto-save 0 0 *default-pool*)
          (mod-rule-finish-slot slot #t))
         ((or ignore-grace? (not (mod-rule-slot-in-grace-period? slot)))
          (when twisted?
            (set! *mod-rule-twist-marked-slot* -1))
          (sound-play "caught-eel")
          (+! *rules-broken* 1)
+         (auto-save-command 'auto-save 0 0 *default-pool*)
          (set! *mod-rule-last-outcome* (if twisted? 'twisted-failed 'failed))
          (let ((punishment (or (-> *mod-rule-slot-punishments* slot) (mod-rule-random-available-punishment (-> *mod-rule-active-slots* slot)))))
            (if (eq? punishment 'punishment-extra-rule)
@@ -3066,9 +3065,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((shuffled-idx (-> *trivia-shuffle-map* guess-idx)))
     (cond
       ;; Dynamic questions here
-      ((= q-idx 40) (trivia-dynamic-choice-str (-> *game-info* total-deaths) shuffled-idx 4))
+      ;; ((= q-idx 999) (trivia-dynamic-choice-str (-> *game-info* total-deaths) shuffled-idx 4))
       ;; ((= q-idx 9999) (trivia-dynamic-choice-str (the int (-> *game-info* money)) shuffled-idx 6))
-      ((= q-idx 41) (trivia-dynamic-choice-str *rules-broken* shuffled-idx 4))
+      ((= q-idx 40) (trivia-dynamic-choice-str *rules-broken* shuffled-idx 4))
       (else (-> *trivia-choices* (+ (* q-idx 4) shuffled-idx))))))
 
 (define *trivia-last-tracked-question* -1)
