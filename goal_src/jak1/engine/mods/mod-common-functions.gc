@@ -2343,7 +2343,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((eq? id 'complication-glare) 8)
              ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
              (else 7)))
-          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 9))
+          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 7))
           ((eq? id 'rule-double-kill)
            (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
                    is-minigame
