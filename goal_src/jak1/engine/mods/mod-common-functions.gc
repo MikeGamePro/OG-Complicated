@@ -644,6 +644,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trivia-question-valid? ((idx int))
   (cond
+    ((= idx 40) (> (-> *game-info* total-deaths) 0))
     ((= idx 41) (> *rules-broken* 0))
     (else #t)))
 
