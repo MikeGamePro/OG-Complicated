@@ -128,15 +128,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-unique-enemy-killed-types* (new 'global 'boxed-array symbol 3))
 
-(define *MOD-rule-hit-bank*
-  (new 'static
-       'mod-rule-hit-bank
-       :player-hit-handles
-       (new 'static 'boxed-array :type handle :length 64 :allocated-length 64)
-       :player-hit-modes
-       (new 'static 'boxed-array :type symbol :length 64 :allocated-length 64)
-       :player-hit-write-idx 0))
-
 (define *mod-rule-timed-punishment-slot-count* 8)
 
 ;; Append new penalties only.
@@ -237,9 +228,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-no-double-jump
        'rule-hang-time
        'complication-unbreakable
-       'complication-get-a-grip))
-
-(define *MOD-rng-bank* (new 'static 'mod-rng-bank :content-state 1 :punish-state 1 :seed-display 0))
+       'complication-get-a-grip
+       'complication-torrent
+       'complication-palate-change))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -955,6 +946,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) "HANG TIME")
     ((eq? id 'complication-unbreakable) "UNBREAKABLE")
     ((eq? id 'complication-get-a-grip) "GET A GRIP")
+    ((eq? id 'complication-torrent) "TORRENT")
+    ((eq? id 'complication-palate-change) "PALATE CHANGE")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1039,6 +1032,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-get-a-grip)
      (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 12))) (seconds 1))))
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
+    ((eq? id 'complication-torrent) "FISH ARE FASTER.")
+    ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1112,6 +1107,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) (apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'complication-unbreakable) (seconds 60)) ;; 60
     ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
+    ((eq? id 'complication-torrent) (seconds 20)) ;; 20
+    ((eq? id 'complication-palate-change) (seconds 30)) ;; 30
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1224,7 +1221,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-mirror)
          (eq? id 'complication-no-double-jump)
          (eq? id 'complication-unbreakable)
-         (eq? id 'complication-get-a-grip))
+         (eq? id 'complication-get-a-grip)
+         (eq? id 'complication-torrent)
+         (eq? id 'complication-palate-change))
      'complication)
     (else 'unknown)))
 
@@ -1567,13 +1566,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (and (target-on-racer?) (cpad-hold? 0 x)))
       (mod-rule-trigger-failure 'rule-red-light)))
   (none))
-
-(define *MOD-target-mesh-bank*
-  (new 'static
-       'mod-target-mesh-bank
-       :envmap-save
-       (new 'static 'boxed-array :type int32 :length 512 :allocated-length 512)
-       :invis-active? #f))
 
 (defun target-mesh-invis-set! ((on symbol))
   (when (and on (not (-> *MOD-target-mesh-bank* invis-active?)))
@@ -2327,7 +2319,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           ;; Special
           ((eq? id 'rule-hang-time) (if (or is-minigame (mod-rule-active? 'rule-grounded) (not (hang-time-level? level-name))) 0 5))
-          ((eq? id 'complication-vibe-check) (if (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 4 2))
+          ((eq? id 'complication-vibe-check)
+            (cond
+              (is-minigame 0)
+              ((< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 4)
+              (else 2)))
           ((eq? id 'rule-express-delivery)
            (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
                         (task-closed? (game-task misty-muse) (task-status need-introduction)))
@@ -2361,7 +2357,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'lavatube))
              0
              4))
-          ((eq? id 'rule-sagging-sails) (if (target-fishing?) 35 0))
+          ((or (eq? id 'complication-torrent) (eq? id 'rule-sagging-sails) (eq? id 'complication-palate-change)) (if (target-fishing?) 35 0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))

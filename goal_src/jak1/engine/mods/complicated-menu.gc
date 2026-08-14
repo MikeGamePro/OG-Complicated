@@ -91,6 +91,8 @@
    (rule-hang-time? symbol)
    (complication-unbreakable? symbol)
    (complication-get-a-grip? symbol)
+   (complication-torrent? symbol)
+   (complication-palate-change? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -178,6 +180,8 @@
   (set! (-> obj rule-hang-time?) #f)
   (set! (-> obj complication-unbreakable?) #t)
   (set! (-> obj complication-get-a-grip?) #f)
+  (set! (-> obj complication-torrent?) #t)
+  (set! (-> obj complication-palate-change?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -272,6 +276,8 @@
                                           (("rule-hang-time?") (set! (-> obj rule-hang-time?) (file-stream-read-symbol file)))
                                           (("complication-unbreakable?") (set! (-> obj complication-unbreakable?) (file-stream-read-symbol file)))
                                           (("complication-get-a-grip?") (set! (-> obj complication-get-a-grip?) (file-stream-read-symbol file)))
+                                          (("complication-torrent?") (set! (-> obj complication-torrent?) (file-stream-read-symbol file)))
+                                          (("complication-palate-change?") (set! (-> obj complication-palate-change?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -373,6 +379,8 @@
     (format file "  (rule-hang-time? ~A)~%" (-> obj rule-hang-time?))
     (format file "  (complication-unbreakable? ~A)~%" (-> obj complication-unbreakable?))
     (format file "  (complication-get-a-grip? ~A)~%" (-> obj complication-get-a-grip?))
+    (format file "  (complication-torrent? ~A)~%" (-> obj complication-torrent?))
+    (format file "  (complication-palate-change? ~A)~%" (-> obj complication-palate-change?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -416,6 +424,7 @@
     (set! (-> *complicated-settings* rule-hang-time?) #f)
     (set! (-> *complicated-settings* rule-qte?) #f)
     (set! (-> *complicated-settings* complication-get-a-grip?) #f)
+    (set! (-> *complicated-settings* complication-torrent?) #f)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -432,6 +441,7 @@
     (set! (-> *complicated-settings* rule-hang-time?) #f)
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
+    (set! (-> *complicated-settings* complication-torrent?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -448,6 +458,7 @@
     (set! (-> *complicated-settings* rule-hang-time?) #t)
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
+    (set! (-> *complicated-settings* complication-torrent?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -464,6 +475,7 @@
     (set! (-> *complicated-settings* rule-hang-time?) #t)
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
+    (set! (-> *complicated-settings* complication-torrent?) #t)
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -1371,6 +1383,26 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [69] TORRENT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-torrent)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [70] PALATE CHANGE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-palate-change)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] BACK
        (new 'static
             'game-option
@@ -1618,6 +1650,8 @@
   (set! (-> *condition-toggle-options* 66 value-to-modify) (&-> *complicated-settings* rule-hang-time?))
   (set! (-> *condition-toggle-options* 67 value-to-modify) (&-> *complicated-settings* complication-unbreakable?))
   (set! (-> *condition-toggle-options* 68 value-to-modify) (&-> *complicated-settings* complication-get-a-grip?))
+  (set! (-> *condition-toggle-options* 69 value-to-modify) (&-> *complicated-settings* complication-torrent?))
+  (set! (-> *condition-toggle-options* 70 value-to-modify) (&-> *complicated-settings* complication-palate-change?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -1726,4 +1760,6 @@
          ((eq? id 'rule-hang-time) (-> *complicated-settings* rule-hang-time?))
          ((eq? id 'complication-unbreakable) (-> *complicated-settings* complication-unbreakable?))
          ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
+         ((eq? id 'complication-torrent) (-> *complicated-settings* complication-torrent?))
+         ((eq? id 'complication-palate-change) (-> *complicated-settings* complication-palate-change?))
          (else #t))))

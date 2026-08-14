@@ -886,6 +886,8 @@
   (complicated-opts-cond-rule-hang-time #x1671)
   (complicated-opts-cond-complication-unbreakable #x1672)
   (complicated-opts-cond-complication-get-a-grip #x1673)
+  (complicated-opts-cond-complication-torrent #x1674)
+  (complicated-opts-cond-complication-palate-change #x1675)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

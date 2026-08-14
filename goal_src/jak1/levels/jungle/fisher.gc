@@ -13,6 +13,20 @@
 
 (define-extern global-countdown-add-seconds (function float none))
 
+(define *torrent-vel-mult* 1.7)
+(define *torrent-period-mult* 1.35)
+
+(defun fisher-torrent-vel-mult ()
+  (if (mod-rule-active? 'complication-torrent) *torrent-vel-mult* 1.0))
+
+(defun fisher-torrent-period-mult ()
+  (if (mod-rule-active? 'complication-torrent) *torrent-period-mult* 1.0))
+
+(define *torrent-swing-vel-mult* 0.5)
+
+(defun fisher-torrent-swing-vel-mult ()
+  (if (mod-rule-active? 'complication-torrent) *torrent-swing-vel-mult* 1.0))
+
 (deftype fisher-bank (basic)
   ((width      meters)
    (net-radius meters)
@@ -822,40 +836,45 @@
 (defstate fisher-fish-caught (fisher-fish)
   :code
     (behavior ()
-      (case (-> self mode)
-        (('deadly 'bad)
-         (sound-play "caught-eel")
-         (ambient-hint-spawn "sksp0a42" (-> self root trans) *entity-pool* 'ambient)
-         (send-event (ppointer->process (-> self parent)) 'deadly))
-        (('powerup)
-         (if (fish-assist-enabled?) (global-countdown-add-seconds 5.0))
-         (process-spawn part-tracker
-                        :init
-                        part-tracker-init
-                        group-fish-collect
-                        -1
-                        #f
-                        #f
-                        #f
-                        (-> self root trans)
-                        :to
-                        *entity-pool*)
-         (sound-play "get-big-fish")
-         (send-event (ppointer->process (-> self parent)) 'fisher-fish-caught 5))
-        (else
-         (process-spawn part-tracker
-                        :init
-                        part-tracker-init
-                        group-fish-collect
-                        -1
-                        #f
-                        #f
-                        #f
-                        (-> self root trans)
-                        :to
-                        *entity-pool*)
-         (sound-play "get-small-fish")
-         (send-event (ppointer->process (-> self parent)) 'fisher-fish-caught 1)))
+      (let ((effective-mode
+              (if (and (mod-rule-active? 'complication-palate-change)
+                       (or (= (-> self mode) 'bad) (= (-> self mode) 'powerup)))
+                (if (= (-> self mode) 'bad) 'powerup 'bad)
+                (-> self mode))))
+        (case effective-mode
+          (('deadly 'bad)
+           (sound-play "caught-eel")
+           (ambient-hint-spawn "sksp0a42" (-> self root trans) *entity-pool* 'ambient)
+           (send-event (ppointer->process (-> self parent)) 'deadly))
+          (('powerup)
+           (if (fish-assist-enabled?) (global-countdown-add-seconds 5.0))
+           (process-spawn part-tracker
+                          :init
+                          part-tracker-init
+                          group-fish-collect
+                          -1
+                          #f
+                          #f
+                          #f
+                          (-> self root trans)
+                          :to
+                          *entity-pool*)
+           (sound-play "get-big-fish")
+           (send-event (ppointer->process (-> self parent)) 'fisher-fish-caught 5))
+          (else
+           (process-spawn part-tracker
+                          :init
+                          part-tracker-init
+                          group-fish-collect
+                          -1
+                          #f
+                          #f
+                          #f
+                          (-> self root trans)
+                          :to
+                          *entity-pool*)
+           (sound-play "get-small-fish")
+           (send-event (ppointer->process (-> self parent)) 'fisher-fish-caught 1))))
       (set! (-> self vel) (/ (-> self vel) 4))
       (while (< 0.1 (-> self root scale x))
         (set! (-> self offset) (-> (the-as fisher (-> self parent 0)) paddle))
@@ -868,31 +887,37 @@
 (defstate fisher-fish-die (fisher-fish)
   :code
     (behavior ()
-      (case (-> self mode)
-        (('deadly 'bad))
-        (('powerup)
-         (mod-rule-counter-add-progress 'rule-sagging-sails 1)
-         (level-hint-spawn (text-id sidekick-hint-fish-powerup) "sksp0b42" (the-as entity #f) *entity-pool* (game-task none))
-         (let ((f0-2 (rand-float-gen)))
-           (if (< 0.5 f0-2)
-             (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA04" #t (-> self root trans))
-             (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA05" #t (-> self root trans))))
-         (send-event (ppointer->process (-> self parent)) 'fisher-fish-die 5))
-        (else
-         (let ((f0-5 (rand-float-gen)))
-           (cond
-             ((and (< 0.8333 f0-5) (< (-> (the-as fisher (-> self parent 0)) paddle-pos z) (-> self root trans z)))
-              (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA01" #t (-> self root trans)))
-             ((< 0.8333 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA02" #t (-> self root trans)))
-             ((and (< 0.6666 f0-5) (< (-> (the-as fisher (-> self parent 0)) paddle-pos z) (-> self root trans z)))
-              (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA1A" #t (-> self root trans)))
-             ((< 0.6666 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA2A" #t (-> self root trans)))
-             ((< 0.5 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA06" #t (-> self root trans)))
-             ((< 0.3333 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA08" #t (-> self root trans)))
-             ((< 0.1666 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA09" #t (-> self root trans)))
-             ((> (-> (the-as fisher (-> self parent 0)) missed) 0)
-              (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA10" #t (-> self root trans)))))
-         (send-event (ppointer->process (-> self parent)) 'fisher-fish-die 1)))))
+      (let ((effective-mode
+              (if (and (mod-rule-active? 'complication-palate-change)
+                       (or (= (-> self mode) 'bad) (= (-> self mode) 'powerup)))
+                (if (= (-> self mode) 'bad) 'powerup 'bad)
+                (-> self mode))))
+        (case effective-mode
+          (('deadly 'bad))
+          (('powerup)
+           (mod-rule-counter-add-progress 'rule-sagging-sails 1)
+           (level-hint-spawn (text-id sidekick-hint-fish-powerup) "sksp0b42" (the-as entity #f) *entity-pool* (game-task none))
+           (let ((f0-2 (rand-float-gen)))
+             (if (< 0.5 f0-2)
+               (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA04" #t (-> self root trans))
+               (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA05" #t (-> self root trans))))
+           (send-event (ppointer->process (-> self parent)) 'fisher-fish-die 5))
+          (else
+           (let ((f0-5 (rand-float-gen)))
+             (cond
+               ((and (< 0.8333 f0-5) (< (-> (the-as fisher (-> self parent 0)) paddle-pos z) (-> self root trans z)))
+                (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA01" #t (-> self root trans)))
+               ((< 0.8333 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA02" #t (-> self root trans)))
+               ((and (< 0.6666 f0-5) (< (-> (the-as fisher (-> self parent 0)) paddle-pos z) (-> self root trans z)))
+                (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA1A" #t (-> self root trans)))
+               ((< 0.6666 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA2A" #t (-> self root trans)))
+               ((< 0.5 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA06" #t (-> self root trans)))
+               ((< 0.3333 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA08" #t (-> self root trans)))
+               ((< 0.1666 f0-5) (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA09" #t (-> self root trans)))
+               ((> (-> (the-as fisher (-> self parent 0)) missed) 0)
+                (play-ambient (-> (the-as fisher (-> self parent 0)) ambient) "FIS-TA10" #t (-> self root trans))))
+             (send-event (ppointer->process (-> self parent)) 'fisher-fish-die 1))))))
+  (none))
 
 (defbehavior fisher-fish-init-by-other fisher-fish ((arg0 symbol) (arg1 float) (arg2 float))
   (set! (-> self mode) arg0)
@@ -1152,7 +1177,7 @@
     (set! (-> self swing-time)
           (rand-vu-int-range (the-as int (-> self params swing-min)) (the-as int (-> self params swing-max))))
     (set! (-> self params vel) (- (-> self params vel))))
-  (+! (-> self spawner) (* (-> self params vel) (seconds-per-frame)))
+  (+! (-> self spawner) (* (-> self params vel) (fisher-torrent-swing-vel-mult) (seconds-per-frame)))
   (if (= (-> self params swing-min) (seconds 333.33))
     (set! (-> self spawner) (* 0.01 (the float (-> self params swing-max)))))
   (cond
@@ -1162,7 +1187,8 @@
     ((and (< (-> self params vel) 0.0) (>= 0.0 (-> self spawner)))
      (set! (-> self params vel) (- (-> self params vel)))
      (set! (-> self spawner) 0.0)))
-  (when (and (nonzero? (-> self params period)) (time-elapsed? (-> self spawn-time) (-> self params period)))
+  (when (and (nonzero? (-> self params period))
+             (time-elapsed? (-> self spawn-time) (max (seconds 0.05) (the int (/ (the float (-> self params period)) (fisher-torrent-period-mult))))))
     (let ((gp-0 (cond
                   ((rand-vu-percent? (-> self params powerup-percent))
                    (if (and (time-elapsed? (-> self ambient-big-one) (seconds 30))
@@ -1178,7 +1204,7 @@
       (set-time! (-> self spawn-time))
       (sound-play "fish-spawn" :vol 70)
       (fisher-spawn-ambient)
-      (process-spawn fisher-fish gp-0 (-> self spawner) (* 1.85 (-> self params fish-vel)) :to self)))
+      (process-spawn fisher-fish gp-0 (-> self spawner) (* 1.85 (-> self params fish-vel) (fisher-torrent-vel-mult)) :to self)))
   (let ((f1-14 (analog-input (the-as int (-> *cpad-list* cpads 0 leftx)) 128.0 32.0 110.0 28.0)))
     (+! (-> self paddle-vel) (* f1-14 (seconds-per-frame))))
   (seek! (-> self paddle-vel) 0.0 (* 15.0 (seconds-per-frame)))

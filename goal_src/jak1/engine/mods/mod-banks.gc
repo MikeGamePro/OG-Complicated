@@ -130,6 +130,8 @@
    (punish-state  uint)
    (seed-display  uint)))
 
+(define *MOD-rng-bank* (new 'static 'mod-rng-bank :content-state 1 :punish-state 1 :seed-display 0))
+
 (deftype mod-quiz-bank (structure)
   ((math-val1                    int32)
    (math-val2                    int32)
@@ -211,6 +213,13 @@
   ((envmap-save   (array int32))
    (invis-active? symbol)))
 
+(define *MOD-target-mesh-bank*
+  (new 'static
+       'mod-target-mesh-bank
+       :envmap-save
+       (new 'static 'boxed-array :type int32 :length 512 :allocated-length 512)
+       :invis-active? #f))
+
 (deftype mod-rule-display-bank (structure)
   ((wrap-line-1        string)
    (wrap-line-2        string)
@@ -226,3 +235,12 @@
   ((player-hit-handles   (array handle))
    (player-hit-modes     (array symbol))
    (player-hit-write-idx int32)))
+
+(define *MOD-rule-hit-bank*
+  (new 'static
+       'mod-rule-hit-bank
+       :player-hit-handles
+       (new 'static 'boxed-array :type handle :length 64 :allocated-length 64)
+       :player-hit-modes
+       (new 'static 'boxed-array :type symbol :length 64 :allocated-length 64)
+       :player-hit-write-idx 0))
