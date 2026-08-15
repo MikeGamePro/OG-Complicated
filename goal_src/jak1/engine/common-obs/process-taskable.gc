@@ -563,7 +563,14 @@
         (process-entity-status! self (entity-perm-status bit-3) #f))
       (cond
         ((not *target*))
-        ((not (-> self will-talk))
+        ((begin
+           (let ((blocked-talk?
+                   (or (mod-rule-active? 'complication-fuel-shortage)
+                       (and *target*
+                            (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0)
+                            (mod-rule-active? 'complication-critical)))))
+             (if blocked-talk? (set! (-> self will-talk) #f)))
+           (not (-> self will-talk)))
          (if (>= (- (-> *display* game-frame-counter) (-> self last-talk)) (seconds 10)) (set! (-> self will-talk) #t)))
         ((begin
            (process-taskable-method-46 self)
@@ -589,7 +596,7 @@
               (kill-current-level-hint '() '(sidekick voicebox ambient) 'exit)
               (level-hint-surpress!)
               (hide-hud)
-              (when (and (hud-hidden?) (can-grab-display? self))
+              (when (and (-> self will-talk) (hud-hidden?) (can-grab-display? self))
                 (let ((gp-1 (new 'stack 'font-context *font-default-matrix* 32 140 0.0 (font-color default) (font-flags shadow kerning))))
                   (set-width! gp-1 440)
                   (set-height! gp-1 60)
