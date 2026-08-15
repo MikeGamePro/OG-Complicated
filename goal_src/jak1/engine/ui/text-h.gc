@@ -903,6 +903,7 @@
   (complicated-opts-punish-toggle-iframes #x1682)
   (complicated-opts-punish-toggle-camera #x1683)
   (complicated-opts-punish-toggle-ohko #x1684)
+  (complicated-opts-punish-toggle-reset #x1685)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

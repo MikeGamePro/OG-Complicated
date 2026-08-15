@@ -149,7 +149,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'punishment-blind
        'punishment-iframes
        'punishment-camera
-       'punishment-ohko))
+       'punishment-ohko
+       'punishment-reset))
 
 (define *mod-rule-punishment-id-count* (length *mod-rule-punishment-ids*))
 
@@ -1738,6 +1739,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-ohko)))))
+    (when (and (not (eq? rule-id 'rule-qte))
+               (punishment-toggle-enabled? 'punishment-reset)
+               (mod-rule-punishment-rollable? 'punishment-reset))
+      (let ((w 3))
+        (when (> w 0)
+          (+! running-total w)
+          (when (< (mod-rand-punish-int-range 0 running-total) w)
+            (set! selected 'punishment-reset)))))
     selected))
 
 (defun play-custom-sfx ((filename string) (base-volume float))
@@ -2625,6 +2634,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")
     ((eq? punishment 'punishment-ohko) "ANY DAMAGE OR BONK KILLS FOR 3 MINUTES")
+    ((eq? punishment 'punishment-reset) "RESET THE RUN")
     (else "NONE")))
 
 (defun mod-rule-timed-punishment-name ((punishment symbol))
@@ -2642,6 +2652,21 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (and (>= failed-slot 0) (< failed-slot *mod-rule-slot-count*) (< (mod-rule-active-slot-count) 2))
     (mod-rule-reroll-slot failed-slot #t)
     (let ((extra-slot (mod-rule-first-free-slot))) (when (>= extra-slot 0) (mod-rule-reroll-slot extra-slot #t))))
+  (none))
+
+(defun mod-rule-reset-run-and-restart ()
+  (set! (-> *MOD-countdown-bank* remaining-time) 0)
+  (set! (-> *MOD-countdown-bank* lost?) #t)
+  (set! (-> *MOD-countdown-bank* active?) #f)
+  (kill-by-name 'mod-rule-manager *active-pool*)
+  (mod-rules-reset)
+  (when *target*
+    (logclear! (-> *target* mask) (process-mask sleep)))
+  (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
+  (process-spawn-function process
+    (lambda ()
+      (suspend)
+      (start-speedrun (the-as speedrun-category #f))))
   (none))
 
 (defun mod-rule-apply-punishment ((punishment symbol))
@@ -2674,6 +2699,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-edge) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-camera) (none) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-ohko) (none) (mod-rule-start-timed-punishment punishment))
+    ((eq? punishment 'punishment-reset)
+     (process-spawn-function process
+       (lambda ()
+         (let ((start-time (current-time)))
+           (until (>= (- (current-time) start-time) (seconds 1))
+             (suspend)))
+         (mod-rule-reset-run-and-restart))))
     ((eq? punishment 'punishment-delay) (input-delay-enable! #t 0.2) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-iframes)
      (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0))
@@ -3602,23 +3634,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                  (sound-play "slider2001"))))
            (when (<= (-> *MOD-countdown-bank* remaining-time) 0)
              (format #t "COUNTDOWN: lost triggered~%")
-             (set! (-> *MOD-countdown-bank* remaining-time) 0)
-             (set! (-> *MOD-countdown-bank* lost?) #t)
-             (set! (-> *MOD-countdown-bank* active?) #f)
-             (format #t "COUNTDOWN: killing mod-rule-manager~%")
-             (kill-by-name 'mod-rule-manager *active-pool*)
-             (format #t "COUNTDOWN: mod-rules-reset~%")
-             (mod-rules-reset)
-             (when *target*
-               (logclear! (-> *target* mask) (process-mask sleep)))
-             (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
-             (format #t "COUNTDOWN: spawning reset process~%")
-             (process-spawn-function process
-               (lambda ()
-                 (suspend)
-                 (format #t "COUNTDOWN: calling start-speedrun, category=~S~%" (-> *speedrun-info* category))
-                 (start-speedrun (the-as speedrun-category #f))
-                 (format #t "COUNTDOWN: start-speedrun returned~%"))))))))
+             (mod-rule-reset-run-and-restart))))))
     (global-countdown-draw)
     (suspend))
   (none))

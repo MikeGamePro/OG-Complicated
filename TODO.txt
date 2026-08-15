@@ -1,13 +1,10 @@
 settings (in progress)
 at least 50 trivia (10 more)
-expand cumbersome moveset
-block npc cells on fuel shortage (purchases done)
 
 new zoomer rule
 add plunger-lurker as kill
 don't start timers until blackout ends
 maybe rename: keep it low, one frame, hands on, bloodlust
 maybe add settings for timer placement
-consider replacement for jak rabbit
 rgyb refresh (or swap powerup)
 
