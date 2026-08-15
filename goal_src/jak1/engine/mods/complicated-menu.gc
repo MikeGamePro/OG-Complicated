@@ -33,6 +33,7 @@
    (punishment-toggle-camera? symbol)
    (punishment-toggle-ohko? symbol)
    (punishment-toggle-reset? symbol)
+   (punishment-toggle-countdown? symbol)
    (klaww-assist? symbol)
    (fish-assist? symbol)
    (rule-grounded? symbol)
@@ -136,6 +137,7 @@
   (set! (-> obj punishment-toggle-camera?) #f)
   (set! (-> obj punishment-toggle-ohko?) #t)
   (set! (-> obj punishment-toggle-reset?) #f)
+  (set! (-> obj punishment-toggle-countdown?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
   (set! (-> obj rule-grounded?) #t)
@@ -247,6 +249,7 @@
                                           (("punishment-toggle-camera?") (set! (-> obj punishment-toggle-camera?) (file-stream-read-symbol file)))
                                           (("punishment-toggle-ohko?") (set! (-> obj punishment-toggle-ohko?) (file-stream-read-symbol file)))
                                           (("punishment-toggle-reset?") (set! (-> obj punishment-toggle-reset?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-countdown?") (set! (-> obj punishment-toggle-countdown?) (file-stream-read-symbol file)))
                                           (("klaww-assist?") (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
                                           (("fish-assist?") (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
                                           (("rule-grounded?") (set! (-> obj rule-grounded?) (file-stream-read-symbol file)))
@@ -364,6 +367,7 @@
     (format file "  (punishment-toggle-camera? ~A)~%" (-> obj punishment-toggle-camera?))
     (format file "  (punishment-toggle-ohko? ~A)~%" (-> obj punishment-toggle-ohko?))
     (format file "  (punishment-toggle-reset? ~A)~%" (-> obj punishment-toggle-reset?))
+    (format file "  (punishment-toggle-countdown? ~A)~%" (-> obj punishment-toggle-countdown?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
     (format file "  (rule-grounded? ~A)~%" (-> obj rule-grounded?))
@@ -868,7 +872,17 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [14] BACK
+       ;; [14] TIME LOSS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-countdown)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [15] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1810,6 +1824,7 @@
   (set! (-> *punishment-toggle-options* 11 value-to-modify) (&-> *complicated-settings* punishment-toggle-camera?))
   (set! (-> *punishment-toggle-options* 12 value-to-modify) (&-> *complicated-settings* punishment-toggle-ohko?))
   (set! (-> *punishment-toggle-options* 13 value-to-modify) (&-> *complicated-settings* punishment-toggle-reset?))
+  (set! (-> *punishment-toggle-options* 14 value-to-modify) (&-> *complicated-settings* punishment-toggle-countdown?))
   ;; Condition toggle mappings
   (set! (-> *condition-toggle-options* 0 value-to-modify) (&-> *complicated-settings* rule-grounded?))
   (set! (-> *condition-toggle-options* 1 value-to-modify) (&-> *complicated-settings* rule-die?))
@@ -1916,6 +1931,7 @@
          ((eq? punishment 'punishment-camera) (-> *complicated-settings* punishment-toggle-camera?))
          ((eq? punishment 'punishment-ohko) (-> *complicated-settings* punishment-toggle-ohko?))
          ((eq? punishment 'punishment-reset) (-> *complicated-settings* punishment-toggle-reset?))
+         ((eq? punishment 'punishment-countdown) (-> *complicated-settings* punishment-toggle-countdown?))
          (else #t))))
 
 (defun klaww-assist-enabled? ()
