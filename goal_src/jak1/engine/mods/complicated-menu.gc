@@ -93,6 +93,7 @@
    (complication-get-a-grip? symbol)
    (complication-torrent? symbol)
    (complication-palate-change? symbol)
+   (complication-jak-be-nimble? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -182,6 +183,7 @@
   (set! (-> obj complication-get-a-grip?) #f)
   (set! (-> obj complication-torrent?) #t)
   (set! (-> obj complication-palate-change?) #t)
+  (set! (-> obj complication-jak-be-nimble?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -278,6 +280,7 @@
                                           (("complication-get-a-grip?") (set! (-> obj complication-get-a-grip?) (file-stream-read-symbol file)))
                                           (("complication-torrent?") (set! (-> obj complication-torrent?) (file-stream-read-symbol file)))
                                           (("complication-palate-change?") (set! (-> obj complication-palate-change?) (file-stream-read-symbol file)))
+                                          (("complication-jak-be-nimble?") (set! (-> obj complication-jak-be-nimble?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -381,6 +384,7 @@
     (format file "  (complication-get-a-grip? ~A)~%" (-> obj complication-get-a-grip?))
     (format file "  (complication-torrent? ~A)~%" (-> obj complication-torrent?))
     (format file "  (complication-palate-change? ~A)~%" (-> obj complication-palate-change?))
+    (format file "  (complication-jak-be-nimble? ~A)~%" (-> obj complication-jak-be-nimble?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1403,6 +1407,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+        ;; [71] JAK BE NIMBLE
+        (new 'static
+              'game-option
+              :option-type (game-option-type on-off)
+              :name (text-id complicated-opts-cond-complication-jak-be-nimble)
+              :scale #t
+              :on-confirm
+              (lambda ()
+                (commit-to-file *complicated-settings*)
+                (none)))
        ;; [--] BACK
        (new 'static
             'game-option
@@ -1652,6 +1666,7 @@
   (set! (-> *condition-toggle-options* 68 value-to-modify) (&-> *complicated-settings* complication-get-a-grip?))
   (set! (-> *condition-toggle-options* 69 value-to-modify) (&-> *complicated-settings* complication-torrent?))
   (set! (-> *condition-toggle-options* 70 value-to-modify) (&-> *complicated-settings* complication-palate-change?))
+  (set! (-> *condition-toggle-options* 71 value-to-modify) (&-> *complicated-settings* complication-jak-be-nimble?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -1762,4 +1777,5 @@
          ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
          ((eq? id 'complication-torrent) (-> *complicated-settings* complication-torrent?))
          ((eq? id 'complication-palate-change) (-> *complicated-settings* complication-palate-change?))
+          ((eq? id 'complication-jak-be-nimble) (-> *complicated-settings* complication-jak-be-nimble?))
          (else #t))))

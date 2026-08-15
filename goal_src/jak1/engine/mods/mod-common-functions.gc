@@ -230,7 +230,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-unbreakable
        'complication-get-a-grip
        'complication-torrent
-       'complication-palate-change))
+       'complication-palate-change
+       'complication-jak-be-nimble))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -532,34 +533,36 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun orb-weight-multiplier ()
   (let ((orbs (max 0.0 (min 150.0 (current-orb-count))))) (- 1.0 (* 0.4 (/ orbs 100.0)))))
 
+(defun mod-rule-refresh-movement-speeds! ((turbo? symbol) (mult float))
+  (let* ((walk-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-walk-speed)))
+         (double-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-double-jump-speed)))
+         (jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-jump-speed)))
+         (attack-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-attack-speed)))
+         (smack-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-smack-jump-speed)))
+         (forward-high-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-forward-high-jump-speed)))
+         (jump-attack-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-jump-attack-speed)))
+         (flip-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-flip-jump-speed))))
+    (set! (-> *walk-mods* target-speed) (* walk-base mult))
+    (set! (-> *double-jump-mods* target-speed) (* double-jump-base mult))
+    (set! (-> *jump-mods* target-speed) (* jump-base mult))
+    (set! (-> *attack-mods* target-speed) (* attack-base mult))
+    (set! (-> *smack-jump-mods* target-speed) (* smack-jump-base mult))
+    (set! (-> *forward-high-jump-mods* target-speed) (* forward-high-jump-base mult))
+    (set! (-> *jump-attack-mods* target-speed) (* jump-attack-base mult))
+    (set! (-> *TARGET-bank* wheel-flip-dist) (* (-> *MOD-orb-weight-bank* base-wheel-flip-dist) mult))
+    (set! (-> *TARGET-bank* wheel-flip-height) (* (-> *MOD-orb-weight-bank* base-wheel-flip-height) mult))
+    (set! (-> *flip-jump-mods* target-speed) (* flip-jump-base mult)))
+  (none))
+
 (defun orb-weight-apply! ()
   (let ((orbs (current-orb-count)))
     (when (!= orbs (-> *MOD-orb-weight-bank* last-applied-orbs))
-      (let ((mult (orb-weight-multiplier)))
-        (set! (-> *walk-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-walk-speed) mult))
-        (set! (-> *double-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-double-jump-speed) mult))
-        (set! (-> *jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-jump-speed) mult))
-        (set! (-> *attack-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-attack-speed) mult))
-        (set! (-> *smack-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-smack-jump-speed) mult))
-        (set! (-> *forward-high-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-forward-high-jump-speed) mult))
-        (set! (-> *jump-attack-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-jump-attack-speed) mult))
-        (set! (-> *TARGET-bank* wheel-flip-dist) (* (-> *MOD-orb-weight-bank* base-wheel-flip-dist) mult))
-        (set! (-> *TARGET-bank* wheel-flip-height) (* (-> *MOD-orb-weight-bank* base-wheel-flip-height) mult))
-        (set! (-> *flip-jump-mods* target-speed) (* (-> *MOD-orb-weight-bank* base-flip-jump-speed) mult)))
+      (mod-rule-refresh-movement-speeds! (mod-rule-active? 'complication-jak-be-nimble) (orb-weight-multiplier))
       (set! (-> *MOD-orb-weight-bank* last-applied-orbs) orbs)))
   (none))
 
 (defun orb-weight-reset! ()
-  (set! (-> *walk-mods* target-speed) (-> *MOD-orb-weight-bank* base-walk-speed))
-  (set! (-> *double-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-double-jump-speed))
-  (set! (-> *jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-jump-speed))
-  (set! (-> *attack-mods* target-speed) (-> *MOD-orb-weight-bank* base-attack-speed))
-  (set! (-> *smack-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-smack-jump-speed))
-  (set! (-> *forward-high-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-forward-high-jump-speed))
-  (set! (-> *jump-attack-mods* target-speed) (-> *MOD-orb-weight-bank* base-jump-attack-speed))
-  (set! (-> *TARGET-bank* wheel-flip-dist) (-> *MOD-orb-weight-bank* base-wheel-flip-dist))
-  (set! (-> *TARGET-bank* wheel-flip-height) (-> *MOD-orb-weight-bank* base-wheel-flip-height))
-  (set! (-> *flip-jump-mods* target-speed) (-> *MOD-orb-weight-bank* base-flip-jump-speed))
+  (mod-rule-refresh-movement-speeds! (mod-rule-active? 'complication-jak-be-nimble) 1.0)
   (set! (-> *MOD-orb-weight-bank* last-applied-orbs) -1.0)
   (none))
 
@@ -946,6 +949,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-get-a-grip) "GET A GRIP")
     ((eq? id 'complication-torrent) "TORRENT")
     ((eq? id 'complication-palate-change) "PALATE CHANGE")
+    ((eq? id 'complication-jak-be-nimble) "JAK BE NIMBLE")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1032,6 +1036,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
     ((eq? id 'complication-torrent) "FISH ARE FASTER.")
     ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
+    ((eq? id 'complication-jak-be-nimble) "JAK MOVES MUCH FASTER.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1056,7 +1061,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-ohko) (seconds 60)) ;; 60
     ((eq? id 'complication-critical) (seconds 60)) ;; 60
     ((eq? id 'complication-heating-balloons) (seconds 20)) ;; 20
-    ((eq? id 'complication-glare) (seconds 60)) ;; 60
+    ((eq? id 'complication-glare) (seconds 50)) ;; 50
     ((eq? id 'complication-disassociate) (seconds 50)) ;; 50
     ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
     ((eq? id 'complication-wings-tied) (seconds 60)) ;; 60
@@ -1107,6 +1112,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
     ((eq? id 'complication-torrent) (seconds 20)) ;; 20
     ((eq? id 'complication-palate-change) (seconds 30)) ;; 30
+    ((eq? id 'complication-jak-be-nimble) (seconds 45)) ;; 45
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1221,7 +1227,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-unbreakable)
          (eq? id 'complication-get-a-grip)
          (eq? id 'complication-torrent)
-         (eq? id 'complication-palate-change))
+         (eq? id 'complication-palate-change)
+         (eq? id 'complication-jak-be-nimble))
      'complication)
     (else 'unknown)))
 
@@ -1732,6 +1739,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (set! (-> *FLUT-bank* jump-height-max) (meters 14))
      (set! (-> *FLUT-bank* double-jump-height-min) (meters 2))
      (set! (-> *FLUT-bank* double-jump-height-max) (meters 4)))
+    ((eq? id 'complication-jak-be-nimble)
+     (mod-rule-refresh-movement-speeds! #t (if (mod-rule-active? 'complication-cumbersome) (orb-weight-multiplier) 1.0))
+     (set! (-> *high-jump-mods* target-speed) 77777.0)
+     (set! (-> *duck-attack-mods* target-speed) 77777.0)
+     (set! (-> *flop-mods* target-speed) 77777.0)
+     (set! (-> *stone-surface* target-speed) 1.25))
     ((eq? id 'complication-joyride) (send-event *target* 'change-mode 'flut #f))
     (else (none)))
   (none))
@@ -1814,7 +1827,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (set! (-> *FLUT-bank* jump-height-min) (meters 5))
            (set! (-> *FLUT-bank* jump-height-max) (meters 7))
            (set! (-> *FLUT-bank* double-jump-height-min) (meters 1))
-           (set! (-> *FLUT-bank* double-jump-height-max) (meters 2))))))
+           (set! (-> *FLUT-bank* double-jump-height-max) (meters 2)))
+          ((eq? id 'complication-jak-be-nimble)
+           (mod-rule-refresh-movement-speeds! #f (if (mod-rule-active? 'complication-cumbersome) (orb-weight-multiplier) 1.0))
+           (set! (-> *high-jump-mods* target-speed) 26624.0)
+           (set! (-> *duck-attack-mods* target-speed) 16384.0)
+           (set! (-> *flop-mods* target-speed) 40960.0)
+           (set! (-> *stone-surface* target-speed) 1.0)))))
     (mod-rule-clear-slot slot))
   (none))
 
@@ -2228,6 +2247,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-hands-on) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 6))
           ;; Movement
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
+          ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 6))
           ((eq? id 'complication-invert) 5)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 7))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
