@@ -51,7 +51,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; add new options here (getter)
 (define-extern show-countup-timer-enabled? (function symbol))
 
-(define-extern crash-toggle-enabled? (function symbol))
+(define-extern punishment-toggle-enabled? (function symbol symbol))
 
 (define-extern klaww-assist-enabled? (function symbol))
 
@@ -740,6 +740,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-id-from-index ((idx int))
   (if (and (>= idx 0) (< idx (-> *mod-rule-ids* length))) (-> *mod-rule-ids* idx) #f))
 
+(defun mod-rule-punishment-id-from-index ((idx int))
+  (if (and (>= idx 0) (< idx *mod-rule-punishment-id-count*)) (-> *mod-rule-punishment-ids* idx) #f))
+
 (defun mod-rule-enabled-condition-count ()
   (let ((count 0))
     (dotimes (i *mod-rule-id-count*)
@@ -749,6 +752,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-enabled-condition-fraction ()
   (/ (the float (mod-rule-enabled-condition-count)) (the float *mod-rule-id-count*)))
+
+(defun mod-rule-punishment-toggle-enabled-count ()
+  (let ((count 0))
+    (dotimes (i *mod-rule-punishment-id-count*)
+      (let ((id (mod-rule-punishment-id-from-index i)))
+        (when (and (!= id 'punishment-countdown) (punishment-toggle-enabled? id))
+          (+! count 1))))
+    count))
+
+(defun mod-rule-punishment-toggle-enabled-fraction ()
+  (/ (the float (mod-rule-punishment-toggle-enabled-count)) (the float (- *mod-rule-punishment-id-count* 1))))
 
 (define SCORE-MAX-INC 35780.0)
 
@@ -771,19 +785,26 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (time-weight 0.2)
          (score-weight 0.8)
          (conditions-weight 0.055)
+         (punishments-weight 0.012)
          (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
          (effective-conditions-mult (+ 1.0 (* (- 1.0 (mod-rule-enabled-condition-fraction)) conditions-weight)))
+         (effective-punishments-mult (+ 1.0 (* (- 1.0 (mod-rule-punishment-toggle-enabled-fraction)) punishments-weight)))
          (score 0.0))
     (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
     (let ((base-score (* max-score (+ (* time-weight time-factor) (* score-weight (- 1.0 inc-norm))))))
-      (set! score (/ (/ base-score effective-mult) effective-conditions-mult)))
+      (set! score (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult)))
     (format #t
             "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f "
             inc-total
             inc-norm
             final-time-seconds
             time-factor)
-    (format #t "eff-mult ~f eff-cond-mult ~f score ~f~%" effective-mult effective-conditions-mult score)
+    (format #t
+            "eff-mult ~f eff-cond-mult ~f eff-punish-mult ~f score ~f~%"
+            effective-mult
+            effective-conditions-mult
+            effective-punishments-mult
+            score)
     score))
 
 (defun mod-game-beaten-resume-from-save ((value int))
@@ -947,7 +968,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) "HANG TIME")
     ((eq? id 'complication-unbreakable) "UNBREAKABLE")
     ((eq? id 'complication-get-a-grip) "GET A GRIP")
-    ((eq? id 'complication-torrent) "TORRENT")
+    ((eq? id 'complication-torrent) "FAST REEL")
     ((eq? id 'complication-palate-change) "PALATE CHANGE")
     ((eq? id 'complication-jak-be-nimble) "JAK BE NIMBLE")
     (else "UNKNOWN")))
@@ -1034,7 +1055,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-get-a-grip)
      (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 12))) (seconds 1))))
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
-    ((eq? id 'complication-torrent) "FISH ARE FASTER.")
+    ((eq? id 'complication-torrent) "YOUR REEL SPEED HAS INCREASED!")
     ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
     ((eq? id 'complication-jak-be-nimble) "JAK MOVES MUCH FASTER.")
     (else "NO DESCRIPTION AVAILABLE.")))
@@ -1628,18 +1649,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-countdown))))
     (when (and (not (or (eq? (current-level-name) 'finalboss) (target-on-racer-or-flut?)))
+               (punishment-toggle-enabled? 'punishment-fall-damage)
                (mod-rule-punishment-rollable? 'punishment-fall-damage))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-fall-damage))))
-    (when (and (not (target-on-racer-or-flut?)) (mod-rule-punishment-rollable? 'punishment-trip))
+    (when (and (not (target-on-racer-or-flut?))
+               (punishment-toggle-enabled? 'punishment-trip)
+               (mod-rule-punishment-rollable? 'punishment-trip))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-trip))))
     (when (and (not (eq? (current-level-name) 'finalboss))
                (not (target-on-racer-or-flut?))
+               (punishment-toggle-enabled? 'punishment-edge)
                (mod-rule-punishment-rollable? 'punishment-edge))
       (let ((w 10))
         (+! running-total w)
@@ -1647,56 +1672,67 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (set! selected 'punishment-edge))))
     (when (and (>= (current-orb-count) 30.0)
                (not (or (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss) (eq? (current-level-name) 'lavatube)))
+               (punishment-toggle-enabled? 'punishment-money)
                (mod-rule-punishment-rollable? 'punishment-money))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-money))))
-    (when (and (!= (-> (level-get-target-inside *level*) name) 'training) (mod-rule-punishment-rollable? 'punishment-warp))
+    (when (and (!= (-> (level-get-target-inside *level*) name) 'training)
+               (punishment-toggle-enabled? 'punishment-warp)
+               (mod-rule-punishment-rollable? 'punishment-warp))
       (let ((w 8))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-warp))))
-    (when (and (mod-rule-can-revert-collected-cell?) (mod-rule-punishment-rollable? 'punishment-revert-cell))
+    (when (and (mod-rule-can-revert-collected-cell?)
+               (punishment-toggle-enabled? 'punishment-revert-cell)
+               (mod-rule-punishment-rollable? 'punishment-revert-cell))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-revert-cell))))
-    (when (and (< (mod-rule-active-slot-count) 2) (mod-rule-punishment-rollable? 'punishment-extra-rule))
+    (when (and (< (mod-rule-active-slot-count) 2)
+               (punishment-toggle-enabled? 'punishment-extra-rule)
+               (mod-rule-punishment-rollable? 'punishment-extra-rule))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-extra-rule))))
-    (when (and (not (eq? rule-id 'rule-qte)) (crash-toggle-enabled?) (mod-rule-punishment-rollable? 'punishment-crash))
+    (when (and (not (eq? rule-id 'rule-qte))
+               (punishment-toggle-enabled? 'punishment-crash)
+               (mod-rule-punishment-rollable? 'punishment-crash))
       (let ((w 6))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-crash))))
-    (when (and (not (mod-rule-active? 'complication-bad-ping)) (mod-rule-punishment-rollable? 'punishment-delay))
-      (let ((w 0)) ;; disabled for zed
+    (when (and (not (mod-rule-active? 'complication-bad-ping))
+               (punishment-toggle-enabled? 'punishment-delay)
+               (mod-rule-punishment-rollable? 'punishment-delay))
+      (let ((w 10)) ;; disabled for zed
         (when (> w 0)
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-delay)))))
-    (when (mod-rule-punishment-rollable? 'punishment-blind)
-      (let ((w 0)) ;; disabled
+    (when (and (punishment-toggle-enabled? 'punishment-blind) (mod-rule-punishment-rollable? 'punishment-blind))
+      (let ((w 10)) ;; disabled
         (when (> w 0)
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-blind)))))
-    (when (mod-rule-punishment-rollable? 'punishment-iframes)
-      (let ((w 0)) ;; disabled
+    (when (and (punishment-toggle-enabled? 'punishment-iframes) (mod-rule-punishment-rollable? 'punishment-iframes))
+      (let ((w 10)) ;; disabled
         (when (> w 0)
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-iframes)))))
-    (when (mod-rule-punishment-rollable? 'punishment-camera)
-      (let ((w 0)) ;; disabled
+    (when (and (punishment-toggle-enabled? 'punishment-camera) (mod-rule-punishment-rollable? 'punishment-camera))
+      (let ((w 10)) ;; disabled
         (when (> w 0)
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
             (set! selected 'punishment-camera)))))
-    (when (mod-rule-punishment-rollable? 'punishment-ohko)
+    (when (and (punishment-toggle-enabled? 'punishment-ohko) (mod-rule-punishment-rollable? 'punishment-ohko))
       (let ((w 10))
         (when (> w 0)
           (+! running-total w)
@@ -2286,7 +2322,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-landlubber)
            (cond
              ((mod-rule-active? 'complication-drought) 0)
-             ((water-level? level-name) 7)
+             ((water-level? level-name) 6)
              ((or (eq? level-name 'misty)
                   (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave)))
               6)
@@ -2332,7 +2368,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              4))
           ((or (eq? id 'complication-torrent) (eq? id 'rule-sagging-sails) (eq? id 'complication-palate-change))
-           (if (target-fishing?) 35 0))
+           (if (target-fishing?) 50 0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))
@@ -3646,9 +3682,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (return i))
       (+! i 1))
     -1))
-
-(defun mod-rule-punishment-id-from-index ((idx int))
-  (if (and (>= idx 0) (< idx *mod-rule-punishment-id-count*)) (-> *mod-rule-punishment-ids* idx) #f))
 
 (defun mod-rule-slot-punishments-save-value ()
   (let ((result (the uint 0))

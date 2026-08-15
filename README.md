@@ -32,8 +32,8 @@
 | **Time Limit Multiplier** | A multiplier applied to rules that have time limits. For example, a value of 2.0 doubles the amount of time you have; 0.5 halves. |
 | **Increments** | The amount of time, in seconds, that will be added to the timer for obtaining a Power Cell, Scout Fly, or Precursor Orb. |
 | **Condition Toggles** | Manually choose which conditions can or cannot be rolled. |
+| **Punishment Toggles** | Manually choose which punishments can or cannot be rolled. |
 | **Speedrun Timer** | Shows an in-game timer above the global countdown timer, to track your current run's duration. |
-| **Crash Punishment** | Choose whether or not the punishment that crashes your game can be rolled. |
 | **Klaww Assist** | Adds 30 seconds to the countdown timer after each Klaww phase. |
 | **Fish Assist** | Adds 5 seconds to the countdown timer for each five-pound fish. |
 
@@ -131,6 +131,9 @@
 | **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
 | **UNBREAKABLE** | SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO. | You will need to use either blue, yellow, or dark eco to break scout fly crates.
 | **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from X seconds; if it reaches 0, you die. Grabbing a ledge resets it. The time limit scales with your Time Limit Multiplier.
+| **FAST REEL** | YOUR REEL SPEED HAS INCREASED! | The fish during the fish minigame move faster.
+| **PALATE CHANGE** | EELS ARE GOOD, YELLOWS ARE BAD. | Their effects are swapped: eels grant 5 pounds, and yellows fail the minigame.
+| **JAK BE NIMBLE** | JAK MOVES MUCH FASTER.
 
 </details>
 

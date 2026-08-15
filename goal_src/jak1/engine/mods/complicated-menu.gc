@@ -19,7 +19,19 @@
 (deftype complicated-settings (basic)
   ;; add new options here
   ((show-countup-timer? symbol)
-   (crash-toggle? symbol)
+   (punishment-toggle-fall-damage? symbol)
+   (punishment-toggle-trip? symbol)
+   (punishment-toggle-edge? symbol)
+   (punishment-toggle-money? symbol)
+   (punishment-toggle-warp? symbol)
+   (punishment-toggle-revert-cell? symbol)
+   (punishment-toggle-extra-rule? symbol)
+   (punishment-toggle-crash? symbol)
+   (punishment-toggle-delay? symbol)
+   (punishment-toggle-blind? symbol)
+   (punishment-toggle-iframes? symbol)
+   (punishment-toggle-camera? symbol)
+   (punishment-toggle-ohko? symbol)
    (klaww-assist? symbol)
    (fish-assist? symbol)
    (rule-grounded? symbol)
@@ -109,7 +121,19 @@
 (defmethod reset ((obj complicated-settings))
   ;; default values for new settings
   (set! (-> obj show-countup-timer?) #f)
-  (set! (-> obj crash-toggle?) #t)
+  (set! (-> obj punishment-toggle-fall-damage?) #t)
+  (set! (-> obj punishment-toggle-trip?) #t)
+  (set! (-> obj punishment-toggle-edge?) #t)
+  (set! (-> obj punishment-toggle-money?) #t)
+  (set! (-> obj punishment-toggle-warp?) #t)
+  (set! (-> obj punishment-toggle-revert-cell?) #t)
+  (set! (-> obj punishment-toggle-extra-rule?) #t)
+  (set! (-> obj punishment-toggle-crash?) #t)
+  (set! (-> obj punishment-toggle-delay?) #f)
+  (set! (-> obj punishment-toggle-blind?) #f)
+  (set! (-> obj punishment-toggle-iframes?) #f)
+  (set! (-> obj punishment-toggle-camera?) #f)
+  (set! (-> obj punishment-toggle-ohko?) #t)
   (set! (-> obj klaww-assist?) #f)
   (set! (-> obj fish-assist?) #f)
   (set! (-> obj rule-grounded?) #t)
@@ -206,7 +230,20 @@
                                           (("show-countup-timer?") (set! (-> obj show-countup-timer?) (file-stream-read-symbol file)))
                                           ;; retired condition-menu toggles; do not restore these as real fields.
                                           (("one-frame-toggle?" "invert-controls-toggle?" "math-quiz-toggle?" "trivia-toggle?") (file-stream-read-symbol file))
-                                          (("crash-toggle?") (set! (-> obj crash-toggle?) (file-stream-read-symbol file)))
+                                          (("crash-toggle?") (set! (-> obj punishment-toggle-crash?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-fall-damage?") (set! (-> obj punishment-toggle-fall-damage?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-trip?") (set! (-> obj punishment-toggle-trip?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-edge?") (set! (-> obj punishment-toggle-edge?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-money?") (set! (-> obj punishment-toggle-money?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-warp?") (set! (-> obj punishment-toggle-warp?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-revert-cell?") (set! (-> obj punishment-toggle-revert-cell?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-extra-rule?") (set! (-> obj punishment-toggle-extra-rule?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-crash?") (set! (-> obj punishment-toggle-crash?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-delay?") (set! (-> obj punishment-toggle-delay?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-blind?") (set! (-> obj punishment-toggle-blind?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-iframes?") (set! (-> obj punishment-toggle-iframes?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-camera?") (set! (-> obj punishment-toggle-camera?) (file-stream-read-symbol file)))
+                                          (("punishment-toggle-ohko?") (set! (-> obj punishment-toggle-ohko?) (file-stream-read-symbol file)))
                                           (("klaww-assist?") (set! (-> obj klaww-assist?) (file-stream-read-symbol file)))
                                           (("fish-assist?") (set! (-> obj fish-assist?) (file-stream-read-symbol file)))
                                           (("rule-grounded?") (set! (-> obj rule-grounded?) (file-stream-read-symbol file)))
@@ -310,7 +347,19 @@
     (format file "(complicated-settings~%")
     ;; add new options here
     (format file "  (show-countup-timer? ~A)~%" (-> obj show-countup-timer?))
-    (format file "  (crash-toggle? ~A)~%" (-> obj crash-toggle?))
+    (format file "  (punishment-toggle-fall-damage? ~A)~%" (-> obj punishment-toggle-fall-damage?))
+    (format file "  (punishment-toggle-trip? ~A)~%" (-> obj punishment-toggle-trip?))
+    (format file "  (punishment-toggle-edge? ~A)~%" (-> obj punishment-toggle-edge?))
+    (format file "  (punishment-toggle-money? ~A)~%" (-> obj punishment-toggle-money?))
+    (format file "  (punishment-toggle-warp? ~A)~%" (-> obj punishment-toggle-warp?))
+    (format file "  (punishment-toggle-revert-cell? ~A)~%" (-> obj punishment-toggle-revert-cell?))
+    (format file "  (punishment-toggle-extra-rule? ~A)~%" (-> obj punishment-toggle-extra-rule?))
+    (format file "  (punishment-toggle-crash? ~A)~%" (-> obj punishment-toggle-crash?))
+    (format file "  (punishment-toggle-delay? ~A)~%" (-> obj punishment-toggle-delay?))
+    (format file "  (punishment-toggle-blind? ~A)~%" (-> obj punishment-toggle-blind?))
+    (format file "  (punishment-toggle-iframes? ~A)~%" (-> obj punishment-toggle-iframes?))
+    (format file "  (punishment-toggle-camera? ~A)~%" (-> obj punishment-toggle-camera?))
+    (format file "  (punishment-toggle-ohko? ~A)~%" (-> obj punishment-toggle-ohko?))
     (format file "  (klaww-assist? ~A)~%" (-> obj klaww-assist?))
     (format file "  (fish-assist? ~A)~%" (-> obj fish-assist?))
     (format file "  (rule-grounded? ~A)~%" (-> obj rule-grounded?))
@@ -481,10 +530,6 @@
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (set! (-> *complicated-settings* complication-torrent?) #t)
     (commit-to-file *complicated-settings*))
-  (none))
-
-(defun crash-toggle-changed! ((new-val symbol))
-  (set! (-> *complicated-settings* crash-toggle?) new-val)
   (none))
 
 (defun klaww-assist-changed! ((new-val symbol))
@@ -661,6 +706,155 @@
               (apply-unfathomable-preset!)
               (none)))
        ;; [4] BACK
+       (new 'static
+            'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))))
+
+(define *punishment-toggle-options*
+  (new 'static
+       'boxed-array
+       :type
+       game-option
+       ;; [0] FALL DAMAGE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-fall-damage)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [1] TRIP
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-trip)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [2] LEDGE GRAB
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-edge)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [3] ORB LOSS
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-money)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [4] WARP
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-warp)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [5] REVERT CELL
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-revert-cell)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [6] EXTRA CONDITION
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-extra-rule)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [7] CRASH
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-crash)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [8] INPUT DELAY
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-delay)
+            :scale #t
+            :option-disabled-func
+            (lambda ()
+              #t)
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [9] BLIND
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-blind)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [10] NO I-FRAMES
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-iframes)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [11] INVERTED CAMERA
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-camera)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [12] OHKO
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-punish-toggle-ohko)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [13] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1387,7 +1581,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [69] TORRENT
+       ;; [69] FAST REEL
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1407,16 +1601,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-        ;; [71] JAK BE NIMBLE
-        (new 'static
-              'game-option
-              :option-type (game-option-type on-off)
-              :name (text-id complicated-opts-cond-complication-jak-be-nimble)
-              :scale #t
-              :on-confirm
-              (lambda ()
-                (commit-to-file *complicated-settings*)
-                (none)))
+       ;; [71] JAK BE NIMBLE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-jak-be-nimble)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] BACK
        (new 'static
             'game-option
@@ -1448,14 +1642,21 @@
             :name (text-id complicated-opts-cond-toggles-title)
             :scale #t
             :param3 (game-option-menu condition-toggle-options))
-       ;; [2] DIFFICULTY PRESETS SUBMENU
+       ;; [2] PUNISHMENT TOGGLES SUBMENU
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-punishment-toggles-title)
+            :scale #t
+            :param3 (game-option-menu punishment-toggle-options))
+       ;; [3] DIFFICULTY PRESETS SUBMENU
        (new 'static
             'game-option
             :option-type (game-option-type menu)
             :name (text-id complicated-opts-difficulty-presets-title)
             :scale #t
             :param3 (game-option-menu difficulty-preset-options))
-       ;; [3] SPEEDRUN TIMER toggle
+       ;; [4] SPEEDRUN TIMER toggle
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1464,20 +1665,6 @@
             :on-change
             (lambda ((val object))
               (countup-timer-setting-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [4] CRASH TOGGLE
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-crash-toggle)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (crash-toggle-changed! (the-as symbol val))
               (none))
             :on-confirm
             (lambda ()
@@ -1582,6 +1769,7 @@
   (set! (-> *options-remap* (progress-screen comp-timer-options)) *comp-timer-options*)
   (set! (-> *options-remap* (progress-screen condition-toggle-options)) *condition-toggle-options*)
   (set! (-> *options-remap* (progress-screen difficulty-preset-options)) *difficulty-preset-options*)
+  (set! (-> *options-remap* (progress-screen punishment-toggle-options)) *punishment-toggle-options*)
   (set! (-> *game-options-complicated* 2 value-to-modify) (&-> *pc-settings* memcard-play-hints?))
   (set! (-> *game-options-complicated* 3 value-to-modify) (&-> *pc-settings* subtitles?))
   (set! (-> *game-options-complicated* 4 value-to-modify) (&-> *pc-settings* hinttitles?))
@@ -1590,10 +1778,23 @@
   (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; Complicated options mappings
-  (set! (-> *complicated-options* 3 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* crash-toggle?))
+  (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
   (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
   (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  ;; Punishment toggle mappings
+  (set! (-> *punishment-toggle-options* 0 value-to-modify) (&-> *complicated-settings* punishment-toggle-fall-damage?))
+  (set! (-> *punishment-toggle-options* 1 value-to-modify) (&-> *complicated-settings* punishment-toggle-trip?))
+  (set! (-> *punishment-toggle-options* 2 value-to-modify) (&-> *complicated-settings* punishment-toggle-edge?))
+  (set! (-> *punishment-toggle-options* 3 value-to-modify) (&-> *complicated-settings* punishment-toggle-money?))
+  (set! (-> *punishment-toggle-options* 4 value-to-modify) (&-> *complicated-settings* punishment-toggle-warp?))
+  (set! (-> *punishment-toggle-options* 5 value-to-modify) (&-> *complicated-settings* punishment-toggle-revert-cell?))
+  (set! (-> *punishment-toggle-options* 6 value-to-modify) (&-> *complicated-settings* punishment-toggle-extra-rule?))
+  (set! (-> *punishment-toggle-options* 7 value-to-modify) (&-> *complicated-settings* punishment-toggle-crash?))
+  (set! (-> *punishment-toggle-options* 8 value-to-modify) (&-> *complicated-settings* punishment-toggle-delay?))
+  (set! (-> *punishment-toggle-options* 9 value-to-modify) (&-> *complicated-settings* punishment-toggle-blind?))
+  (set! (-> *punishment-toggle-options* 10 value-to-modify) (&-> *complicated-settings* punishment-toggle-iframes?))
+  (set! (-> *punishment-toggle-options* 11 value-to-modify) (&-> *complicated-settings* punishment-toggle-camera?))
+  (set! (-> *punishment-toggle-options* 12 value-to-modify) (&-> *complicated-settings* punishment-toggle-ohko?))
   ;; Condition toggle mappings
   (set! (-> *condition-toggle-options* 0 value-to-modify) (&-> *complicated-settings* rule-grounded?))
   (set! (-> *condition-toggle-options* 1 value-to-modify) (&-> *complicated-settings* rule-die?))
@@ -1682,8 +1883,24 @@
 (defun time-limit-multiplier ()
   (if *complicated-settings* (snap-to-step (-> *complicated-settings* time-limit-multiplier) 0.1) 1.2))
 
-(defun crash-toggle-enabled? ()
-  (the symbol (and *complicated-settings* (-> *complicated-settings* crash-toggle?))))
+(defun punishment-toggle-enabled? ((punishment symbol))
+  (the symbol
+       (cond
+         ((not *complicated-settings*) #t)
+         ((eq? punishment 'punishment-fall-damage) (-> *complicated-settings* punishment-toggle-fall-damage?))
+         ((eq? punishment 'punishment-trip) (-> *complicated-settings* punishment-toggle-trip?))
+         ((eq? punishment 'punishment-edge) (-> *complicated-settings* punishment-toggle-edge?))
+         ((eq? punishment 'punishment-money) (-> *complicated-settings* punishment-toggle-money?))
+         ((eq? punishment 'punishment-warp) (-> *complicated-settings* punishment-toggle-warp?))
+         ((eq? punishment 'punishment-revert-cell) (-> *complicated-settings* punishment-toggle-revert-cell?))
+         ((eq? punishment 'punishment-extra-rule) (-> *complicated-settings* punishment-toggle-extra-rule?))
+         ((eq? punishment 'punishment-crash) (-> *complicated-settings* punishment-toggle-crash?))
+         ((eq? punishment 'punishment-delay) (-> *complicated-settings* punishment-toggle-delay?))
+         ((eq? punishment 'punishment-blind) (-> *complicated-settings* punishment-toggle-blind?))
+         ((eq? punishment 'punishment-iframes) (-> *complicated-settings* punishment-toggle-iframes?))
+         ((eq? punishment 'punishment-camera) (-> *complicated-settings* punishment-toggle-camera?))
+         ((eq? punishment 'punishment-ohko) (-> *complicated-settings* punishment-toggle-ohko?))
+         (else #t))))
 
 (defun klaww-assist-enabled? ()
   (the symbol (and *complicated-settings* (-> *complicated-settings* klaww-assist?))))
@@ -1777,5 +1994,5 @@
          ((eq? id 'complication-get-a-grip) (-> *complicated-settings* complication-get-a-grip?))
          ((eq? id 'complication-torrent) (-> *complicated-settings* complication-torrent?))
          ((eq? id 'complication-palate-change) (-> *complicated-settings* complication-palate-change?))
-          ((eq? id 'complication-jak-be-nimble) (-> *complicated-settings* complication-jak-be-nimble?))
+         ((eq? id 'complication-jak-be-nimble) (-> *complicated-settings* complication-jak-be-nimble?))
          (else #t))))

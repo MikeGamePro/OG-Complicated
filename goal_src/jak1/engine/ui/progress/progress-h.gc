@@ -138,6 +138,7 @@
      (comp-timer-options)
      (condition-toggle-options)
      (difficulty-preset-options)
+     (punishment-toggle-options)
      ;; the last one!
      (max))
    (defenum game-option-type

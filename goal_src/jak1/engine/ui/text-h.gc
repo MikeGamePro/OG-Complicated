@@ -801,7 +801,7 @@
   (complicated-opts-increment-title #x161b)
   ;; add new options here, but don't change the order of the existing ones, or it will break save files
   (complicated-opts-show-timer #x161c)
-  (complicated-opts-crash-toggle #x161f)
+  ;; #x161f retired (was complicated-opts-crash-toggle, replaced by the punishment toggles submenu; do not reuse this hex value.
   ;; #x1620 and #x1621 retired (were complicated-opts-math-quiz-toggle and -trivia-toggle; do not reuse these hex values.
   (complicated-opts-klaww-assist #x1622)
   (complicated-opts-fish-assist #x1623)
@@ -889,6 +889,20 @@
   (complicated-opts-cond-complication-torrent #x1674)
   (complicated-opts-cond-complication-palate-change #x1675)
   (complicated-opts-cond-complication-jak-be-nimble #x1676)
+  (complicated-opts-punishment-toggles-title #x1677)
+  (complicated-opts-punish-toggle-fall-damage #x1678)
+  (complicated-opts-punish-toggle-trip #x1679)
+  (complicated-opts-punish-toggle-edge #x167a)
+  (complicated-opts-punish-toggle-money #x167b)
+  (complicated-opts-punish-toggle-warp #x167c)
+  (complicated-opts-punish-toggle-revert-cell #x167d)
+  (complicated-opts-punish-toggle-extra-rule #x167e)
+  (complicated-opts-punish-toggle-crash #x167f)
+  (complicated-opts-punish-toggle-delay #x1680)
+  (complicated-opts-punish-toggle-blind #x1681)
+  (complicated-opts-punish-toggle-iframes #x1682)
+  (complicated-opts-punish-toggle-camera #x1683)
+  (complicated-opts-punish-toggle-ohko #x1684)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)
