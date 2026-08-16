@@ -757,9 +757,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-punishment-toggle-enabled-count ()
   (let ((count 0))
     (dotimes (i *mod-rule-punishment-id-count*)
-      (let ((id (mod-rule-punishment-id-from-index i)))
-        (when (and (!= id 'punishment-countdown) (punishment-toggle-enabled? id))
-          (+! count 1))))
+      (let ((id (mod-rule-punishment-id-from-index i))) (when (punishment-toggle-enabled? id) (+! count 1))))
     count))
 
 (defun mod-rule-punishment-toggle-enabled-fraction ()
@@ -1844,14 +1842,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (let ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
       (when id
         (cond
-          ((or (eq? id 'complication-ohko) (eq? id 'rule-survivor))
+          ((and *target* (or (eq? id 'complication-ohko) (eq? id 'rule-survivor)))
            (set! (-> (the-as fact-info-target (-> *target* fact)) health) 3.0))
           ((eq? id 'complication-hidden-treasure) (refresh-money-actors))
           ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #f))
           ((eq? id 'complication-cumbersome) (orb-weight-reset!))
-          ((eq? id 'complication-bad-ping) (input-delay-enable! #f 0.0))
-          ((eq? id 'complication-joyride) (send-event *target* 'end-mode))
-          ((eq? id 'complication-invisible-man)
+          ((and *target* (eq? id 'complication-bad-ping)) (input-delay-enable! #f 0.0))
+          ((and *target* (eq? id 'complication-joyride)) (send-event *target* 'end-mode))
+          ((and *target* (eq? id 'complication-invisible-man))
            (target-mesh-invis-set! #f)
            (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 1.0)
            (send-event *target* 'sidekick #t)
@@ -1994,30 +1992,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun collected-money-for-level ((lvl-idx int))
   (-> *game-info* money-per-level lvl-idx))
 
-(defun collected-money-current-level ()
-  (if (and *target* (-> *target* current-level))
-    (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
-      (collected-money-for-level lvl-idx))
-    0))
-
 (defun max-money-for-level ((lvl-idx int))
   (-> *game-counts* data lvl-idx money-count))
-
-(defun max-money-current-level ()
-  (if (and *target* (-> *target* current-level))
-    (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
-      (max-money-for-level lvl-idx))
-    0))
 
 (defun collected-buzzer-for-level ((lvl-idx int))
   (buzzer-count *game-info*
                 (-> *level-task-data* lvl-idx task-info (-> *level-task-data* lvl-idx buzzer-task-index) task-id)))
-
-(defun collected-buzzer-current-level ()
-  (if (and *target* (-> *target* current-level))
-    (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
-      (collected-buzzer-for-level lvl-idx))
-    0))
 
 (defun collected-fuel-for-level ((lvl-idx int))
   (let ((completed-task-count 0))
@@ -2026,20 +2006,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (+! completed-task-count 1)))
     completed-task-count))
 
-(defun collected-fuel-current-level ()
-  (if (and *target* (-> *target* current-level))
-    (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
-      (collected-fuel-for-level lvl-idx))
-    0))
-
 (defun max-fuel-for-level ((lvl-idx int))
   (-> *level-task-data* lvl-idx nb-of-tasks))
 
-(defun max-fuel-current-level ()
-  (if (and *target* (-> *target* current-level))
-    (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
-      (max-fuel-for-level lvl-idx))
-    0))
+(defmacro def-current-level-wrapper (name for-level-fn)
+  `(defun ,name ()
+    (if (and *target* (-> *target* current-level))
+      (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1)))) (,for-level-fn lvl-idx))
+      0)))
+
+(def-current-level-wrapper collected-money-current-level collected-money-for-level)
+
+(def-current-level-wrapper max-money-current-level max-money-for-level)
+
+(def-current-level-wrapper collected-buzzer-current-level collected-buzzer-for-level)
+
+(def-current-level-wrapper collected-fuel-current-level collected-fuel-for-level)
+
+(def-current-level-wrapper max-fuel-current-level max-fuel-for-level)
 
 (defun target-fishing? ()
   (if (not *target*) #f (let ((mode (send-event *target* 'query 'mode))) (= mode 'target-fishing))))
@@ -2675,6 +2659,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (cond
     ((eq? punishment 'punishment-money) (set! (-> *game-info* money) (max 0.0 (- (current-orb-count) 60.0))))
     ((eq? punishment 'punishment-crash)
+     (play-custom-sfx "Goodbye.mp3" 40.0)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1)) (suspend)))
@@ -2704,9 +2689,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-reset)
      (process-spawn-function process
        (lambda ()
-         (let ((start-time (current-time)))
-           (until (>= (- (current-time) start-time) (seconds 1))
-             (suspend)))
+         (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1)) (suspend)))
          (mod-rule-reset-run-and-restart))))
     ((eq? punishment 'punishment-delay) (input-delay-enable! #t 0.2) (mod-rule-start-timed-punishment punishment))
     ((eq? punishment 'punishment-iframes)
@@ -3161,7 +3144,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rules-start ()
-  (mod-rules-reset)
   (kill-by-name 'mod-rule-manager *active-pool*)
   (mod-rule-reroll-current #t)
   (process-spawn-function process
@@ -3652,9 +3634,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
   (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time))
   (set! (-> *MOD-rule-context-bank* last-update-time) (current-time))
-  (set! (-> *MOD-rule-context-bank* last-reverted-cell-task) 0)
-  (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) 0)
-  (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
   (none))
 
 (defun mod-rng-reset-state! ()
@@ -3674,10 +3653,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((i 0)) (while (< i (length *trivia-questions-used*)) (set! (-> *trivia-questions-used* i) #f) (+! i 1)))
   (let ((i 0))
     (while (< i 3)
-      (set! (-> (-> *MOD-rule-slot-bank* active-slots) i) #f)
-      (set! (-> (-> *MOD-rule-slot-bank* pending-slots) i) #f)
-      (set! (-> (-> *MOD-rule-slot-bank* slot-end-times) i) 0)
-      (set! (-> (-> *MOD-rule-slot-bank* roll-ready-times) i) 0)
+      (mod-rule-deactivate-slot i)
       (set! (-> (-> *MOD-rule-slot-bank* saved-remaining-times) i) -1)
       (set! (-> (-> *MOD-rule-slot-bank* saved-punishments) i) #f)
       (set! (-> (-> *MOD-rule-slot-bank* saved-pending) i) #f)
@@ -3792,17 +3768,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (+! offset 1))))
   (none))
 
-(defun mod-rule-slot-progress0-save-value ()
-  (mod-rule-slot-progress-save-value 0))
+(defmacro def-save-index-pair (save-name resume-name base-save-fn base-resume-fn index)
+  `(begin
+    (defun ,save-name ()
+      (,base-save-fn ,index))
+    (defun ,resume-name ((val int))
+      (,base-resume-fn ,index val))))
 
-(defun mod-rule-slot-progress0-resume-from-save ((val int))
-  (mod-rule-slot-progress-resume-from-save 0 val))
+(def-save-index-pair mod-rule-slot-progress0-save-value
+                     mod-rule-slot-progress0-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     0)
 
-(defun mod-rule-slot-progress1-save-value ()
-  (mod-rule-slot-progress-save-value 1))
-
-(defun mod-rule-slot-progress1-resume-from-save ((val int))
-  (mod-rule-slot-progress-resume-from-save 1 val))
+(def-save-index-pair mod-rule-slot-progress1-save-value
+                     mod-rule-slot-progress1-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     1)
 
 (defun mod-rule-math-quiz-state-save-value ()
   (the int
@@ -3905,17 +3888,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (+! offset 1))))
   (none))
 
-(defun mod-rule-timed-punishment-times0-save-value ()
-  (mod-rule-timed-punishment-times-save-value 0))
+(def-save-index-pair mod-rule-timed-punishment-times0-save-value
+                     mod-rule-timed-punishment-times0-resume-from-save
+                     mod-rule-timed-punishment-times-save-value
+                     mod-rule-timed-punishment-times-resume-from-save
+                     0)
 
-(defun mod-rule-timed-punishment-times0-resume-from-save ((val int))
-  (mod-rule-timed-punishment-times-resume-from-save 0 val))
-
-(defun mod-rule-timed-punishment-times1-save-value ()
-  (mod-rule-timed-punishment-times-save-value 1))
-
-(defun mod-rule-timed-punishment-times1-resume-from-save ((val int))
-  (mod-rule-timed-punishment-times-resume-from-save 1 val))
+(def-save-index-pair mod-rule-timed-punishment-times1-save-value
+                     mod-rule-timed-punishment-times1-resume-from-save
+                     mod-rule-timed-punishment-times-save-value
+                     mod-rule-timed-punishment-times-resume-from-save
+                     1)
 
 (defun mod-rule-active-slots-save-value ()
   (let ((result (the uint 0))
@@ -3937,23 +3920,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> (-> *MOD-rule-slot-bank* saved-remaining-times) slot) (max 0 val))
   (none))
 
-(defun mod-rule-slot0-end-time-save-value ()
-  (mod-rule-slot-remaining-time-save-value 0))
+(def-save-index-pair mod-rule-slot0-end-time-save-value
+                     mod-rule-slot0-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     0)
 
-(defun mod-rule-slot0-end-time-resume-from-save ((val int))
-  (mod-rule-slot-remaining-time-resume-from-save 0 val))
+(def-save-index-pair mod-rule-slot1-end-time-save-value
+                     mod-rule-slot1-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     1)
 
-(defun mod-rule-slot1-end-time-save-value ()
-  (mod-rule-slot-remaining-time-save-value 1))
-
-(defun mod-rule-slot1-end-time-resume-from-save ((val int))
-  (mod-rule-slot-remaining-time-resume-from-save 1 val))
-
-(defun mod-rule-slot2-end-time-save-value ()
-  (mod-rule-slot-remaining-time-save-value 2))
-
-(defun mod-rule-slot2-end-time-resume-from-save ((val int))
-  (mod-rule-slot-remaining-time-resume-from-save 2 val))
+(def-save-index-pair mod-rule-slot2-end-time-save-value
+                     mod-rule-slot2-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     2)
 
 (defun mod-rule-finalize-resume-from-save ()
   (dotimes (slot *mod-rule-slot-count*)
@@ -4080,17 +4063,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! i 1)))
   (none))
 
-(defun mod-trivia-used-word0-save-value ()
-  (mod-trivia-used-word-save-value 0))
+(def-save-index-pair mod-trivia-used-word0-save-value
+                     mod-trivia-used-word0-resume-from-save
+                     mod-trivia-used-word-save-value
+                     mod-trivia-used-word-resume-from-save
+                     0)
 
-(defun mod-trivia-used-word0-resume-from-save ((val int))
-  (mod-trivia-used-word-resume-from-save 0 val))
-
-(defun mod-trivia-used-word1-save-value ()
-  (mod-trivia-used-word-save-value 1))
-
-(defun mod-trivia-used-word1-resume-from-save ((val int))
-  (mod-trivia-used-word-resume-from-save 1 val))
+(def-save-index-pair mod-trivia-used-word1-save-value
+                     mod-trivia-used-word1-resume-from-save
+                     mod-trivia-used-word-save-value
+                     mod-trivia-used-word-resume-from-save
+                     1)
 
 (defun global-countdown-start ()
   (let ((active-seed (mod-rng-active-seed)))

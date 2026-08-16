@@ -70,8 +70,6 @@
 
 (define-extern mod-rule-context-reset! (function none))
 
-(define-extern mod-rng-reset-seed-display! (function none))
-
 (define-extern mod-rule-twist-pending-count-save-value (function int))
 
 (define-extern mod-rule-twist-pending-count-resume-from-save (function int none))

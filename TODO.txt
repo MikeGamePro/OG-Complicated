@@ -4,7 +4,7 @@ at least 50 trivia (10 more)
 new zoomer rule
 add plunger-lurker as kill
 don't start timers until blackout ends
-maybe rename: keep it low, one frame, hands on, bloodlust
+maybe rename: keep it low, one frame, bloodlust
 maybe add settings for timer placement
 rgyb refresh (or swap powerup)
 

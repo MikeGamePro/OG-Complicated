@@ -469,7 +469,7 @@
              ;; this reverts that.
              (*! f1-0 (-> *pc-settings* aspect-ratio-scale))
              (*! f0-1 (-> *pc-settings* aspect-ratio-scale)))
-           (when (pc-cheats? (-> *pc-settings* cheats) mirror)
+           (when (or (pc-cheats? (-> *pc-settings* cheats) mirror) *mod-mirror-active?*)
              (*! f1-0 -1.0)
              (*! f0-1 -1.0)))
          (set-vector! (-> mtx2 vector 0) f0-1 0.0 0.0 0.0)
