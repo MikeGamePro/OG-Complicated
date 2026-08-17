@@ -545,7 +545,6 @@ nav-enemy-default-event-handler
                       (let ((gp-0 'racer)) (= gp-0 (send-event *target* 'query 'mode)))))
           (go-virtual nav-enemy-flee))
         (when (nav-enemy-notice-player?)
-          (mod-rule-trigger-glare)
           (go-virtual nav-enemy-notice))))
   :code
     (behavior ()
@@ -584,6 +583,7 @@ nav-enemy-default-event-handler
   :event nav-enemy-default-event-handler
   :enter
     (behavior ()
+      (mod-rule-trigger-glare)
       (logior! (-> self nav-enemy-flags) (nav-enemy-flags navenmf2))
       (nav-enemy-neck-control-look-at)
       (if (logtest? (-> self nav-enemy-flags) (nav-enemy-flags navenmf1)) (go-virtual nav-enemy-chase))

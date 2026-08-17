@@ -1324,7 +1324,8 @@
       (logclear! (-> self mask) (process-mask actor-pause))
       (process-entity-status! self (entity-perm-status complete) #t)
       (sound-play "buzzer-pickup")
-      (runs-on-fly-pickup)
+      (when (not arg0) ;; fix fly pickup triggering on cell spawn
+        (runs-on-fly-pickup))
       (case (-> (level-get-target-inside *level*) name)
         (('training)
          (level-hint-spawn (text-id training-buzzer-hint) "asstvb44" (the-as entity #f) *entity-pool* (game-task none)))

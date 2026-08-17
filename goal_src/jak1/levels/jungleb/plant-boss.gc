@@ -830,6 +830,7 @@
   :event plant-boss-default-event-handler
   :enter
     (behavior ()
+      (mod-rule-trigger-glare)
       (when (not (-> self try-inc))
         (let ((gp-0 (-> self entity extra perm)))
           (logior! (-> gp-0 status) (entity-perm-status user-set-from-cstage))
