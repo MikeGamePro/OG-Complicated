@@ -1036,7 +1036,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-landlubber) "STAY OUT OF THE WATER, MUD, AND TAR.")
     ((eq? id 'complication-double-aphids) "DOUBLE THE APHIDS.")
     ((eq? id 'complication-invert) "CONTROLS ARE INVERTED.")
-    ((eq? id 'complication-loose-pockets) "BONKING OR TAKING DAMAGE DROPS 20 ORBS.")
+    ((eq? id 'complication-loose-pockets) "BONKING OR TAKING DAMAGE LOSES 20 ORBS.")
     ((eq? id 'complication-twisted)
      (let ((rolls-away (- (-> *MOD-rule-context-bank* twist-pending-count) (-> *MOD-stats-bank* rules-rolled))))
        (if (> rolls-away 0)
@@ -1110,7 +1110,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-button-pusher) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-loyal-customer) (apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'complication-invisible-man) (seconds 50)) ;; 50
-    ((eq? id 'rule-cooked) (apply-time-limit-multiplier (seconds 30))) ;; 30
+    ((eq? id 'rule-cooked) (apply-time-limit-multiplier (seconds 35))) ;; 35
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
     ((eq? id 'rule-sagging-sails) (apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-side-to-side) (seconds 60)) ;; 60
