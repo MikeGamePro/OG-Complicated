@@ -511,8 +511,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "SPADES"
        "HEARTS"
        "DIAMONDS"
-       "CLUBS"
-       ))
+       "CLUBS"))
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
@@ -2457,7 +2456,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (not (mod-rule-active? candidate))
        (not (mod-rule-pending? candidate))
        (not (and (eq? (mod-rule-type candidate) 'rule)
-                 (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted))))))
+                 (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted))))
+       (not (and (eq? candidate 'complication-twisted)
+                 (or (>= (-> *MOD-rule-context-bank* twist-pending-count) 0)
+                     (mod-rule-any-rule-active?)
+                     (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0))))))
 
 (defun mod-rule-pick-fallback-id ()
   (let ((idx 0)
@@ -2508,8 +2511,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (while (< idx *mod-rule-id-count*)
           (let ((candidate (mod-rule-id-from-index idx)))
             (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
-              (let ((priority (mod-rule-roll-priority candidate)))
-                (+! total priority))))
+              (let ((priority (mod-rule-roll-priority candidate))) (+! total priority))))
           (+! idx 1))
         (when (and *debug-segment* (> total 0))
           (format #t "Weighted Roll Debug: only recently-rolled candidates eligible, ignoring recency~%")))
@@ -2793,11 +2795,28 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (mod-rule-finish-slot slot #t))))))))
   (none))
 
+(defun mod-rule-clear-other-active-rules! ((exclude-slot int))
+  (let ((slot 0))
+    (while (< slot *mod-rule-slot-count*)
+      (when (!= slot exclude-slot)
+        (let ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
+          (when (and id (eq? (mod-rule-type id) 'rule))
+            (mod-rule-deactivate-slot slot)
+            (let ((chosen (mod-rule-pick-weighted-id)))
+              (if chosen
+                (begin
+                  (mod-rule-activate-slot slot chosen)
+                  (mod-rule-record-roll! chosen))
+                (mod-rule-schedule-slot slot 'mod-rule-pending-roll #t))))))
+      (+! slot 1)))
+  (none))
+
 (defun mod-rule-twist-check-and-mark! ((slot int) (id symbol))
   (when (and (>= (-> *MOD-rule-context-bank* twist-pending-count) 0)
              (= (-> *MOD-stats-bank* rules-rolled) (-> *MOD-rule-context-bank* twist-pending-count)))
     (set! (-> *MOD-rule-context-bank* twist-marked-slot) slot)
-    (set! (-> *MOD-rule-context-bank* twist-pending-count) -1))
+    (set! (-> *MOD-rule-context-bank* twist-pending-count) -1)
+    (mod-rule-clear-other-active-rules! slot))
   (none))
 
 (defun mod-rule-twist-marked-slot? ((slot int))

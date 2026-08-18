@@ -1685,9 +1685,7 @@
 (defun condition-toggle-set-all! ((val symbol))
   (dotimes (i (-> *condition-toggle-options* length))
     (when (and (= (-> *condition-toggle-options* i option-type) (game-option-type on-off))
-               (not (and val
-                         (= (-> *condition-toggle-options* i value-to-modify)
-                            (&-> *complicated-settings* complication-bad-ping?)))))
+               (not (and val (= (-> *condition-toggle-options* i value-to-modify) (&-> *complicated-settings* complication-bad-ping?)))))
       (set! (-> (the-as (pointer symbol) (-> *condition-toggle-options* i value-to-modify)) 0) val)))
   (none))
 
