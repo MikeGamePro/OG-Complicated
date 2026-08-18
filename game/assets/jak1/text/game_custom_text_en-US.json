@@ -334,6 +334,10 @@
   "1684": "OHKO",
   "1685": "RESET RUN",
   "1686": "TIME LOSS",
+  "1687": "TOGGLE ALL ON",
+  "1688": "TOGGLE ALL OFF",
+  
+  "1999": "RESTORE DEFAULTS",
 
   "2000": "<PAD_TRIANGLE>",
   "2001": "<PAD_CIRCLE>",

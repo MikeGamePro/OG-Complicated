@@ -335,7 +335,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHAT COLOR IS THE CROSS ON FINLAND\c12S FLAG?"
        "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
        "ACROPHOBIA IS THE FEAR OF WHAT?"
-       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"))
+       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
+       "WHAT SUIT IS THE CARD ON THE GAMBLER\c12S HAT?"))
 
 (define *trivia-choices*
   (new 'static
@@ -501,7 +502,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "HEIGHTS"
        "OPEN SPACES"
        "FLYING"
-       "CROWDS"))
+       "CROWDS"
+       ;; q-idx 40 is dynamic
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "SPADES"
+       "HEARTS"
+       "DIAMONDS"
+       "CLUBS"
+       ))
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
@@ -2271,7 +2282,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-ohko) 6) ;; disabled
           ((eq? id 'complication-invisible-man) (if on-racer 0 6))
           ((eq? id 'complication-double-aphids) ;; disabled
-           (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 0 20))
+           (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 20 0))
           ;; Crates
           ((eq? id 'rule-crate-break)
            (if (or is-klaww is-minigame (string= (current-checkpoint-name) "sunkenb-helix") (sparse-crate-level? level-name)) 0 6))
@@ -2352,7 +2363,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-rule-timed-punishment-active? 'punishment-edge)
                    (target-on-racer-or-flut?))
              0
-             6))
+             4))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
@@ -2412,7 +2423,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (string= (current-checkpoint-name) "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
           ((eq? id 'complication-bus-driver) (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 15 0))
           ((eq? id 'rule-speed) ;; disabled
-           (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 0 25))
+           (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 25 0))
           ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 6))
           ((eq? id 'complication-disassociate) (if (and on-flut (not (sparse-lurker-level? level-name))) 40 0))
           ((eq? id 'complication-wings-tied) (if (and on-flut (not (eq? level-name 'finalboss))) 20 0))
@@ -2440,10 +2451,46 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           (else 6))))))
 
+(defun mod-rule-fallback-candidate? ((candidate symbol))
+  (and candidate
+       (mod-rule-condition-enabled? candidate)
+       (not (mod-rule-active? candidate))
+       (not (mod-rule-pending? candidate))
+       (not (and (eq? (mod-rule-type candidate) 'rule)
+                 (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted))))))
+
+(defun mod-rule-pick-fallback-id ()
+  (let ((idx 0)
+        (count 0))
+    (while (< idx *mod-rule-id-count*)
+      (when (mod-rule-fallback-candidate? (mod-rule-id-from-index idx))
+        (+! count 1))
+      (+! idx 1))
+    (when *debug-segment*
+      (format #t "Fallback roll: ~D enabled+eligible candidates~%" count))
+    (if (> count 0)
+      (let ((pick (mod-rand-int-range 0 count))
+            (idx 0)
+            (remaining 0)
+            (chosen #f))
+        (set! remaining pick)
+        (while (and (< idx *mod-rule-id-count*) (not chosen))
+          (let ((candidate (mod-rule-id-from-index idx)))
+            (when (mod-rule-fallback-candidate? candidate)
+              (if (= remaining 0) (set! chosen candidate) (-! remaining 1))))
+          (+! idx 1))
+        (when *debug-segment*
+          (format #t "Fallback roll chose: ~S~%" chosen))
+        chosen)
+      (begin
+        (when *debug-segment*
+          (format #t "Fallback roll: no enabled candidates, returning #f~%"))
+        #f))))
+
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
         (total 0))
-    ;; Calculate total weight
+    ;; Calculate total weight (weighted by recency)
     (while (< idx *mod-rule-id-count*)
       (let ((candidate (mod-rule-id-from-index idx)))
         (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
@@ -2453,38 +2500,51 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (set! weight (if (> priority 0) (* priority recent-factor) 0))
             (+! total weight))))
       (+! idx 1))
-    ;; Debug Print
-    (when (and *debug-segment* (> total 0))
-      (format #t "--- Weighted Roll Debug (Total: ~D) ---~%" total)
-      (let ((debug-idx 0))
-        (while (< debug-idx *mod-rule-id-count*)
-          (let ((candidate (mod-rule-id-from-index debug-idx)))
-            (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
-              (let* ((priority (mod-rule-roll-priority candidate))
-                     (recent-factor (mod-rule-recent-roll-factor candidate))
-                     (weight (if (> priority 0) (* priority recent-factor) 0)))
-                (let ((percent (* 100.0 (/ (the float weight) (the float total)))))
-                  (format #t "  ~S: Weight=~D (Prio: ~D, Rec: ~D) | ~2,1f%~%" candidate weight priority recent-factor percent)))))
-          (+! debug-idx 1))))
-    ;; Selection
-    (if (> total 0)
-      (let ((roll (mod-rand-int-range 0 total))
-            (idx 0)
-            (chosen #f))
-        (while (and (< idx *mod-rule-id-count*) (not chosen))
+    ;; Fallback: only one condition is eligible and it's the one that was just rolled, 
+    ;; ignore recency so something is rolled.
+    (let ((use-fallback (= total 0)))
+      (when use-fallback
+        (set! idx 0)
+        (while (< idx *mod-rule-id-count*)
           (let ((candidate (mod-rule-id-from-index idx)))
             (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
-              (let ((priority (mod-rule-roll-priority candidate))
-                    (recent-factor (mod-rule-recent-roll-factor candidate))
-                    (weight 0))
-                (set! weight (if (> priority 0) (* priority recent-factor) 0))
-                (when (> weight 0)
-                  (if (< roll weight) (set! chosen candidate) (set! roll (- roll weight)))))))
+              (let ((priority (mod-rule-roll-priority candidate)))
+                (+! total priority))))
           (+! idx 1))
-        (when *debug-segment*
-          (format #t "Weighted roll chose ~S~%" chosen))
-        chosen)
-      #f)))
+        (when (and *debug-segment* (> total 0))
+          (format #t "Weighted Roll Debug: only recently-rolled candidates eligible, ignoring recency~%")))
+      ;; Debug Print
+      (when (and *debug-segment* (> total 0))
+        (format #t "--- Weighted Roll Debug (Total: ~D) ---~%" total)
+        (let ((debug-idx 0))
+          (while (< debug-idx *mod-rule-id-count*)
+            (let ((candidate (mod-rule-id-from-index debug-idx)))
+              (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
+                (let* ((priority (mod-rule-roll-priority candidate))
+                       (recent-factor (if use-fallback 1 (mod-rule-recent-roll-factor candidate)))
+                       (weight (if (> priority 0) (* priority recent-factor) 0)))
+                  (let ((percent (* 100.0 (/ (the float weight) (the float total)))))
+                    (format #t "  ~S: Weight=~D (Prio: ~D, Rec: ~D) | ~2,1f%~%" candidate weight priority recent-factor percent)))))
+            (+! debug-idx 1))))
+      ;; Selection
+      (if (> total 0)
+        (let ((roll (mod-rand-int-range 0 total))
+              (idx 0)
+              (chosen #f))
+          (while (and (< idx *mod-rule-id-count*) (not chosen))
+            (let ((candidate (mod-rule-id-from-index idx)))
+              (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
+                (let ((priority (mod-rule-roll-priority candidate))
+                      (recent-factor (if use-fallback 1 (mod-rule-recent-roll-factor candidate)))
+                      (weight 0))
+                  (set! weight (if (> priority 0) (* priority recent-factor) 0))
+                  (when (> weight 0)
+                    (if (< roll weight) (set! chosen candidate) (set! roll (- roll weight)))))))
+            (+! idx 1))
+          (when *debug-segment*
+            (format #t "Weighted roll chose ~S~%" chosen))
+          chosen)
+        (mod-rule-pick-fallback-id)))))
 
 (defun mod-rule-reroll-slot ((slot int) (apply-buffer symbol))
   (mod-rule-deactivate-slot slot)

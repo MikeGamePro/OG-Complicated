@@ -905,6 +905,10 @@
   (complicated-opts-punish-toggle-ohko #x1684)
   (complicated-opts-punish-toggle-reset #x1685)
   (complicated-opts-punish-toggle-countdown #x1686)
+  (complicated-opts-cond-toggle-all-on #x1687)
+  (complicated-opts-cond-toggle-all-off #x1688)
+  
+  (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
   (pad-circle #x2001)

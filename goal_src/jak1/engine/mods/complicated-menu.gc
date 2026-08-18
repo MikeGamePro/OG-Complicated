@@ -901,6 +901,8 @@
               (commit-to-file *complicated-settings*)
               (none)))))
 
+(defun-extern condition-toggle-set-all! symbol none)
+
 (define *condition-toggle-options*
   (new 'static
        'boxed-array
@@ -1647,6 +1649,28 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [--] TOGGLE ALL ON
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-cond-toggle-all-on)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (condition-toggle-set-all! #t)
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [--] TOGGLE ALL OFF
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-cond-toggle-all-off)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (condition-toggle-set-all! #f)
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] BACK
        (new 'static
             'game-option
@@ -1657,6 +1681,15 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))))
+
+(defun condition-toggle-set-all! ((val symbol))
+  (dotimes (i (-> *condition-toggle-options* length))
+    (when (and (= (-> *condition-toggle-options* i option-type) (game-option-type on-off))
+               (not (and val
+                         (= (-> *condition-toggle-options* i value-to-modify)
+                            (&-> *complicated-settings* complication-bad-ping?)))))
+      (set! (-> (the-as (pointer symbol) (-> *condition-toggle-options* i value-to-modify)) 0) val)))
+  (none))
 
 ;; ---- Main Complicated Options Submenu --------------------------------------
 (define *complicated-options*
@@ -1734,7 +1767,17 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [7] BACK
+       ;; [7] RESTORE DEFAULTS
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-restore-defaults)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (reset *complicated-settings*)
+              (none)))
+       ;; [8] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
