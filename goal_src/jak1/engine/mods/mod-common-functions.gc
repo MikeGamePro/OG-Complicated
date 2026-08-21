@@ -2214,7 +2214,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    is-minigame
                    is-klaww
                    (eq? level-name 'finalboss)
-                   (string= (current-checkpoint-name) "lavatube-after-ribbon"))
+                   deep-lavatube)
              0
              6))
           ((eq? id 'complication-hidden-treasure)
@@ -2404,6 +2404,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'jungleb)
                    (eq? level-name 'training)
                    (eq? level-name 'finalboss)
+                   (eq? level-name 'village3)
                    is-klaww
                    (string= (current-checkpoint-name) "lavatube-middle"))
              0

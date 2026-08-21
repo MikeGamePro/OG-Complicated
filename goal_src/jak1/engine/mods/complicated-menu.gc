@@ -130,7 +130,7 @@
   (set! (-> obj punishment-toggle-warp?) #t)
   (set! (-> obj punishment-toggle-revert-cell?) #t)
   (set! (-> obj punishment-toggle-extra-rule?) #t)
-  (set! (-> obj punishment-toggle-crash?) #t)
+  (set! (-> obj punishment-toggle-crash?) #f)
   (set! (-> obj punishment-toggle-delay?) #f)
   (set! (-> obj punishment-toggle-blind?) #f)
   (set! (-> obj punishment-toggle-iframes?) #f)

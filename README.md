@@ -43,7 +43,7 @@
 
 | Preset | Start Time | Time Limit Multiplier | Cell | Orb | Fly | Toggles Off
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Simple** | 30 | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Ballons, Hang Time, Quick Time Event, Get a Grip |
+| **Simple** | 30 | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Ballons, Hang Time, Quick Time Event, Get a Grip, Fast Reel, Crash Punishment |
 | **Complicated** | 30 | 1.2x | 30.0 | 1.0 | 10.0 | One Frame, Hang Time
 | **Esoteric** | 30 | 1.0x | 20.0 | 1.0 | 8.0 | None
 | **Unfathomable** | 10 | 0.8x | 20.0 | 1.0 | 5.0 | None
@@ -105,11 +105,11 @@
 | **HEATING BALLOONS** | COOLING BALLOONS MELT YOU. |
 | **DROUGHT** | ALL WATER, LAVA, AND DARK ECO ARE GONE. |
 | **OHKO** | JAK IS LIMITED TO ONE HEALTH. |
-| **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | Currently this only works on open and purchasable cells. Turning in tasks still rewards a cell.
+| **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | You will also be unable to talk to NPCs.
 | **GLARE** | JAK FREEZES WHEN LURKERS SEE HIM. | When a lurker notices Jak, he freezes for exactly 3 seconds.
 | **DISASSOCIATE** | KILLING A LURKER DISMOUNTS FLUT FLUT. |
 | **BUS DRIVER** | ZOOMER EXPLODES IF TOO SLOW. | If you're on the zoomer and your speed goes below 20 meters per second, you explode.
-| **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | Currently, this only works on open and purchasable cells. Turning in tasks still rewards a cell.
+| **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | You will also be unable to talk to NPCs.
 | **HIDDEN TREASURE** | ORBS ARE INVISIBLE. |
 | **WINGS TIED** | YOU CANNOT COLLECT CELLS WHILE ON FLUT FLUT. |
 | **JAK RABBIT** | JUMP HEIGHTS ARE DOUBLED. |
