@@ -90,6 +90,7 @@
 | **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
 | **QUICK TIME EVENT** | QUICKLY PRESS A SPECIFIC FACE BUTTON. | A random face button (X, Circle, Triangle or Square) is chosen. You must press it before time runs out.
 | **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Landing, spinning/kicking, grabbing a ledge, or entering goggles resets the progress.
+| **DO NO HARM** | DO NOT KILL ANY LURKERS. |
 
 </details>
 <details>
@@ -125,7 +126,7 @@
 | **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
 | **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
 | **TWISTED** | A LATER RULE MUST BE BROKEN. | A twisted rule is chosen at random. You must *break* this rule. Rules are colored orange.
-| **VIBE CHECK** | I LIKE YA CUT, G | Jak gets smacked into the air and takes damage.
+| **VIBE CHECK** | I LIKE YA CUT, G. | Jak gets smacked into the air and takes damage.
 | **INCOME TAX** | TIMER INCREMENTS ARE HALVED. | The additional time granted from cells, orbs, and flies is cut in half.
 | **MIRRORED** | THE WORLD IS MIRRORED. |
 | **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
@@ -133,7 +134,9 @@
 | **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from X seconds; if it reaches 0, you die. Grabbing a ledge resets it. The time limit scales with your Time Limit Multiplier.
 | **FAST REEL** | YOUR REEL SPEED HAS INCREASED! | The fish during the fish minigame move faster.
 | **PALATE CHANGE** | EELS ARE GOOD, YELLOWS ARE BAD. | Their effects are swapped: eels grant 5 pounds, and yellows fail the minigame.
-| **JAK BE NIMBLE** | JAK MOVES MUCH FASTER.
+| **JAK BE NIMBLE** | JAK BE QUICK. | Jak moves much faster.
+| **SOUL BOND** | KILLING A LURKER KILLS YOU TOO. |
+| **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 
 </details>
 

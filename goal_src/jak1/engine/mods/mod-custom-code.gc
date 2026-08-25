@@ -152,6 +152,7 @@
   (none))
 
 (defun runs-on-enemy-death ((enemy process-drawable))
+  (mod-rule-trigger-failure 'rule-no-harm)
   (format #t "distance: ~f~%" (vector-vector-distance (-> enemy root trans) (target-pos 0)))
   (when *target*
     (format #t "kill mode (target state): ~a~%" (-> *target* state name)))
@@ -170,6 +171,7 @@
     (mod-rule-trigger-double-kill)
     (mod-rule-trigger-hitlist enemy-type)
     (mod-rule-trigger-flop-this was-flop?)
+    (mod-rule-trigger-soul-bond)
     (mod-rule-trigger-red-eco was-red?))
   (none))
 

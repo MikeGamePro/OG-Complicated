@@ -122,7 +122,8 @@
    (twist-marked-slot        int32)
    (get-a-grip-last-grab     time-frame)
    (bus-driver-activate-time time-frame)
-   (bus-driver-grace-period  time-frame)))
+   (bus-driver-grace-period  time-frame)
+   (shifty-next-time         time-frame)))
 
 (define *MOD-rule-context-bank*
   (new 'static
@@ -141,7 +142,8 @@
        :twist-marked-slot -1
        :get-a-grip-last-grab 0
        :bus-driver-activate-time 0
-       :bus-driver-grace-period (seconds 2)))
+       :bus-driver-grace-period (seconds 2)
+       :shifty-next-time 0))
 
 (deftype mod-rng-bank (structure)
   ((content-state uint)

@@ -232,7 +232,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-get-a-grip
        'complication-torrent
        'complication-palate-change
-       'complication-jak-be-nimble))
+       'complication-jak-be-nimble
+       'rule-no-harm
+       'complication-soul-bond
+       'complication-shifty))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -289,6 +292,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< r threshold)
       (set! r (mod-rng-punish-next-u32)))
     (+ lo (the int (mod r bound)))))
+
+(defun mod-rand-float-range ((lo float) (hi float))
+  (let ((r (logand (mod-rng-content-next-u32) (the uint #x7fffffff))))
+    (+ lo (* (- hi lo) (/ (the float r) 2147483648.0)))))
 
 (define *trivia-questions*
   (new 'static
@@ -980,6 +987,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-torrent) "FAST REEL")
     ((eq? id 'complication-palate-change) "PALATE CHANGE")
     ((eq? id 'complication-jak-be-nimble) "JAK BE NIMBLE")
+    ((eq? id 'rule-no-harm) "DO NO HARM")
+    ((eq? id 'complication-soul-bond) "SOUL BOND")
+    ((eq? id 'complication-shifty) "SHIFTY")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1052,7 +1062,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (if (> rolls-away 0)
          (string-format "THE RULE ROLLED ~D RULES FROM NOW DECEIVES YOU." rolls-away)
          "A LATER RULE MUST BE BROKEN.")))
-    ((eq? id 'complication-vibe-check) "I LIKE YA CUT, G")
+    ((eq? id 'complication-vibe-check) "I LIKE YA CUT, G.")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
     ((eq? id 'rule-touch-grass) "DO THAT.")
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
@@ -1066,7 +1076,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
     ((eq? id 'complication-torrent) "YOUR REEL SPEED HAS INCREASED!")
     ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
-    ((eq? id 'complication-jak-be-nimble) "JAK MOVES MUCH FASTER.")
+    ((eq? id 'complication-jak-be-nimble) "JAK BE QUICK.")
+    ((eq? id 'rule-no-harm) "DO NOT KILL ANY LURKERS.")
+    ((eq? id 'complication-soul-bond) "KILLING A LURKER KILLS YOU TOO.")
+    ((eq? id 'complication-shifty) "JAK RANDOMLY TELEPORTS SHORT DISTANCES.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1109,7 +1122,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-red-light) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 45)) ;; 45
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
-    ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 150))) ;; 150
+    ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 120))) ;; 120
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
     ((eq? id 'rule-speed) (apply-time-limit-multiplier (seconds 60))) ;; 60
@@ -1143,6 +1156,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-torrent) (seconds 20)) ;; 20
     ((eq? id 'complication-palate-change) (seconds 30)) ;; 30
     ((eq? id 'complication-jak-be-nimble) (seconds 45)) ;; 45
+    ((eq? id 'rule-no-harm) (seconds 40)) ;; 40
+    ((eq? id 'complication-soul-bond) (seconds 40)) ;; 40
+    ((eq? id 'complication-shifty) (seconds 45)) ;; 45
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1220,7 +1236,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-express-delivery)
          (eq? id 'rule-qte)
          (eq? id 'rule-touch-grass)
-         (eq? id 'rule-hang-time))
+         (eq? id 'rule-hang-time)
+         (eq? id 'rule-no-harm))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1258,7 +1275,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-get-a-grip)
          (eq? id 'complication-torrent)
          (eq? id 'complication-palate-change)
-         (eq? id 'complication-jak-be-nimble))
+         (eq? id 'complication-jak-be-nimble)
+         (eq? id 'complication-soul-bond)
+         (eq? id 'complication-shifty))
      'complication)
     (else 'unknown)))
 
@@ -1801,6 +1820,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (set! (-> *flop-mods* target-speed) 77777.0)
      (set! (-> *stone-surface* target-speed) 1.25))
     ((eq? id 'complication-joyride) (send-event *target* 'change-mode 'flut #f))
+    ((eq? id 'complication-shifty)
+     (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (current-time) (seconds (mod-rand-int-range 1 9)))))
     (else (none)))
   (none))
 
@@ -1815,6 +1836,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) (set! (-> *MOD-rule-context-bank* hang-time-air-start) (current-time)))
     ((eq? id 'complication-get-a-grip) (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (current-time)))
     ((eq? id 'complication-bus-driver) (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (current-time)))
+    ((eq? id 'complication-shifty)
+     (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (current-time) (seconds (mod-rand-int-range 1 9)))))
     ((eq? id 'complication-vibe-check)
      (play-custom-sfx "I like ya cut g.mp3" 30.0)
      (process-spawn-function process
@@ -2210,13 +2233,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               3)
              (else 8)))
           ((eq? id 'rule-money-pressure)
-           (if (or (< money-left 35)
-                   is-minigame
-                   is-klaww
-                   (eq? level-name 'finalboss)
-                   deep-lavatube)
-             0
-             6))
+           (if (or (< money-left 35) is-minigame is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 6))
           ((eq? id 'complication-hidden-treasure)
            (if (or is-klaww (eq? level-name 'finalboss) (string= (current-checkpoint-name) "firecanyon-start") deep-lavatube) 0 6))
           ((eq? id 'rule-loyal-customer)
@@ -2243,15 +2260,41 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
              ((eq? id 'complication-glare) 8)
-             ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
+             ((or (target-fishing?)
+                  (mod-rule-active? 'rule-no-harm)
+                  (mod-rule-active? 'complication-soul-bond)
+                  (eq? level-name 'finalboss))
+              0)
              (else 8)))
-          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 7))
+          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) (mod-rule-active? 'rule-no-harm) is-minigame) 0 7))
           ((eq? id 'rule-double-kill)
            (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
                    is-minigame
                    is-klaww
                    (eq? level-name 'finalboss)
-                   (eq? level-name 'sunkenb))
+                   (eq? level-name 'sunkenb)
+                   (mod-rule-active? 'rule-no-harm))
+             0
+             7))
+          ((eq? id 'rule-no-harm) ;; disabled
+           (if (or (sparse-lurker-level? level-name)
+                   is-minigame
+                   is-klaww
+                   (mod-rule-active? 'rule-hitlist)
+                   (mod-rule-active? 'rule-lurker-pressure)
+                   (mod-rule-active? 'rule-double-kill)
+                   (eq? level-name 'jungleb)
+                   (eq? level-name 'finalboss))
+             0
+             7))
+          ((eq? id 'complication-soul-bond) ;; disabled
+           (if (or (sparse-lurker-level? level-name)
+                   is-minigame
+                   is-klaww
+                   (mod-rule-active? 'rule-lurker-pressure)
+                   (mod-rule-active? 'complication-disassociate)
+                   (eq? level-name 'jungleb)
+                   (eq? level-name 'finalboss))
              0
              7))
           ((eq? id 'rule-sniper)
@@ -2291,6 +2334,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 6))
           ((eq? id 'complication-invert) 4)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 7))
+          ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 5))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
              ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
@@ -2395,8 +2439,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           ((eq? id 'rule-for-billy)
            (if (and (not (task-closed? (game-task swamp-billy) (task-status need-resolution)))
-                    (> (-> *MOD-countdown-bank* remaining-time) (seconds 210))
-                    (eq? level-name 'swamp))
+                    (> (-> *MOD-countdown-bank* remaining-time) (seconds 240))
+                    (or (string= (current-checkpoint-name) "swamp-game")
+                        (string= (current-checkpoint-name) "swamp-cave2")
+                        (string= (current-checkpoint-name) "swamp-dock2")))
              15
              0))
           ((eq? id 'complication-rgyb)
@@ -2425,7 +2471,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-speed) ;; disabled
            (if (or (string= (current-checkpoint-name) "firecanyon-start") on-racer) 25 0))
           ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 6))
-          ((eq? id 'complication-disassociate) (if (and on-flut (not (sparse-lurker-level? level-name))) 40 0))
+          ((eq? id 'complication-disassociate)
+           (if (and on-flut (not (or (mod-rule-active? 'complication-soul-bond) (sparse-lurker-level? level-name)))) 40 0))
           ((eq? id 'complication-wings-tied) (if (and on-flut (not (eq? level-name 'finalboss))) 20 0))
           ((eq? id 'complication-fuel-shortage)
            (if (or (eq? level-name 'training)
@@ -2949,6 +2996,25 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *MOD-rule-context-bank* mean-look-clear-time) (+ (current-time) (* 3 300))))
   (none))
 
+(defun mod-rule-trigger-shifty ()
+  (when (and (mod-rule-active? 'complication-shifty) (>= (current-time) (-> *MOD-rule-context-bank* shifty-next-time)))
+    (when (and *target* (not (movie?)))
+      (let ((dx (mod-rand-float-range 1.5 5.0))
+            (dz (mod-rand-float-range 1.5 5.0))
+            (sfx (mod-rand-int-range 0 3)))
+        (when (= (mod-rand-int-range 0 2) 0)
+          (set! dx (- dx)))
+        (when (= (mod-rand-int-range 0 2) 0)
+          (set! dz (- dz)))
+        (set! (-> (target-pos 0) x) (+ (-> (target-pos 0) x) (meters dx)))
+        (set! (-> (target-pos 0) z) (+ (-> (target-pos 0) z) (meters dz)))
+        (cond 
+          ((= sfx 0) (play-custom-sfx "warp1.mp3" 60.0))
+          ((= sfx 1) (play-custom-sfx "warp2.mp3" 60.0))
+          ((= sfx 2) (play-custom-sfx "warp3.mp3" 60.0)))))
+    (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (current-time) (seconds (mod-rand-int-range 1 11)))))
+  (none))
+
 (defun mod-rule-trigger-lurker-pressure ()
   (when (mod-rule-active? 'rule-lurker-pressure)
     (mod-rule-counter-add-progress 'rule-lurker-pressure 1))
@@ -2970,6 +3036,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (let ((punishment (mod-rule-punishment-for-id 'rule-flop-this)))
       (when punishment
         (let ((slot (mod-rule-find-active-slot 'rule-flop-this))) (when (>= slot 0) (mod-rule-resolve! slot 'failed #f))))))
+  (none))
+
+(defun mod-rule-trigger-soul-bond ()
+  (when (mod-rule-active? 'complication-soul-bond)
+    (send-event *target* 'attack-invinc #f (static-attack-info ((mode (if (target-on-flut?) 'endlessfall 'melt))))))
   (none))
 
 (defun mod-rule-trigger-hitlist ((enemy-type symbol))
@@ -3173,6 +3244,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (+ (-> *MOD-rule-context-bank* get-a-grip-last-grab) elapsed))
   (set! (-> *MOD-rule-context-bank* bus-driver-activate-time)
         (+ (-> *MOD-rule-context-bank* bus-driver-activate-time) elapsed))
+  (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (-> *MOD-rule-context-bank* shifty-next-time) elapsed))
   (none))
 
 (defbehavior mod-rule-manager-proc process ()
@@ -3195,6 +3267,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-trivia)
            (mod-rule-update-hang-time)
            (mod-rule-trigger-red-light)
+           (mod-rule-trigger-shifty)
            (when (mod-rule-active? 'complication-get-a-grip)
              (when (>= (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)) (apply-time-limit-multiplier (seconds 12)))
                (send-event *target* 'attack-invinc #f (static-attack-info ((mode 'endlessfall))))

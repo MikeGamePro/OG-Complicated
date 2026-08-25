@@ -108,6 +108,9 @@
    (complication-torrent? symbol)
    (complication-palate-change? symbol)
    (complication-jak-be-nimble? symbol)
+   (rule-no-harm? symbol)
+   (complication-soul-bond? symbol)
+   (complication-shifty? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -212,6 +215,9 @@
   (set! (-> obj complication-torrent?) #t)
   (set! (-> obj complication-palate-change?) #t)
   (set! (-> obj complication-jak-be-nimble?) #t)
+  (set! (-> obj rule-no-harm?) #f)
+  (set! (-> obj complication-soul-bond?) #f)
+  (set! (-> obj complication-shifty?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -324,6 +330,9 @@
                                           (("complication-torrent?") (set! (-> obj complication-torrent?) (file-stream-read-symbol file)))
                                           (("complication-palate-change?") (set! (-> obj complication-palate-change?) (file-stream-read-symbol file)))
                                           (("complication-jak-be-nimble?") (set! (-> obj complication-jak-be-nimble?) (file-stream-read-symbol file)))
+                                          (("rule-no-harm?") (set! (-> obj rule-no-harm?) (file-stream-read-symbol file)))
+                                          (("complication-soul-bond?") (set! (-> obj complication-soul-bond?) (file-stream-read-symbol file)))
+                                          (("complication-shifty?") (set! (-> obj complication-shifty?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -442,6 +451,9 @@
     (format file "  (complication-torrent? ~A)~%" (-> obj complication-torrent?))
     (format file "  (complication-palate-change? ~A)~%" (-> obj complication-palate-change?))
     (format file "  (complication-jak-be-nimble? ~A)~%" (-> obj complication-jak-be-nimble?))
+    (format file "  (rule-no-harm? ~A)~%" (-> obj rule-no-harm?))
+    (format file "  (complication-soul-bond? ~A)~%" (-> obj complication-soul-bond?))
+    (format file "  (complication-shifty? ~A)~%" (-> obj complication-shifty?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1506,7 +1518,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [58] I LIKE YA CUT, G
+       ;; [58] VIBE CHECK
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1649,6 +1661,36 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [72] DO NO HARM
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-no-harm)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [73] SOUL BOND
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-soul-bond)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [74] SHIFTY
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-shifty)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -1774,6 +1816,7 @@
             :on-confirm
             (lambda ()
               (reset *complicated-settings*)
+              (commit-to-file *complicated-settings*)
               (none)))
        ;; [8] BACK
        (new 'static
@@ -1947,6 +1990,9 @@
   (set! (-> *condition-toggle-options* 69 value-to-modify) (&-> *complicated-settings* complication-torrent?))
   (set! (-> *condition-toggle-options* 70 value-to-modify) (&-> *complicated-settings* complication-palate-change?))
   (set! (-> *condition-toggle-options* 71 value-to-modify) (&-> *complicated-settings* complication-jak-be-nimble?))
+  (set! (-> *condition-toggle-options* 72 value-to-modify) (&-> *complicated-settings* rule-no-harm?))
+  (set! (-> *condition-toggle-options* 73 value-to-modify) (&-> *complicated-settings* complication-soul-bond?))
+  (set! (-> *condition-toggle-options* 74 value-to-modify) (&-> *complicated-settings* complication-shifty?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2076,4 +2122,7 @@
          ((eq? id 'complication-torrent) (-> *complicated-settings* complication-torrent?))
          ((eq? id 'complication-palate-change) (-> *complicated-settings* complication-palate-change?))
          ((eq? id 'complication-jak-be-nimble) (-> *complicated-settings* complication-jak-be-nimble?))
+         ((eq? id 'rule-no-harm) (-> *complicated-settings* rule-no-harm?))
+         ((eq? id 'complication-soul-bond) (-> *complicated-settings* complication-soul-bond?))
+         ((eq? id 'complication-shifty) (-> *complicated-settings* complication-shifty?))
          (else #t))))
