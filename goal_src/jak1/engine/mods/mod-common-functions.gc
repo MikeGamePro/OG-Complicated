@@ -230,7 +230,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-hang-time
        'complication-unbreakable
        'complication-get-a-grip
-       'complication-torrent
+       'complication-fast-reel
        'complication-palate-change
        'complication-jak-be-nimble
        'rule-no-harm
@@ -984,7 +984,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) "HANG TIME")
     ((eq? id 'complication-unbreakable) "UNBREAKABLE")
     ((eq? id 'complication-get-a-grip) "GET A GRIP")
-    ((eq? id 'complication-torrent) "FAST REEL")
+    ((eq? id 'complication-fast-reel) "FAST REEL")
     ((eq? id 'complication-palate-change) "PALATE CHANGE")
     ((eq? id 'complication-jak-be-nimble) "JAK BE NIMBLE")
     ((eq? id 'rule-no-harm) "DO NO HARM")
@@ -1074,7 +1074,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-get-a-grip)
      (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 12))) (seconds 1))))
        (string-format "FOR EVERY ~D SECONDS A LEDGE IS NOT GRABBED, YOU DIE." seconds)))
-    ((eq? id 'complication-torrent) "YOUR REEL SPEED HAS INCREASED!")
+    ((eq? id 'complication-fast-reel) "YOUR REEL SPEED HAS INCREASED!")
     ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
     ((eq? id 'complication-jak-be-nimble) "JAK BE QUICK.")
     ((eq? id 'rule-no-harm) "DO NOT KILL ANY LURKERS.")
@@ -1092,7 +1092,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-double-kill) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-sniper) (apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'rule-money-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
-    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 30))) ;; 30
+    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 35))) ;; 35
     ((eq? id 'rule-buzzer-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
@@ -1109,7 +1109,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
     ((eq? id 'complication-wings-tied) (seconds 60)) ;; 60
     ((eq? id 'rule-survivor) (seconds 60)) ;; 60
-    ((eq? id 'complication-fuel-shortage) (seconds 45)) ;; 45
+    ((eq? id 'complication-fuel-shortage) (seconds 30)) ;; 30
     ((eq? id 'complication-hidden-treasure) (seconds 60)) ;; 60
     ((eq? id 'complication-drought) (seconds 45)) ;; 45
     ((eq? id 'complication-jak-rabbit) (seconds 45)) ;; 45
@@ -1153,7 +1153,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) (apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'complication-unbreakable) (seconds 60)) ;; 60
     ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
-    ((eq? id 'complication-torrent) (seconds 20)) ;; 20
+    ((eq? id 'complication-fast-reel) (seconds 15)) ;; 15
     ((eq? id 'complication-palate-change) (seconds 30)) ;; 30
     ((eq? id 'complication-jak-be-nimble) (seconds 45)) ;; 45
     ((eq? id 'rule-no-harm) (seconds 40)) ;; 40
@@ -1273,7 +1273,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-no-double-jump)
          (eq? id 'complication-unbreakable)
          (eq? id 'complication-get-a-grip)
-         (eq? id 'complication-torrent)
+         (eq? id 'complication-fast-reel)
          (eq? id 'complication-palate-change)
          (eq? id 'complication-jak-be-nimble)
          (eq? id 'complication-soul-bond)
@@ -1924,7 +1924,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (eq? id 'rule-math-quiz)
             (eq? id 'rule-trivia)
             (eq? id 'complication-twisted)
-            (eq? id 'rule-red-light))
+            (eq? id 'rule-red-light)
+            (eq? id 'complication-palate-change))
       (sound-play "warning")
       (sound-play "ecohit2"))
     (set! (-> (-> *MOD-rule-slot-bank* slot-goals) slot) (mod-rule-counter-goal id))
@@ -2417,8 +2418,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'lavatube))
              0
              4))
-          ((or (eq? id 'complication-torrent) (eq? id 'rule-sagging-sails) (eq? id 'complication-palate-change))
-           (if (target-fishing?) 50 0))
+          ((or (eq? id 'complication-fast-reel) (eq? id 'complication-palate-change))
+            (if (target-fishing?) 50 0))
+          ((eq? id 'rule-sagging-sails)
+            (if (and (target-fishing?) (< (-> *MOD-rule-context-bank* fisher-missed-count) 5)) 50 0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))

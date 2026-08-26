@@ -13,19 +13,19 @@
 
 (define-extern global-countdown-add-seconds (function float none))
 
-(define *torrent-vel-mult* 1.7)
-(define *torrent-period-mult* 1.35)
+(define *torrent-vel-mult* 1.65)
+(define *torrent-period-mult* 1.3)
 
 (defun fisher-torrent-vel-mult ()
-  (if (mod-rule-active? 'complication-torrent) *torrent-vel-mult* 1.0))
+  (if (mod-rule-active? 'complication-fast-reel) *torrent-vel-mult* 1.0))
 
 (defun fisher-torrent-period-mult ()
-  (if (mod-rule-active? 'complication-torrent) *torrent-period-mult* 1.0))
+  (if (mod-rule-active? 'complication-fast-reel) *torrent-period-mult* 1.0))
 
-(define *torrent-swing-vel-mult* 0.5)
+(define *torrent-swing-vel-mult* 0.4)
 
 (defun fisher-torrent-swing-vel-mult ()
-  (if (mod-rule-active? 'complication-torrent) *torrent-swing-vel-mult* 1.0))
+  (if (mod-rule-active? 'complication-fast-reel) *torrent-swing-vel-mult* 1.0))
 
 (deftype fisher-bank (basic)
   ((width      meters)
@@ -1221,10 +1221,11 @@
       (local-vars (v0-2 object))
       (case message
         (('fisher-fish-die)
-         (sound-play "fish-miss")
-         (set! v0-2 (+ (-> self missed) (-> block param 0)))
-         (set! (-> self missed) (the-as int v0-2))
-         v0-2)
+        (sound-play "fish-miss")
+        (set! v0-2 (+ (-> self missed) (-> block param 0)))
+        (set! (-> self missed) (the-as int v0-2))
+        (set! (-> *MOD-rule-context-bank* fisher-missed-count) (-> self missed))
+        v0-2)
         (('fisher-fish-caught)
          (send-event *target* 'bounce)
          (set! v0-2 (+ (-> self caught) (-> block param 0)))
@@ -1282,6 +1283,7 @@
       (set-time! (-> self start-time))
       (set! (-> self caught) 0)
       (set! (-> self missed) 0)
+      (set! (-> *MOD-rule-context-bank* fisher-missed-count) 0)
       (set! (-> self spawner) 0.5)
       (set! (-> self spawner-last) 0.5)
       (set! (-> self swing-time) 0)
