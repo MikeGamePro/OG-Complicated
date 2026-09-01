@@ -111,6 +111,7 @@
    (rule-no-harm? symbol)
    (complication-soul-bond? symbol)
    (complication-shifty? symbol)
+   (complication-interference? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -218,6 +219,7 @@
   (set! (-> obj rule-no-harm?) #f)
   (set! (-> obj complication-soul-bond?) #f)
   (set! (-> obj complication-shifty?) #t)
+  (set! (-> obj complication-interference?) #f)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -333,6 +335,7 @@
                                           (("rule-no-harm?") (set! (-> obj rule-no-harm?) (file-stream-read-symbol file)))
                                           (("complication-soul-bond?") (set! (-> obj complication-soul-bond?) (file-stream-read-symbol file)))
                                           (("complication-shifty?") (set! (-> obj complication-shifty?) (file-stream-read-symbol file)))
+                                          (("complication-interference?") (set! (-> obj complication-interference?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -454,6 +457,7 @@
     (format file "  (rule-no-harm? ~A)~%" (-> obj rule-no-harm?))
     (format file "  (complication-soul-bond? ~A)~%" (-> obj complication-soul-bond?))
     (format file "  (complication-shifty? ~A)~%" (-> obj complication-shifty?))
+    (format file "  (complication-interference? ~A)~%" (-> obj complication-interference?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1691,6 +1695,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [75] INTERFERENCE
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-interference)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -1993,6 +2007,7 @@
   (set! (-> *condition-toggle-options* 72 value-to-modify) (&-> *complicated-settings* rule-no-harm?))
   (set! (-> *condition-toggle-options* 73 value-to-modify) (&-> *complicated-settings* complication-soul-bond?))
   (set! (-> *condition-toggle-options* 74 value-to-modify) (&-> *complicated-settings* complication-shifty?))
+  (set! (-> *condition-toggle-options* 75 value-to-modify) (&-> *complicated-settings* complication-interference?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2125,4 +2140,5 @@
          ((eq? id 'rule-no-harm) (-> *complicated-settings* rule-no-harm?))
          ((eq? id 'complication-soul-bond) (-> *complicated-settings* complication-soul-bond?))
          ((eq? id 'complication-shifty) (-> *complicated-settings* complication-shifty?))
+         ((eq? id 'complication-interference) (-> *complicated-settings* complication-interference?))
          (else #t))))

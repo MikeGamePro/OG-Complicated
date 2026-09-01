@@ -886,6 +886,7 @@
   (complicated-opts-cond-rule-no-harm #x1671)
   (complicated-opts-cond-complication-soul-bond #x1672)
   (complicated-opts-cond-complication-shifty #x1673)
+  (complicated-opts-cond-complication-interference #x1674)
   ;; #x1674 - #x16ff reserved for future condition toggles
   (complicated-opts-cond-toggle-all-on #x1700)
   (complicated-opts-cond-toggle-all-off #x1701)

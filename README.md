@@ -137,6 +137,7 @@
 | **JAK BE NIMBLE** | JAK BE QUICK. | Jak moves much faster.
 | **SOUL BOND** | KILLING A LURKER KILLS YOU TOO. |
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
+| **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
 
 </details>
 
