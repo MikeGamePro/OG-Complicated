@@ -119,7 +119,7 @@
 | **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Currently, live clusters are not updated. They need to respawn to swap or swap back. Eco vents will grant the opposite powerup.
 | **BUTTER FINGERS** | JAK CANNOT GRAB LEDGES. |
 | **OVERCLOCK** | CITADEL DISCS ARE FASTER. | The large disc platforms in Citadel (pizzas) rotate faster.
-| **BAD PING** | YOU HAVE 120MS INPUT DELAY. | This is currently disabled until Zed releases his mod.
+| **BAD PING** | YOU HAVE 120MS INPUT DELAY. |
 | **INVISIBLE MAN** | JAK IS INVISIBLE. |
 | **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is.
 | **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) is doubled.

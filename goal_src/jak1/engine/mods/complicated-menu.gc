@@ -135,7 +135,7 @@
   (set! (-> obj punishment-toggle-revert-cell?) #t)
   (set! (-> obj punishment-toggle-extra-rule?) #t)
   (set! (-> obj punishment-toggle-crash?) #f)
-  (set! (-> obj punishment-toggle-delay?) #f)
+  (set! (-> obj punishment-toggle-delay?) #t)
   (set! (-> obj punishment-toggle-blind?) #f)
   (set! (-> obj punishment-toggle-iframes?) #f)
   (set! (-> obj punishment-toggle-camera?) #f)
@@ -186,7 +186,7 @@
   (set! (-> obj rule-speed?) #f)
   (set! (-> obj rule-math-quiz?) #t)
   (set! (-> obj rule-trivia?) #t)
-  (set! (-> obj complication-bad-ping?) #f)
+  (set! (-> obj complication-bad-ping?) #t)
   (set! (-> obj rule-green-pilled?) #t)
   (set! (-> obj rule-button-pusher?) #t)
   (set! (-> obj complication-invisible-man?) #t)
@@ -839,9 +839,9 @@
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-punish-toggle-delay)
             :scale #t
-            :option-disabled-func
-            (lambda ()
-              #t)
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
             :on-confirm
             (lambda ()
               (commit-to-file *complicated-settings*)
@@ -1362,9 +1362,9 @@
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-cond-complication-bad-ping)
             :scale #t
-            :option-disabled-func
-            (lambda ()
-              #t)
+            ;; :option-disabled-func
+            ;; (lambda ()
+            ;;   #t)
             :on-confirm
             (lambda ()
               (commit-to-file *complicated-settings*)
