@@ -7,6 +7,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-rule-trivia-hiding-money-total? (function symbol))
+
 (defpartgroup group-part-hud-pickup
   :id 75
   :flags (screen-space)
@@ -543,10 +545,12 @@
       (case *hud-collectable-view*
         (((hud-collectable-view game-totals))
          ;; show orbs collected/total across entire game
-         (draw-string-xy-scaled (string-format "~D~%/~D"
-                                               (the int (-> *game-info* money-total))
-                                               2000 ;;(-> (the progress (-> *progress-process* 0)) total-nb-of-orbs)
-                                               )
+         (draw-string-xy-scaled (if (mod-rule-trivia-hiding-money-total?)
+                         (string-format "???~%/~D" 2000)
+                         (string-format "~D~%/~D"
+                                                (the int (-> *game-info* money-total))
+                                                2000 ;;(-> (the progress (-> *progress-process* 0)) total-nb-of-orbs)
+                                                ))
                                 buf
                                 string-x
                                 (- string-y 5)

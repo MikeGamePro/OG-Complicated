@@ -887,7 +887,7 @@
   (complicated-opts-cond-complication-soul-bond #x1672)
   (complicated-opts-cond-complication-shifty #x1673)
   (complicated-opts-cond-complication-interference #x1674)
-  ;; #x1674 - #x16ff reserved for future condition toggles
+  ;; up to #x16ff reserved for future condition toggles
   (complicated-opts-cond-toggle-all-on #x1700)
   (complicated-opts-cond-toggle-all-off #x1701)
   ;; punishment toggle menu
@@ -915,6 +915,7 @@
   (complicated-opts-unfathomable-preset #x1716)
   ;; timer submenu (paired with complicated-opts-show-timer above at 0x161c)
   (complicated-opts-time-limit-multiplier #x1717)
+  (complicated-opts-text-scale #x1718)
 
   (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change

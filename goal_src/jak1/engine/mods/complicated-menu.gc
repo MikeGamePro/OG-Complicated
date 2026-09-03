@@ -116,7 +116,8 @@
    (orb-increment float)
    (fly-increment float)
    (countdown-start-seconds float)
-   (time-limit-multiplier float))
+   (time-limit-multiplier float)
+   (text-scale float))
   (:methods
    (reset (_type_) _type_)
    (commit-to-file (_type_) none)
@@ -225,6 +226,7 @@
   (set! (-> obj fly-increment) 10.0)
   (set! (-> obj countdown-start-seconds) 30.0)
   (set! (-> obj time-limit-multiplier) 1.2)
+  (set! (-> obj text-scale) 1.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -340,7 +342,8 @@
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
                                           (("countdown-start-seconds") (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
-                                          (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file))))))))
+                                          (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file)))
+                                          (("text-scale") (set! (-> obj text-scale) (file-stream-read-float file))))))))
     (file-stream-close file))
   #t)
 
@@ -463,6 +466,7 @@
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
     (format file "  (time-limit-multiplier ~f)~%" (snap-to-step (-> obj time-limit-multiplier) 0.1))
+    (format file "  (text-scale ~f)~%" (snap-to-step (-> obj text-scale) 0.1))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -486,6 +490,10 @@
 
 (defun time-limit-multiplier-changed! ((new-val float))
   (set! (-> *complicated-settings* time-limit-multiplier) (+ (snap-to-step new-val 0.05) 0.001))
+  (none))
+
+(defun text-scale-changed! ((new-val float))
+  (set! (-> *complicated-settings* text-scale) (+ (snap-to-step new-val 0.05) 0.001))
   (none))
 
 (defun apply-easy-preset! ()
@@ -681,7 +689,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [5] BACK
+        ;; [5] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1821,27 +1829,45 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [7] RESTORE DEFAULTS
-       (new 'static
-            'game-option
-            :option-type (game-option-type confirmation)
-            :name (text-id complicated-opts-restore-defaults)
-            :scale #t
-            :on-confirm
-            (lambda ()
-              (reset *complicated-settings*)
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [8] BACK
-       (new 'static
-            'game-option
-            :option-type (game-option-type button)
-            :name (text-id back)
-            :scale #t
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))))
+      ;; [7] TEXT SCALE
+      (new 'static
+           'game-option
+           :option-type (game-option-type slider)
+           :name (text-id complicated-opts-text-scale)
+           :scale #t
+           :param1 0.5
+           :param2 1.0
+           :slider-step-size 0.05
+           :slider-show-decimal? #t
+           :on-change
+           (lambda ((val object))
+            (text-scale-changed! (the-as float val))
+             (none))
+           :on-confirm
+           (lambda ()
+             (commit-to-file *complicated-settings*)
+            (none)))
+      ;; [8] RESTORE DEFAULTS
+        (new 'static
+             'game-option
+             :option-type (game-option-type confirmation)
+             :name (text-id complicated-opts-restore-defaults)
+             :scale #t
+             :on-confirm
+             (lambda ()
+               (reset *complicated-settings*)
+               (commit-to-file *complicated-settings*)
+               (none)))
+      ;; [9] BACK
+        (new 'static
+             'game-option
+             :option-type (game-option-type button)
+             :name (text-id back)
+             :scale #t
+             :on-confirm
+             (lambda ()
+               (commit-to-file *complicated-settings*)
+               (none)))))
 
 (define *game-options-complicated*
   (new 'static
@@ -1915,6 +1941,7 @@
   (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
   (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
   (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* text-scale))
   ;; Punishment toggle mappings
   (set! (-> *punishment-toggle-options* 0 value-to-modify) (&-> *complicated-settings* punishment-toggle-fall-damage?))
   (set! (-> *punishment-toggle-options* 1 value-to-modify) (&-> *complicated-settings* punishment-toggle-trip?))
@@ -2022,6 +2049,9 @@
 
 (defun time-limit-multiplier ()
   (if *complicated-settings* (snap-to-step (-> *complicated-settings* time-limit-multiplier) 0.1) 1.2))
+
+(defun text-scale-multiplier ()
+  (if *complicated-settings* (snap-to-step (-> *complicated-settings* text-scale) 0.1) 1.0))
 
 (defun punishment-toggle-enabled? ((punishment symbol))
   (the symbol

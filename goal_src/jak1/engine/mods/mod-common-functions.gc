@@ -67,6 +67,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern time-limit-multiplier (function float))
 
+(define-extern text-scale-multiplier (function float))
+
 (define-extern mod-rule-twist-check-and-mark! (function int symbol none))
 
 (define-extern mod-rule-twist-marked-slot? (function int symbol))
@@ -344,7 +346,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
        "ACROPHOBIA IS THE FEAR OF WHAT?"
        "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
-       "WHAT SUIT IS THE CARD ON THE GAMBLER\c12S HAT?"))
+       "WHAT SUIT IS THE CARD ON THE GAMBLER\c12S HAT?"
+       "WHICH OF THESE SHAPES HAS THE MOST SIDES?"
+       "WHAT COLOR IS NOT FOUND ON A RUBIK\c12S CUBE?"
+       "WHO SCULPTED DAVID?"
+       "WHAT IS THE CAPITAL OF CANADA?"
+       "WHO DIRECTED THE SHINING?"
+       "HOW MANY ORBS HAVE YOU COLLECTED THIS RUN?"
+      ))
 
 (define *trivia-choices*
   (new 'static
@@ -519,7 +528,33 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "SPADES"
        "HEARTS"
        "DIAMONDS"
-       "CLUBS"))
+       "CLUBS"
+       "NONAGON"
+       "HEXAGON"
+       "HEPTAGON"
+       "OCTAGON"
+       "PURPLE"
+       "ORANGE"
+       "YELLOW"
+       "WHITE"
+       "MICHELANGELO"
+       "DONATELLO"
+       "LEONARDO DA VINCI"
+       "AUGUSTE RODIN"
+       "OTTAWA"
+       "MONTREAL"
+       "TORONTO"
+       "VANCOUVER"
+       "STANLEY KUBRICK"
+       "MARTIN SCORSESE"
+       "QUENTIN TARANTINO"
+       "WOODY ALLEN"
+       ;; q-idx 47 is dynamic
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       ))
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
@@ -529,8 +564,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trivia-question-valid? ((idx int))
   (cond
-    ;; ((= idx 999) (> (-> *game-info* total-deaths) 0))
+    ;; ((= idx 9999) (> (-> *game-info* total-deaths) 0))
     ((= idx 40) (> (-> *MOD-stats-bank* rules-broken) 0))
+    ((= idx 47) (> (-> *game-info* money-total) 150.0))
     (else #t)))
 
 (defun mod-rule-trivia-pick-question ()
@@ -548,6 +584,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! idx (mod-rand-int-range 0 count)))
       (set! (-> *trivia-questions-used* idx) #t)
       idx)))
+
+(defun mod-rule-trivia-hiding-money-total? ()
+  (and (mod-rule-active? 'rule-trivia)
+       (= (-> *MOD-quiz-bank* trivia-current-question) 47)))
 
 (defun orb-weight-multiplier ()
   (let ((orbs (max 0.0 (min 150.0 (current-orb-count))))) (- 1.0 (* 0.4 (/ orbs 100.0)))))
@@ -3163,9 +3203,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((shuffled-idx (-> (-> *MOD-quiz-bank* trivia-shuffle-map) guess-idx)))
     (cond
       ;; Dynamic questions here
-      ;; ((= q-idx 999) (trivia-dynamic-choice-str (-> *game-info* total-deaths) shuffled-idx 4))
+      ;; ((= q-idx 9999) (trivia-dynamic-choice-str (-> *game-info* total-deaths) shuffled-idx 4))
       ;; ((= q-idx 9999) (trivia-dynamic-choice-str (the int (-> *game-info* money)) shuffled-idx 6))
       ((= q-idx 40) (trivia-dynamic-choice-str (-> *MOD-stats-bank* rules-broken) shuffled-idx 4))
+      ((= q-idx 47) (trivia-dynamic-choice-str (the int (-> *game-info* money-total)) shuffled-idx 6))
       (else (-> *trivia-choices* (+ (* q-idx 4) shuffled-idx))))))
 
 (defun get-trivia-answer ((q-idx int))
@@ -3370,6 +3411,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> dst data j) 0))
   dst)
 
+(defun mod-draw-string-xy-scaled ((str string) (buf dma-buffer) (x int) (y int) (color font-color) (flags font-flags) (scale float))
+  (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier))))
+
+;; scales a row-spacing/indent pixel offset by the same multiplier as the HUD text
+(defun mod-scale-px ((n int))
+  (the int (* (the float n) (text-scale-multiplier))))
+
 (defun draw-qte-button ((arg0 dma-buffer) (x int) (y int))
   (let ((button-text (case (-> *MOD-rule-context-bank* qte-target-button)
                        ((0) (lookup-text! *common-text* (text-id pad-triangle) #f))
@@ -3378,25 +3426,25 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                        ((3) (lookup-text! *common-text* (text-id pad-square) #f))
                        (else #f))))
     (when button-text
-      (draw-string-xy-scaled (the string button-text) arg0 x y (font-color green) (font-flags shadow kerning large) 0.65))))
+      (mod-draw-string-xy-scaled (the string button-text) arg0 x y (font-color green) (font-flags shadow kerning large) 0.65))))
 
 (defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
   (let ((idx (mod-rule-find-substr line highlight 0))
         (flags (font-flags shadow kerning large)))
     (if (< idx 0)
-      (draw-string-xy-scaled line buf x y (font-color white) flags scale)
+      (mod-draw-string-xy-scaled line buf x y (font-color white) flags scale)
       (let ((cur-x x)
             (highlight-end (+ idx (length highlight))))
         (when (> idx 0)
           (mod-rule-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line 0 idx)
-          (draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)
+          (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)
           (+! cur-x (the int (mod-rule-string-width (-> *MOD-rule-display-bank* highlight-line-buf) flags scale))))
         (mod-rule-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line idx highlight-end)
-        (draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y highlight-color flags scale)
+        (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y highlight-color flags scale)
         (when (< highlight-end (length line))
           (+! cur-x (the int (mod-rule-string-width (-> *MOD-rule-display-bank* highlight-line-buf) flags scale)))
           (mod-rule-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line highlight-end (length line))
-          (draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)))))
+          (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)))))
   (none))
 
 (defun mod-rule-wrap-point ((str string) (max-len int))
@@ -3411,7 +3459,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-draw-desc-line! ((buf dma-buffer) (id symbol) (line string) (x int) (y int) (scale float))
   (if (eq? id 'complication-twisted)
     (mod-rule-draw-line-highlighted! buf line "RULE" (font-color orangeb) x y scale)
-    (draw-string-xy-scaled line buf x y (font-color white) (font-flags shadow kerning large) scale))
+    (mod-draw-string-xy-scaled line buf x y (font-color white) (font-flags shadow kerning large) scale))
   (none))
 
 (defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int))
@@ -3424,119 +3472,119 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (row y)
          (desc (mod-rule-description id))
          (break-idx (mod-rule-wrap-point desc 25)))
-    (draw-string-xy-scaled (mod-rule-name id)
+    (mod-draw-string-xy-scaled (mod-rule-name id)
                            buf
                            10
                            row
                            (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
                            (font-flags shadow kerning large)
                            0.5)
-    (+! row 10)
+    (+! row (mod-scale-px 10))
     (if (>= break-idx (length desc))
       (if (eq? id 'rule-qte)
         (begin
-          (draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
-          (draw-qte-button buf 50 row)
-          (+! row 15))
+          (mod-draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+          (draw-qte-button buf (mod-scale-px 50) row)
+          (+! row (mod-scale-px 15)))
         (begin
           (mod-rule-draw-desc-line! buf id desc 10 row 0.35)
-          (+! row 9)))
+          (+! row (mod-scale-px 9))))
       (begin
         (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-1) desc 0 break-idx)
         (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-2) desc (+ break-idx 1) (length desc))
         (mod-rule-draw-desc-line! buf id (-> *MOD-rule-display-bank* wrap-line-1) 10 row 0.35)
-        (+! row 9)
+        (+! row (mod-scale-px 9))
         (mod-rule-draw-desc-line! buf id (-> *MOD-rule-display-bank* wrap-line-2) 10 row 0.35)
-        (+! row 9)))
+        (+! row (mod-scale-px 9))))
     (when punishment
-      (draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
+      (mod-draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
       (let* ((punishment-str (mod-rule-punishment-name punishment))
              (punish-break-idx (mod-rule-wrap-point punishment-str 16)))
         (if (>= punish-break-idx (length punishment-str))
           (begin
-            (draw-string-xy-scaled punishment-str buf 80 row (font-color white) (font-flags shadow kerning large) 0.3)
-            (+! row 8))
+            (mod-draw-string-xy-scaled punishment-str buf (mod-scale-px 80) row (font-color white) (font-flags shadow kerning large) 0.3)
+            (+! row (mod-scale-px 8)))
           (begin
             (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-1) punishment-str 0 punish-break-idx)
             (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-2)
                                   punishment-str
                                   (+ punish-break-idx 1)
                                   (length punishment-str))
-            (draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
+            (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
                                    buf
-                                   80
+                                   (mod-scale-px 80)
                                    row
                                    (font-color white)
                                    (font-flags shadow kerning large)
                                    0.3)
-            (+! row 8)
-            (draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
+            (+! row (mod-scale-px 8))
+            (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
                                    buf
-                                   80
+                                   (mod-scale-px 80)
                                    row
                                    (font-color white)
                                    (font-flags shadow kerning large)
                                    0.3)
-            (+! row 8)))))
+            (+! row (mod-scale-px 8))))))
     (when show-progress?
-      (draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
+      (mod-draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
       (if (eq? id 'rule-hang-time)
         (let* ((elapsed (min (seconds (mod-rule-counter-goal 'rule-hang-time))
                              (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start))))
                (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
-          (draw-string-xy-scaled (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal)
+          (mod-draw-string-xy-scaled (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal)
                                  buf
-                                 80
+                                 (mod-scale-px 80)
                                  row
                                  (font-color white)
                                  (font-flags shadow kerning large)
                                  0.5))
-        (draw-string-xy-scaled (string-format "~D/~D" progress goal)
+        (mod-draw-string-xy-scaled (string-format "~D/~D" progress goal)
                                buf
-                               80
+                               (mod-scale-px 80)
                                row
                                (font-color white)
                                (font-flags shadow kerning large)
                                0.5))
-      (+! row 7))
-    (draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
+      (+! row (mod-scale-px 7)))
+    (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
                            buf
                            10
                            row
                            (font-color white)
                            (font-flags shadow kerning large)
                            0.5)
-    (+! row 12)
+    (+! row (mod-scale-px 12))
     (when (eq? id 'rule-distancing)
-      (draw-string-xy-scaled "DISTANCE: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
-      (-! row 2)
+      (mod-draw-string-xy-scaled "DISTANCE: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
+      (-! row (mod-scale-px 2))
       (if (> *closest-buzzer-dist* (meters 40))
-        (draw-string-xy-scaled "-" buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
+        (mod-draw-string-xy-scaled "-" buf (mod-scale-px 66) row (font-color white) (font-flags shadow kerning large) 0.4)
         (let* ((dist-meters (/ *closest-buzzer-dist* 4096.0))
                (tenths (the int (* dist-meters 10))))
-          (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
+          (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
                                  buf
-                                 66
+                                 (mod-scale-px 66)
                                  row
                                  (font-color white)
                                  (font-flags shadow kerning large)
                                  0.4)))
-      (+! row 8))
+      (+! row (mod-scale-px 8)))
     (when (eq? id 'rule-sniper)
-      (draw-string-xy-scaled "LAST KILL: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
-      (-! row 2)
+      (mod-draw-string-xy-scaled "LAST KILL: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
+      (-! row (mod-scale-px 2))
       (if (< *last-kill-dist* (meters 0))
-        (draw-string-xy-scaled "-" buf 66 row (font-color white) (font-flags shadow kerning large) 0.4)
+        (mod-draw-string-xy-scaled "-" buf (mod-scale-px 66) row (font-color white) (font-flags shadow kerning large) 0.4)
         (let* ((dist-meters (/ *last-kill-dist* 4096.0))
                (tenths (the int (* dist-meters 10))))
-          (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
+          (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
                                  buf
-                                 66
+                                 (mod-scale-px 66)
                                  row
                                  (font-color white)
                                  (font-flags shadow kerning large)
                                  0.4)))
-      (+! row 8))
+      (+! row (mod-scale-px 8)))
     (when (eq? id 'rule-math-quiz)
       (let ((op-string (cond
                          ((= (-> *MOD-quiz-bank* math-op) 0) "+")
@@ -3548,8 +3596,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                 op-string
                 (-> *MOD-quiz-bank* math-val2)
                 (-> *MOD-quiz-bank* math-current-guess))
-        (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)
-        (+! row 12)))
+        (mod-draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.6)
+        (+! row (mod-scale-px 12))))
     (when (eq? id 'rule-trivia)
       (let* ((q-idx (-> *MOD-quiz-bank* trivia-current-question))
              (choice-str (if (= (-> *MOD-quiz-bank* trivia-current-guess) -1)
@@ -3559,61 +3607,61 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let ((quiz-break-idx (mod-rule-wrap-point *temp-string* 27)))
           (if (>= quiz-break-idx (length *temp-string*))
             (begin
-              (draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
-              (+! row 8))
+              (mod-draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+              (+! row (mod-scale-px 8)))
             (begin
               (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-1) *temp-string* 0 quiz-break-idx)
               (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-2)
                                     *temp-string*
                                     (+ quiz-break-idx 1)
                                     (length *temp-string*))
-              (draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
+              (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
                                      buf
                                      10
                                      row
                                      (font-color white)
                                      (font-flags shadow kerning large)
                                      0.35)
-              (+! row 8)
-              (draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
+              (+! row (mod-scale-px 8))
+              (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
                                      buf
                                      10
                                      row
                                      (font-color white)
                                      (font-flags shadow kerning large)
                                      0.35)
-              (+! row 8))))
+              (+! row (mod-scale-px 8)))))
         (format (clear *temp-string*) " ~S" choice-str)
-        (draw-string-xy-scaled *temp-string* buf 20 row (font-color progress-memcard) (font-flags shadow kerning large) 0.47)
-        (+! row 12)))
+        (mod-draw-string-xy-scaled *temp-string* buf (mod-scale-px 20) row (font-color progress-memcard) (font-flags shadow kerning large) 0.47)
+        (+! row (mod-scale-px 12))))
     (when (or (eq? id 'complication-bus-driver) (eq? id 'rule-speed))
-      (draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
-      (-! row 2)
+      (mod-draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
+      (-! row (mod-scale-px 2))
       (let* ((dist-meters (/ (-> *target* control ctrl-xz-vel) 4096.0))
              (tenths (the int (* dist-meters 10))))
-        (draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
+        (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
                                buf
-                               66
+                               (mod-scale-px 66)
                                row
                                (font-color white)
                                (font-flags shadow kerning large)
                                0.4)
         (if (mod-rule-active? 'complication-bus-driver)
-          (draw-string-xy-scaled "/20.0" buf 96 row (font-color white) (font-flags shadow kerning large) 0.4)))
-      (+! row 8))
+          (mod-draw-string-xy-scaled "/20.0" buf (mod-scale-px 96) row (font-color white) (font-flags shadow kerning large) 0.4)))
+      (+! row (mod-scale-px 8)))
     (when (eq? id 'complication-get-a-grip)
-      (draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
-      (-! row 2)
+      (mod-draw-string-xy-scaled "DEATH: " buf 10 row (font-color red) (font-flags shadow kerning large) 0.3)
+      (-! row (mod-scale-px 2))
       (let* ((elapsed (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)))
              (time-left (max 0 (- (apply-time-limit-multiplier (seconds 12)) elapsed))))
-        (draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
+        (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
                                buf
-                               66
+                               (mod-scale-px 66)
                                row
                                (font-color white)
                                (font-flags shadow kerning large)
                                0.4))
-      (+! row 8))
+      (+! row (mod-scale-px 8)))
     row))
 
 (defun mod-rule-draw-timed-punishments ((buf dma-buffer))
@@ -3622,7 +3670,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (let ((punishment (-> (-> *MOD-rule-punishment-bank* timed-punishments) slot)))
         (when punishment
           (let ((time-left (max 0 (- (-> (-> *MOD-rule-punishment-bank* timed-end-times) slot) (current-time))))
-                (row-y (+ 68 (* row-count 10))))
+                (row-y (+ 68 (* row-count (mod-scale-px 10)))))
             (draw-string-xy-scaled (mod-rule-timed-punishment-name punishment)
                                    buf
                                    395
@@ -3632,8 +3680,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                    0.3)
             (draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
                                    buf
-                                   465
-                                   (- row-y 2)
+                                   (+ 395 (mod-scale-px 70))
+                                   (- row-y (mod-scale-px 2))
                                    (font-color white)
                                    (font-flags shadow kerning large)
                                    0.4)
@@ -3643,13 +3691,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-draw-last-outcome ((buf dma-buffer) (y int))
   (cond
     ((eq? (-> *MOD-rule-context-bank* last-outcome) 'success)
-     (draw-string-xy-scaled "GOOD JOB!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
+     (mod-draw-string-xy-scaled "GOOD JOB!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
     ((eq? (-> *MOD-rule-context-bank* last-outcome) 'failed)
-     (draw-string-xy-scaled "RULE BROKEN!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4))
+     (mod-draw-string-xy-scaled "RULE BROKEN!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4))
     ((eq? (-> *MOD-rule-context-bank* last-outcome) 'twisted-success)
-     (draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
+     (mod-draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
     ((eq? (-> *MOD-rule-context-bank* last-outcome) 'twisted-failed)
-     (draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4)))
+     (mod-draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4)))
   (none))
 
 (defun mod-rule-draw-rolling-slot ((buf dma-buffer))
@@ -3663,8 +3711,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (set! rolling-left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))))
       (+! slot 1))
     (when rolling-id
-      (draw-string-xy-scaled "NEW CONDITION" buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
-      (draw-string-xy-scaled (mod-format-time-frame rolling-left 1 'auto)
+      (mod-draw-string-xy-scaled "NEW CONDITION" buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
+      (mod-draw-string-xy-scaled (mod-format-time-frame rolling-left 1 'auto)
                              buf
                              110
                              57
@@ -3685,7 +3733,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                               (font-flags shadow kerning large)
                               0.4)
        ;; Draw main countdown timer
-       (draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* remaining-time) 2 'auto)
+       (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* remaining-time) 2 'auto)
                               global-buf
                               380
                               50
@@ -3695,7 +3743,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        ;; Draw countup timer
        (when (show-countup-timer-enabled?)
          (let ((show-hours? (> (the int (/ (-> *MOD-countdown-bank* countup-timer) (seconds 3600))) 0)))
-           (draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* countup-timer) 2 'auto)
+           (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* countup-timer) 2 'auto)
                                   global-buf
                                   (if show-hours? 390 410)
                                   40
@@ -3708,13 +3756,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (cond
            ((>= primary 0)
             (let ((end-row (mod-rule-draw-slot global-buf primary 40)))
-              (set! reverted-y (+ end-row 20))
+              (set! reverted-y (+ end-row (mod-scale-px 20)))
               (let ((secondary (mod-rule-nth-active-slot (+ primary 1))))
                 (cond
                   ((>= secondary 0)
-                   (mod-rule-draw-last-outcome global-buf (+ end-row 8))
-                   (mod-rule-draw-slot global-buf secondary (+ end-row 18)))
-                  (else (mod-rule-draw-last-outcome global-buf (+ end-row 8)))))))
+                   (mod-rule-draw-last-outcome global-buf (+ end-row (mod-scale-px 8)))
+                   (mod-rule-draw-slot global-buf secondary (+ end-row (mod-scale-px 18))))
+                  (else (mod-rule-draw-last-outcome global-buf (+ end-row (mod-scale-px 8))))))))
            (else (mod-rule-draw-rolling-slot global-buf) (mod-rule-draw-last-outcome global-buf 51)))
          (when (and #t ;; *debug-segment*
                     (> (-> *MOD-rule-context-bank* last-reverted-cell-until) (current-time)))
@@ -3748,7 +3796,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                              (font-color green)
                              (font-flags shadow kerning large)
                              0.8)
-      (+! title-row 15)
+      (+! title-row (mod-scale-px 15))
       (draw-string-xy-scaled "A COMPLICATED MOD WITH RULES."
                              global-buf
                              title-x
@@ -3756,7 +3804,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                              (font-color white)
                              (font-flags shadow kerning large)
                              0.4)
-      (+! title-row 10)
+      (+! title-row (mod-scale-px 10))
       (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (font-flags shadow kerning large) 1.0)))
   (none))
 
