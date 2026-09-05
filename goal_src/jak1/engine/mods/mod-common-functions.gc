@@ -1179,7 +1179,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-speed) (apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'rule-math-quiz) (apply-time-limit-multiplier (seconds 20))) ;; 20
     ((eq? id 'rule-trivia) (apply-time-limit-multiplier (seconds 15))) ;; 15
-    ((eq? id 'complication-bad-ping) (seconds 60)) ;; 60
+    ((eq? id 'complication-bad-ping) (seconds 50)) ;; 50
     ((eq? id 'rule-green-pilled) (apply-time-limit-multiplier (seconds 90))) ;; 90
     ((eq? id 'rule-button-pusher) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-loyal-customer) (apply-time-limit-multiplier (seconds 60))) ;; 60
@@ -1420,7 +1420,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-delay) (seconds 60))
     ((eq? punishment 'punishment-iframes) (seconds 180))
     ((eq? punishment 'punishment-camera) (seconds 120))
-    ((eq? punishment 'punishment-ohko) (seconds 180))
+    ((eq? punishment 'punishment-ohko) (seconds 120))
     (else 0)))
 
 (defun mod-rule-find-timed-punishment-slot ((punishment symbol))
@@ -2489,7 +2489,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-math-quiz) (if (or (mod-rule-active? 'rule-trivia) (eq? level-name 'training)) 0 3))
           ((eq? id 'rule-trivia) (if (or (mod-rule-active? 'rule-math-quiz) (eq? level-name 'training)) 0 3))
           ((eq? id 'complication-overclock)
-           (if (and (not (string= checkpoint-name "citadel-elevator")) (eq? level-name 'citadel)) 20 0))
+           (if (and (eq? level-name 'citadel) (not (string= checkpoint-name "citadel-elevator"))) 20 0))
           ((eq? id 'rule-one-frame)
            (cond
              (is-minigame 0)
@@ -2791,7 +2791,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")
-    ((eq? punishment 'punishment-ohko) "ANY DAMAGE OR BONK KILLS FOR 3 MINUTES")
+    ((eq? punishment 'punishment-ohko) "ANY DAMAGE OR BONK KILLS FOR 2 MINUTES")
     ((eq? punishment 'punishment-reset) "RESET THE RUN")
     (else "NONE")))
 
@@ -3877,7 +3877,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((i 0)) (while (< i 8) (set! (-> *mod-rule-recent-rolls* i) #f) (+! i 1)))
   (let ((i 0)) (while (< i (length *trivia-questions-used*)) (set! (-> *trivia-questions-used* i) #f) (+! i 1)))
   (let ((i 0))
-    (while (< i 3)
+    (while (< i *mod-rule-slot-count*)
       (mod-rule-deactivate-slot i)
       (set! (-> (-> *MOD-rule-slot-bank* saved-remaining-times) i) -1)
       (set! (-> (-> *MOD-rule-slot-bank* saved-punishments) i) #f)
@@ -4128,7 +4128,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-active-slots-save-value ()
   (let ((result (the uint 0))
         (i 0))
-    (while (< i 3)
+    (while (< i *mod-rule-slot-count*)
       (let* ((sym (-> (-> *MOD-rule-slot-bank* active-slots) i))
              (idx (if sym (mod-rule-index-from-id sym) -1))
              (byte-val (if (>= idx 0) (the uint idx) (the uint #xff))))
@@ -4197,10 +4197,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-active-slots-resume-from-save ((val int))
-  (let ((i 0)) (while (< i 3) (mod-rule-deactivate-slot i) (+! i 1)))
+  (let ((i 0)) (while (< i *mod-rule-slot-count*) (mod-rule-deactivate-slot i) (+! i 1)))
   (let ((bits (the uint val))
         (i 0))
-    (while (< i 3)
+    (while (< i *mod-rule-slot-count*)
       (let* ((byte-val (logand (shr bits (* i 8)) (the uint #xff)))
              (id (if (= byte-val (the uint #xff)) #f (mod-rule-id-from-index (the int byte-val)))))
         (set! (-> (-> *MOD-rule-slot-bank* active-slots) i) id)

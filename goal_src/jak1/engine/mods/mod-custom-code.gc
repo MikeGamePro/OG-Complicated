@@ -53,7 +53,7 @@
     (when (and (cpad-pressed? 0 circle) (cpad-hold? 0 left))
       (mod-rule-reroll-slot 1 #f))
     (when (and (cpad-pressed? 0 x) (cpad-hold? 0 right))
-      (dotimes (s 3)
+      (dotimes (s *mod-rule-slot-count*)
         (when (!= s 0)
           (mod-rule-deactivate-slot s)))
       (mod-rule-reroll-slot 0 #f))
