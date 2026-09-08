@@ -8,6 +8,7 @@
   (new 'static 'speedrun-info-jak1 :should-display? #t :needs-post-blackout-setup? #f :has-started? #f))
 
 (define-extern *mod-version-text* string)
+(define-extern global-countdown-reset (function none))
 
 (define *hub1-cell-list*
   (new 'static
