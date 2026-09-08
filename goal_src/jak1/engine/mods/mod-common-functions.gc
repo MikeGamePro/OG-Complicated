@@ -124,7 +124,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-look-around)
                   (= state-name 'target-attack-air))))))
 
-(define *mod-rule-slot-count* 3)
+(define *mod-rule-slot-count* 2)
 
 (define *mod-rule-recent-rolls* (new 'global 'boxed-array symbol 8))
 
@@ -1934,7 +1934,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-hidden-treasure) (refresh-money-actors))
           ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #f))
           ((eq? id 'complication-cumbersome) (orb-weight-reset!))
-          ((and *target* (eq? id 'complication-bad-ping)) (input-delay-enable! #f 0.0))
+          ((eq? id 'complication-bad-ping) (input-delay-enable! #f 0.0))
           ((and *target* (eq? id 'complication-joyride) (target-on-flut?)) (send-event *target* 'end-mode))
           ((and *target* (eq? id 'complication-invisible-man))
            (target-mesh-invis-set! #f)

@@ -180,7 +180,8 @@
   ;; reset has-started? flag so we can flip it back to #t when jak touches ground/out of blackout
   (false! (-> *speedrun-info* has-started?))
   ;; start new game with specified category, if any (otherwise we're resetting current category)
-  (global-countdown-start)
+  (global-countdown-reset)
+  (kill-by-name 'mod-rule-manager *active-pool*)
   (if category (set! (-> *speedrun-info* category) category))
   (case (-> *speedrun-info* category)
     (((speedrun-category full-game))
@@ -448,6 +449,7 @@
                (or (logtest? (-> *target* control status) (cshape-moving-flags onground onsurf on-water))
                    (= (-> *target* next-state name) 'target-hit-ground)))
       (mark-speedrun-started)
+      (global-countdown-start)
       ;; spawn a process that resets autosplitter after suspending for 1 frame
       (process-spawn-function process
         (lambda ()
