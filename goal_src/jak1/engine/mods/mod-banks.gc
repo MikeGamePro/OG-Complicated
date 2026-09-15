@@ -256,6 +256,20 @@
 
 (set! (-> *MOD-rule-display-bank* highlight-line-buf) (new 'global 'string 128 (the-as string #f)))
 
+(deftype mod-lights-out-bank (structure)
+  ((active?          symbol)
+   (saved-moods      (array mood-context))
+   (saved-mood-funcs (array (function mood-context float int none)))))
+
+(define *MOD-lights-out-bank*
+  (new 'static
+       'mod-lights-out-bank
+       :active? #f
+       :saved-moods
+       (new 'static 'boxed-array :type mood-context :length 8 :allocated-length 8)
+       :saved-mood-funcs
+       (new 'static 'boxed-array :type (function mood-context float int none) :length 8 :allocated-length 8)))
+
 (deftype mod-rule-hit-bank (structure)
   ((player-hit-handles   (array handle))
    (player-hit-modes     (array symbol))

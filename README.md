@@ -36,6 +36,7 @@
 | **Speedrun Timer** | Shows an in-game timer above the global countdown timer, to track your current run's duration. |
 | **Klaww Assist** | Adds 30 seconds to the countdown timer after each Klaww phase. |
 | **Fish Assist** | Adds 5 seconds to the countdown timer for each five-pound fish. |
+| **Text Scale** | The size of the mod text. This includes condition names, descriptions, punishments, and timers.
 
 ⚠️ **SPOILER WARNING: Below has names of conditions!**
 
@@ -43,7 +44,7 @@
 
 | Preset | Start Time | Time Limit Multiplier | Cell | Orb | Fly | Toggles Off
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Simple** | 30s | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Balloons, Hang Time, Quick Time Event, Get a Grip, Fast Reel, Crash Punishment |
+| **Simple** | 30s | 1.5x | 40.0 | 2.0 | 15.0 | One Frame, Rotten Eggs, Heating Balloons, Hang Time, Quick Time Event, Get a Grip, Fast Reel, Quicksand, Crash Punishment |
 | **Complicated** | 30s | 1.2x | 30.0 | 1.0 | 10.0 | One Frame, Hang Time
 | **Esoteric** | 30s | 1.0x | 20.0 | 1.0 | 8.0 | None
 | **Unfathomable** | 10s | 0.8x | 20.0 | 1.0 | 5.0 | None
@@ -138,6 +139,8 @@
 | **SOUL BOND** | KILLING A LURKER KILLS YOU TOO. |
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 | **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
+| **QUICKSAND** | TIMER DRAINS TWICE AS FAST WHILE ON SAND. |
+| **LIGHTS OUT** | SORRY, WERE YOU USING THAT? | Makes the level very dark. Only rolls in Spider Cave. |
 
 </details>
 

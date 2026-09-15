@@ -239,7 +239,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-soul-bond
        'complication-shifty
        'complication-interference
-       'complication-quicksand))
+       'complication-quicksand
+       'complication-lights-out))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -994,7 +995,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-hidden-treasure) "HIDDEN TREASURE")
     ((eq? id 'complication-drought) "DROUGHT")
     ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
-    ((eq? id 'rule-survivor) "STEP 1")
+    ((eq? id 'rule-survivor) "STEP ONE")
     ((eq? id 'rule-vendetta) "VENDETTA")
     ((eq? id 'rule-hands-on) "HANDS ON")
     ((eq? id 'complication-eco-reserve) "ECO RESERVE")
@@ -1042,6 +1043,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-shifty) "SHIFTY")
     ((eq? id 'complication-interference) "INTERFERENCE")
     ((eq? id 'complication-quicksand) "QUICKSAND")
+    ((eq? id 'complication-lights-out) "LIGHTS OUT")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1083,8 +1085,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
     ((eq? id 'rule-hands-on) "CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
-    ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES THE TIMER.")
-    ((eq? id 'complication-red-stop) "RED ECO PAUSES THE TIMER.")
+    ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES TIMER.")
+    ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A SCOUT FLY.")
     ((eq? id 'rule-red-light) "DO NOT MOVE.")
@@ -1133,7 +1135,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-soul-bond) "KILLING A LURKER KILLS YOU TOO.")
     ((eq? id 'complication-shifty) "JAK RANDOMLY TELEPORTS SHORT DISTANCES.")
     ((eq? id 'complication-interference) "ECO PIXELATES THE SCREEN.")
-    ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE ON SAND.")
+    ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE YOU\c12RE ON SAND.")
+    ((eq? id 'complication-lights-out) "SORRY, WERE YOU USING THAT?")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1215,6 +1218,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-shifty) (seconds 45)) ;; 45
     ((eq? id 'complication-interference) (seconds 60)) ;; 60
     ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
+    ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1335,7 +1339,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-soul-bond)
          (eq? id 'complication-shifty)
          (eq? id 'complication-interference)
-         (eq? id 'complication-quicksand))
+         (eq? id 'complication-quicksand)
+         (eq? id 'complication-lights-out))
      'complication)
     (else 'unknown)))
 
@@ -1841,6 +1846,29 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (scaled-vol (the int (* base-volume (/ sfx-vol 100.0)))))
     (play-sound-file filename scaled-vol)))
 
+(defun mod-rule-lights-out-activate! ()
+  (unless (-> *MOD-lights-out-bank* active?)
+    (let ((count (min (-> *level* length) (-> (-> *MOD-lights-out-bank* saved-moods) length))))
+      (dotimes (i count)
+        (let ((lev (-> *level* level i)))
+          (set! (-> (-> *MOD-lights-out-bank* saved-moods) i) (-> lev mood))
+          (set! (-> (-> *MOD-lights-out-bank* saved-mood-funcs) i) (-> lev mood-func))
+          (set! (-> lev mood) *lights-out-mood*)
+          (set! (-> lev mood-func) update-mood-lights-out))))
+    (set! (-> *MOD-lights-out-bank* active?) #t))
+  (none))
+
+(defun mod-rule-lights-out-deactivate! ()
+  (when (-> *MOD-lights-out-bank* active?)
+    (let ((count (min (-> *level* length) (-> (-> *MOD-lights-out-bank* saved-moods) length))))
+      (dotimes (i count)
+        (let ((lev (-> *level* level i)))
+          (set! (-> lev mood) (-> (-> *MOD-lights-out-bank* saved-moods) i))
+          (set! (-> lev mood-func) (-> (-> *MOD-lights-out-bank* saved-mood-funcs) i))
+          (set! (-> (-> *MOD-lights-out-bank* saved-moods) i) #f))))
+    (set! (-> *MOD-lights-out-bank* active?) #f))
+  (none))
+
 (defun mod-rule-reapply-slot-visual-effect ((id symbol))
   (cond
     ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #t))
@@ -1853,6 +1881,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (send-event *target* 'sidekick #f)
      (let ((v1-9 (-> *target* draw shadow-ctrl))) (logior! (-> v1-9 settings flags) (shadow-flags disable-draw))))
     ((eq? id 'complication-bad-ping) (input-delay-enable! #t 0.12))
+    ((eq? id 'complication-lights-out) (mod-rule-lights-out-activate!))
     ((eq? id 'complication-jak-rabbit)
      (set! (-> *TARGET-bank* jump-height-min) (meters 2.02))
      (set! (-> *TARGET-bank* jump-height-max) (meters 7))
@@ -1940,6 +1969,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #f))
           ((eq? id 'complication-cumbersome) (orb-weight-reset!))
           ((eq? id 'complication-bad-ping) (input-delay-enable! #f 0.0))
+          ((eq? id 'complication-lights-out) (mod-rule-lights-out-deactivate!))
           ((and *target* (eq? id 'complication-joyride) (target-on-flut?)) (send-event *target* 'end-mode))
           ((and *target* (eq? id 'complication-invisible-man))
            (target-mesh-invis-set! #f)
@@ -2198,7 +2228,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun launcher-level? ((level symbol))
   (or (and (eq? level 'beach) (task-closed? (game-task jungle-eggtop) (task-status need-resolution)))
       (case level
-        (('jungle 'jungleb 'swamp 'robocave) #t)
+        (('jungle 'jungleb 'swamp) #t)
         (else #f))
       (string= (current-checkpoint-name) "citadel-start")
       (string= (current-checkpoint-name) "citadel-launch-start")
@@ -2478,7 +2508,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-rule-timed-punishment-active? 'punishment-edge)
                    (target-on-racer-or-flut?))
              0
-             4))
+             3))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 4))
           ((eq? id 'complication-joyride)
            (if (or (target-on-racer-or-flut?)
@@ -2505,7 +2535,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-one-frame)
            (cond
              (is-minigame 0)
-             ((string= checkpoint-name "sunkenb-helix") 6)
+             ((or (eq? level-name 'robocave) (string= checkpoint-name "sunkenb-helix")) 6)
              ((eq? level-name 'finalboss) 3)
              ((launcher-level? level-name) 8)
              (else 0)))
@@ -2569,6 +2599,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              4))
           ((eq? id 'rule-qte)
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
+          ((eq? id 'complication-lights-out)
+             (case level-name
+                (('maincave 'robocave) 8)
+                (else 0)))
           (else 6))))))
 
 (defun mod-rule-fallback-candidate? ((candidate symbol))
