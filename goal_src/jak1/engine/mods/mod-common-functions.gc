@@ -238,7 +238,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-no-harm
        'complication-soul-bond
        'complication-shifty
-       'complication-interference))
+       'complication-interference
+       'complication-quicksand))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -1040,6 +1041,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-soul-bond) "SOUL BOND")
     ((eq? id 'complication-shifty) "SHIFTY")
     ((eq? id 'complication-interference) "INTERFERENCE")
+    ((eq? id 'complication-quicksand) "QUICKSAND")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1081,8 +1083,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-vendetta) "KILL A LURKER WITH RED ECO.")
     ((eq? id 'rule-hands-on) "CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK.")
     ((eq? id 'rule-survivor) "STAY ALIVE.")
-    ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES TIMER.")
-    ((eq? id 'complication-red-stop) "RED ECO PAUSES TIMER.")
+    ((eq? id 'complication-eco-reserve) "YELLOW ECO PAUSES THE TIMER.")
+    ((eq? id 'complication-red-stop) "RED ECO PAUSES THE TIMER.")
     ((eq? id 'rule-one-frame) "DO A ONE-FRAME.")
     ((eq? id 'rule-distancing) "DO NOT GET WITHIN 8 METERS OF A SCOUT FLY.")
     ((eq? id 'rule-red-light) "DO NOT MOVE.")
@@ -1131,6 +1133,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-soul-bond) "KILLING A LURKER KILLS YOU TOO.")
     ((eq? id 'complication-shifty) "JAK RANDOMLY TELEPORTS SHORT DISTANCES.")
     ((eq? id 'complication-interference) "ECO PIXELATES THE SCREEN.")
+    ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE ON SAND.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1211,6 +1214,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-soul-bond) (seconds 40)) ;; 40
     ((eq? id 'complication-shifty) (seconds 45)) ;; 45
     ((eq? id 'complication-interference) (seconds 60)) ;; 60
+    ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1330,7 +1334,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-jak-be-nimble)
          (eq? id 'complication-soul-bond)
          (eq? id 'complication-shifty)
-         (eq? id 'complication-interference))
+         (eq? id 'complication-interference)
+         (eq? id 'complication-quicksand))
      'complication)
     (else 'unknown)))
 
@@ -2204,6 +2209,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('beach 'village1 'jungle 'village2) #t)
     (else #f)))
 
+(defun sand-level? ((level symbol))
+  (case level
+    (('training 'beach 'village1) #t)
+    (else #f)))
+
 (defun no-drought-level? ((level symbol))
   (or (case level
         (('swamp 'snow 'lavatube 'jungleb 'citadel 'finalboss) #t)
@@ -2381,7 +2391,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           ((eq? id 'complication-red-stop) ;; disabled
            (if (red-eco-level? level-name) 0 6))
-          ((eq? id 'complication-ohko) 6) ;; disabled
+          ((eq? id 'complication-ohko) (if (mod-rule-timed-punishment-active? 'punishment-ohko) 0 6)) ;; disabled
           ((eq? id 'complication-invisible-man) (if on-racer 0 6))
           ((eq? id 'complication-double-aphids) ;; disabled
            (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 20 0))
@@ -2392,6 +2402,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ;; Movement
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 6))
+          ((eq? id 'complication-quicksand)
+           (if (sand-level? level-name) 8 0))
           ((eq? id 'complication-invert) 4)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 7))
           ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 5))
@@ -2450,7 +2462,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              8
              0))
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
-          ((eq? id 'complication-mirror) 4)
+          ((eq? id 'complication-mirror) (if is-klaww 0 4))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 3))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer racer-lavatube (not (burn-level? level-name))) 0 9))
@@ -3831,6 +3843,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (when (or (< elapsed 0) (> elapsed (seconds 10)))
              (set! elapsed 0))
            (when (> elapsed 0)
+             (when (and *target*
+                        (mod-rule-active? 'complication-quicksand)
+                        (= (-> *target* control ground-pat material) (pat-material sand)))
+               (set! elapsed (* elapsed 2)))
              (set! (-> *MOD-countdown-bank* remaining-time) (max 0 (- (-> *MOD-countdown-bank* remaining-time) elapsed))))
            (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
            ;; Beep on second during the final 10 seconds

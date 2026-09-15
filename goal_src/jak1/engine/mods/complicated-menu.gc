@@ -112,6 +112,7 @@
    (complication-soul-bond? symbol)
    (complication-shifty? symbol)
    (complication-interference? symbol)
+   (complication-quicksand? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -221,6 +222,7 @@
   (set! (-> obj complication-soul-bond?) #f)
   (set! (-> obj complication-shifty?) #t)
   (set! (-> obj complication-interference?) #f)
+  (set! (-> obj complication-quicksand?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -338,6 +340,7 @@
                                           (("complication-soul-bond?") (set! (-> obj complication-soul-bond?) (file-stream-read-symbol file)))
                                           (("complication-shifty?") (set! (-> obj complication-shifty?) (file-stream-read-symbol file)))
                                           (("complication-interference?") (set! (-> obj complication-interference?) (file-stream-read-symbol file)))
+                                          (("complication-quicksand?") (set! (-> obj complication-quicksand?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -461,6 +464,7 @@
     (format file "  (complication-soul-bond? ~A)~%" (-> obj complication-soul-bond?))
     (format file "  (complication-shifty? ~A)~%" (-> obj complication-shifty?))
     (format file "  (complication-interference? ~A)~%" (-> obj complication-interference?))
+    (format file "  (complication-quicksand? ~A)~%" (-> obj complication-quicksand?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -511,6 +515,7 @@
     (set! (-> *complicated-settings* rule-qte?) #f)
     (set! (-> *complicated-settings* complication-get-a-grip?) #f)
     (set! (-> *complicated-settings* complication-fast-reel?) #f)
+    (set! (-> *complicated-settings* complication-quicksand?) #f)
     (set! (-> *complicated-settings* punishment-toggle-crash?) #f)
     (commit-to-file *complicated-settings*))
   (none))
@@ -530,6 +535,7 @@
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (set! (-> *complicated-settings* complication-fast-reel?) #t)
+    (set! (-> *complicated-settings* complication-quicksand?) #t)
     (set! (-> *complicated-settings* punishment-toggle-crash?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -549,6 +555,7 @@
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (set! (-> *complicated-settings* complication-fast-reel?) #t)
+    (set! (-> *complicated-settings* complication-quicksand?) #t)
     (set! (-> *complicated-settings* punishment-toggle-crash?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -568,6 +575,7 @@
     (set! (-> *complicated-settings* rule-qte?) #t)
     (set! (-> *complicated-settings* complication-get-a-grip?) #t)
     (set! (-> *complicated-settings* complication-fast-reel?) #t)
+    (set! (-> *complicated-settings* complication-quicksand?) #t)
     (set! (-> *complicated-settings* punishment-toggle-crash?) #t)
     (commit-to-file *complicated-settings*))
   (none))
@@ -1713,6 +1721,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [76] QUICKSAND
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-quicksand)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -2035,6 +2053,7 @@
   (set! (-> *condition-toggle-options* 73 value-to-modify) (&-> *complicated-settings* complication-soul-bond?))
   (set! (-> *condition-toggle-options* 74 value-to-modify) (&-> *complicated-settings* complication-shifty?))
   (set! (-> *condition-toggle-options* 75 value-to-modify) (&-> *complicated-settings* complication-interference?))
+  (set! (-> *condition-toggle-options* 76 value-to-modify) (&-> *complicated-settings* complication-quicksand?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2171,4 +2190,5 @@
          ((eq? id 'complication-soul-bond) (-> *complicated-settings* complication-soul-bond?))
          ((eq? id 'complication-shifty) (-> *complicated-settings* complication-shifty?))
          ((eq? id 'complication-interference) (-> *complicated-settings* complication-interference?))
+         ((eq? id 'complication-quicksand) (-> *complicated-settings* complication-quicksand?))
          (else #t))))
