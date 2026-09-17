@@ -118,9 +118,11 @@
        )
       (((pickup-type eco-blue))
        ;; Code here runs as soon as you pickup blue eco
+       (mod-rule-counter-add-progress 'rule-supercharged 1)
        )
       (((pickup-type eco-pill))
        ;; Code here runs as soon as you pickup small green eco
+       (mod-rule-counter-add-progress 'rule-green-pilled 1)
        )
       (((pickup-type eco-green))
        ;; Code here runs as soon as you pickup big green eco 

@@ -114,6 +114,7 @@
    (complication-interference? symbol)
    (complication-quicksand? symbol)
    (complication-lights-out? symbol)
+   (rule-supercharged? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -225,6 +226,7 @@
   (set! (-> obj complication-interference?) #f)
   (set! (-> obj complication-quicksand?) #t)
   (set! (-> obj complication-lights-out?) #t)
+  (set! (-> obj rule-supercharged?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -344,6 +346,7 @@
                                           (("complication-interference?") (set! (-> obj complication-interference?) (file-stream-read-symbol file)))
                                           (("complication-quicksand?") (set! (-> obj complication-quicksand?) (file-stream-read-symbol file)))
                                           (("complication-lights-out?") (set! (-> obj complication-lights-out?) (file-stream-read-symbol file)))
+                                          (("rule-supercharged?") (set! (-> obj rule-supercharged?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -469,6 +472,7 @@
     (format file "  (complication-interference? ~A)~%" (-> obj complication-interference?))
     (format file "  (complication-quicksand? ~A)~%" (-> obj complication-quicksand?))
     (format file "  (complication-lights-out? ~A)~%" (-> obj complication-lights-out?))
+    (format file "  (rule-supercharged? ~A)~%" (-> obj rule-supercharged?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1745,6 +1749,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [78] SUPERCHARGED
+        (new 'static
+              'game-option
+              :option-type (game-option-type on-off)
+              :name (text-id complicated-opts-cond-rule-supercharged)
+              :scale #t
+              :on-confirm
+              (lambda ()
+                (commit-to-file *complicated-settings*)
+                (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -2069,6 +2083,7 @@
   (set! (-> *condition-toggle-options* 75 value-to-modify) (&-> *complicated-settings* complication-interference?))
   (set! (-> *condition-toggle-options* 76 value-to-modify) (&-> *complicated-settings* complication-quicksand?))
   (set! (-> *condition-toggle-options* 77 value-to-modify) (&-> *complicated-settings* complication-lights-out?))
+  (set! (-> *condition-toggle-options* 78 value-to-modify) (&-> *complicated-settings* rule-supercharged?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2207,4 +2222,5 @@
          ((eq? id 'complication-interference) (-> *complicated-settings* complication-interference?))
          ((eq? id 'complication-quicksand) (-> *complicated-settings* complication-quicksand?))
          ((eq? id 'complication-lights-out) (-> *complicated-settings* complication-lights-out?))
+          ((eq? id 'rule-supercharged) (-> *complicated-settings* rule-supercharged?))
          (else #t))))

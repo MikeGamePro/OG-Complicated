@@ -122,7 +122,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-edge-grab-jump)
                   (= state-name 'target-edge-grab-off)
                   (= state-name 'target-look-around)
-                  (= state-name 'target-attack-air))))))
+                  (= state-name 'target-stance)
+                  (= state-name 'target-walk)
+                  (= state-name 'target-duck-stance)
+                  (= state-name 'target-duck-walk)
+                  (= state-name 'target-attack)
+                  (= state-name 'target-hit-ground-hard)
+                  (= state-name 'target-hit-ground)
+                  )))))
 
 (define *mod-rule-slot-count* 2)
 
@@ -240,7 +247,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-shifty
        'complication-interference
        'complication-quicksand
-       'complication-lights-out))
+       'complication-lights-out
+       'rule-supercharged))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -1044,6 +1052,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-interference) "INTERFERENCE")
     ((eq? id 'complication-quicksand) "QUICKSAND")
     ((eq? id 'complication-lights-out) "LIGHTS OUT")
+    ((eq? id 'rule-supercharged) "SUPERCHARGED")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1123,7 +1132,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-qte) "PRESS ")
     ((eq? id 'complication-mirror) "THE WORLD IS MIRRORED.")
     ((eq? id 'complication-no-double-jump) "JAK FORGOT HOW TO DOUBLE JUMP.")
-    ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING.")
+    ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 3 CONSECUTIVE SECONDS.")
     ((eq? id 'complication-unbreakable) "SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO.")
     ((eq? id 'complication-get-a-grip)
      (let ((seconds (/ (the int (apply-time-limit-multiplier (seconds 12))) (seconds 1))))
@@ -1137,6 +1146,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-interference) "ECO PIXELATES THE SCREEN.")
     ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE YOU\c12RE ON SAND.")
     ((eq? id 'complication-lights-out) "SORRY, WERE YOU USING THAT?")
+    ((eq? id 'rule-supercharged) "COLLECT BLUE ECO.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1149,7 +1159,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-double-kill) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-sniper) (apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'rule-money-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
-    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 35))) ;; 35
+    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
     ((eq? id 'rule-buzzer-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
@@ -1219,6 +1229,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-interference) (seconds 60)) ;; 60
     ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
     ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
+    ((eq? id 'rule-supercharged) (seconds 25)) ;; 25
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1245,6 +1256,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-qte) 'event-once)
     ((eq? id 'rule-touch-grass) 'event-once)
     ((eq? id 'rule-hang-time) 'counter)
+    ((eq? id 'rule-supercharged) 'event-once)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1257,7 +1269,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) 2)
     ((eq? id 'rule-green-pilled) 50)
     ((eq? id 'rule-sagging-sails) 3)
-    ((eq? id 'rule-hang-time) 2)
+    ((eq? id 'rule-hang-time) 3)
     (else 0)))
 
 (defun mod-rule-type ((id symbol))
@@ -1297,7 +1309,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-qte)
          (eq? id 'rule-touch-grass)
          (eq? id 'rule-hang-time)
-         (eq? id 'rule-no-harm))
+         (eq? id 'rule-no-harm)
+         (eq? id 'rule-supercharged))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1802,7 +1815,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (and (not (mod-rule-active? 'complication-bad-ping))
                (punishment-toggle-enabled? 'punishment-delay)
                (mod-rule-punishment-rollable? 'punishment-delay))
-      (let ((w 10)) ;; disabled for zed
+      (let ((w 10))
         (when (> w 0)
           (+! running-total w)
           (when (< (mod-rand-punish-int-range 0 running-total) w)
@@ -2219,7 +2232,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun hang-time-level? ((level symbol))
   (or (case level
-        (('beach 'jungle 'misty 'rolling 'swamp 'sunkenb 'snow 'maincave 'robocave) #t)
+        (('village1 'beach 'jungle 'misty 'swamp 'sunkenb 'snow 'maincave 'robocave) #t)
         (else #f))
       (string= (current-checkpoint-name) "citadel-start")
       (string= (current-checkpoint-name) "citadel-launch-start")
@@ -2296,7 +2309,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         0
         (cond
           ;; Resources
-          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 7))
+          ((eq? id 'rule-supercharged) (if (no-blue-eco-level? level-name) 0 6))
+          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 6))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
                    (mod-rule-active? 'rule-distancing)

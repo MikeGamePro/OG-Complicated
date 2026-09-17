@@ -90,8 +90,9 @@
 | **TOUCH GRASS** | DO THAT. |
 | **EXPRESS DELIVERY** | RETURN THE MUSE. OR SUFFER MY CURSE. |
 | **QUICK TIME EVENT** | QUICKLY PRESS A SPECIFIC FACE BUTTON. | A random face button (X, Circle, Triangle or Square) is chosen. You must press it before time runs out.
-| **HANG TIME** | STAY AIRBORNE FOR 2 SECONDS, WITHOUT KICKING. | The seconds must be consecutive. Landing, spinning/kicking, grabbing a ledge, or entering goggles resets the progress.
+| **HANG TIME** | STAY AIRBORNE FOR 3 CONSECUTIVE SECONDS. | Landing, grabbing a ledge, or entering goggles resets the progress.
 | **DO NO HARM** | DO NOT KILL ANY LURKERS. |
+| **SUPERCHARGED** | COLLECT BLUE ECO. |
 
 </details>
 <details>
