@@ -2309,7 +2309,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         0
         (cond
           ;; Resources
-          ((eq? id 'rule-supercharged) (if (no-blue-eco-level? level-name) 0 6))
+          ((eq? id 'rule-supercharged) (if (or is-minigame (no-blue-eco-level? level-name)) 0 6))
           ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 6))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
