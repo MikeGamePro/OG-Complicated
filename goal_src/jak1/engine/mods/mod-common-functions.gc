@@ -252,6 +252,35 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
+(defun mod-villagers-closed? ((level symbol))
+  (cond
+    ((or (eq? level 'village1) (eq? level 'beach))
+     (and (task-closed? (game-task village1-mayor-money) (task-status need-resolution))
+          (task-closed? (game-task village1-uncle-money) (task-status need-resolution))))
+    ((or (eq? level 'village2) (eq? level 'rolling))
+     (and (task-closed? (game-task village2-gambler-money) (task-status need-resolution))
+          (task-closed? (game-task village2-geologist-money) (task-status need-resolution))
+          (task-closed? (game-task village2-warrior-money) (task-status need-resolution))))
+    ((eq? level 'village3)
+     (and (task-closed? (game-task village3-miner-money1) (task-status need-resolution))
+          (task-closed? (game-task village3-miner-money2) (task-status need-resolution))
+          (task-closed? (game-task village3-miner-money3) (task-status need-resolution))
+          (task-closed? (game-task village3-miner-money4) (task-status need-resolution))))
+    (else #f)))
+
+(defun mod-oracles-closed? ((level symbol))
+  (cond
+    ((or (eq? level 'village1) (eq? level 'beach))
+     (and (task-closed? (game-task village1-oracle-money1) (task-status need-resolution))
+          (task-closed? (game-task village1-oracle-money2) (task-status need-resolution))))
+    ((or (eq? level 'village2) (eq? level 'rolling))
+     (and (task-closed? (game-task village2-oracle-money1) (task-status need-resolution))
+          (task-closed? (game-task village2-oracle-money2) (task-status need-resolution))))
+    ((eq? level 'village3)
+     (and (task-closed? (game-task village3-oracle-money1) (task-status need-resolution))
+          (task-closed? (game-task village3-oracle-money2) (task-status need-resolution))))
+    (else #f)))
+
 (defun mod-rng-hash-u32 ((x uint))
   (set! x (logxor x (shr x 16)))
   (set! x (* x (the uint #x7feb352d)))
@@ -1141,7 +1170,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-twisted)
      (let ((rolls-away (- (-> *MOD-rule-context-bank* twist-pending-count) (-> *MOD-stats-bank* rules-rolled))))
        (if (> rolls-away 0)
-         (string-format "THE RULE ROLLED ~D RULES FROM NOW DECEIVES YOU." rolls-away)
+         (string-format "THE RULE ROLLED ~D RULES FROM NOW MUST BE BROKEN." rolls-away)
          "A LATER RULE MUST BE BROKEN.")))
     ((eq? id 'complication-vibe-check) "I LIKE YA CUT, G.")
     ((eq? id 'complication-income-tax) "TIMER INCREMENTS ARE HALVED.")
@@ -1165,7 +1194,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE YOU\c12RE ON SAND.")
     ((eq? id 'complication-lights-out) "SORRY, WERE YOU USING THAT?")
     ((eq? id 'rule-supercharged) "COLLECT BLUE ECO.")
-    ((eq? id 'complication-half-price) "ALL CELLS ARE 50% OFF!")
+    ((eq? id 'complication-half-price) "POWER CELLS ARE 50% OFF!")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1248,7 +1277,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-interference) (seconds 60)) ;; 60
     ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
     ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
-    ((eq? id 'rule-supercharged) (seconds 25)) ;; 25
+    ((eq? id 'rule-supercharged) (apply-time-limit-multiplier (seconds 25))) ;; 25
     ((eq? id 'complication-half-price) (seconds 20)) ;; 20
     (else (seconds 30))))
 
@@ -2258,11 +2287,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('maincave 'darkcave 'firecanyon 'finalboss 'village3 'ogre 'rolling 'lavatube) #t)
     (else #f)))
 
-(defun no-half-price-level? ((level symbol))
-  (case level
-    (('training 'sunken 'snow 'swamp 'darkcave 'robocave 'sunkenb 'finalboss 'citadel) #t)
-    (else #f)))
-
 (defun hang-time-level? ((level symbol))
   (or (case level
         (('village1 'beach 'jungle 'misty 'swamp 'sunkenb 'snow 'maincave 'robocave) #t)
@@ -2312,10 +2336,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (task-complete? *game-info* (game-task beach-flutflut))))
       (and (not (target-on-flut?)) (or (eq? level 'sunken) (eq? level 'sunkenb)))))
 
-(defun oracle-level? ((level symbol))
+(defun mod-cells-purchased? ((level symbol))
+  (and (mod-villagers-closed? level)
+       (mod-oracles-closed? level)))
+
+(defun mod-cell-purchase-level? ((level symbol))
   (case level
-    (('village1 'village2 'village3) #t)
+    (('village1 'village2 'village3 'beach 'rolling) #t)
     (else #f)))
+
+(defun half-price-level? ((level symbol))
+  (and (mod-cell-purchase-level? level)
+       (not (mod-cells-purchased? level))))
 
 (defun burn-level? ((level symbol))
   (or (case level
@@ -2384,24 +2416,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-hidden-treasure)
            (if (or is-klaww (eq? level-name 'finalboss) (string= checkpoint-name "firecanyon-start") deep-lavatube) 0 6))
           ((eq? id 'rule-loyal-customer)
-           (let ((oracles-closed? (cond
-                                    ((eq? level-name 'village1)
-                                     (and (task-closed? (game-task village1-oracle-money1) (task-status need-resolution))
-                                          (task-closed? (game-task village1-oracle-money2) (task-status need-resolution))))
-                                    ((eq? level-name 'village2)
-                                     (and (task-closed? (game-task village2-oracle-money1) (task-status need-resolution))
-                                          (task-closed? (game-task village2-oracle-money2) (task-status need-resolution))))
-                                    ((eq? level-name 'village3)
-                                     (and (task-closed? (game-task village3-oracle-money1) (task-status need-resolution))
-                                          (task-closed? (game-task village3-oracle-money2) (task-status need-resolution))))
-                                    (else #f))))
-             (if (and (oracle-level? level-name)
-                      (not oracles-closed?)
-                      (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
-                      (<= (- (mod-cell-price-oracle) (current-orb-count)) 35)
-                      (not (mod-rule-active? 'complication-fuel-shortage)))
-               20
-               0)))
+           (if (and (mod-cell-purchase-level? level-name)
+                    (not (mod-oracles-closed? level-name))
+                    (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
+                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 35)
+                    (not (mod-rule-active? 'complication-fuel-shortage)))
+             6
+             0))
           ;; Enemies
           ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
            (cond
@@ -2539,7 +2560,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 4))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 3))
-          ((eq? id 'complication-half-price) (if (no-half-price-level? level-name) 0 3))
+          ((eq? id 'complication-half-price) (if (half-price-level? level-name) 3 0))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer racer-lavatube (not (burn-level? level-name))) 0 9))
           ((eq? id 'complication-get-a-grip)
