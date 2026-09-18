@@ -7,7 +7,9 @@
 ;; DECOMP BEGINS
 
 (define-extern mod-cell-price-task (function float))
+
 (define-extern mod-trade-hint-task (function text-id))
+
 (define-extern mod-cell-blocked? (function symbol))
 
 ;; WARN: rewrite_to_get_var got a none typed variable. Is there unreachable code? [OP: 47]
@@ -305,12 +307,7 @@
           (close-current! (-> this tasks))
           (send-event *target* 'get-pickup 5 (- (mod-cell-price-task)))
           (save-reminder (-> this tasks) (+ s4-3 1) 2))
-         (else
-          (set! (-> this will-talk)
-                (if (mod-cell-blocked?)
-                  #f
-                  #t))
-          (set! (-> this talk-message) (mod-trade-hint-task))))
+         (else (set! (-> this will-talk) (if (mod-cell-blocked?) #f #t)) (set! (-> this talk-message) (mod-trade-hint-task))))
        (if (< (the-as uint s4-3) (the-as uint 3))
          (new 'static 'spool-anim :name "minershort-resolution-1-orbs" :index 7 :parts 2 :command-list '())
          (new 'static

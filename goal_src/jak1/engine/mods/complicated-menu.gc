@@ -709,7 +709,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-        ;; [5] BACK
+       ;; [5] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1754,25 +1754,25 @@
               (commit-to-file *complicated-settings*)
               (none)))
        ;; [78] SUPERCHARGED
-        (new 'static
-              'game-option
-              :option-type (game-option-type on-off)
-              :name (text-id complicated-opts-cond-rule-supercharged)
-              :scale #t
-              :on-confirm
-              (lambda ()
-                (commit-to-file *complicated-settings*)
-                (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-supercharged)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [79] LIMITED TIME OFFER
-        (new 'static
-              'game-option
-              :option-type (game-option-type on-off)
-              :name (text-id complicated-opts-cond-complication-half-price)
-              :scale #t
-              :on-confirm
-              (lambda ()
-                (commit-to-file *complicated-settings*)
-                (none)))
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-half-price)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -1889,45 +1889,45 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-      ;; [7] TEXT SCALE
-      (new 'static
-           'game-option
-           :option-type (game-option-type slider)
-           :name (text-id complicated-opts-text-scale)
-           :scale #t
-           :param1 0.5
-           :param2 1.0
-           :slider-step-size 0.05
-           :slider-show-decimal? #t
-           :on-change
-           (lambda ((val object))
-            (text-scale-changed! (the-as float val))
-             (none))
-           :on-confirm
-           (lambda ()
-             (commit-to-file *complicated-settings*)
-            (none)))
-      ;; [8] RESTORE DEFAULTS
-        (new 'static
-             'game-option
-             :option-type (game-option-type confirmation)
-             :name (text-id complicated-opts-restore-defaults)
-             :scale #t
-             :on-confirm
-             (lambda ()
-               (reset *complicated-settings*)
-               (commit-to-file *complicated-settings*)
-               (none)))
-      ;; [9] BACK
-        (new 'static
-             'game-option
-             :option-type (game-option-type button)
-             :name (text-id back)
-             :scale #t
-             :on-confirm
-             (lambda ()
-               (commit-to-file *complicated-settings*)
-               (none)))))
+       ;; [7] TEXT SCALE
+       (new 'static
+            'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-text-scale)
+            :scale #t
+            :param1 0.5
+            :param2 1.0
+            :slider-step-size 0.05
+            :slider-show-decimal? #t
+            :on-change
+            (lambda ((val object))
+              (text-scale-changed! (the-as float val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [8] RESTORE DEFAULTS
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-restore-defaults)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (reset *complicated-settings*)
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [9] BACK
+       (new 'static
+            'game-option
+            :option-type (game-option-type button)
+            :name (text-id back)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))))
 
 (define *game-options-complicated*
   (new 'static

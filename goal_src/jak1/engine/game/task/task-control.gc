@@ -7,6 +7,7 @@
 ;; DECOMP BEGINS
 
 (define-extern mod-cell-price-task (function float))
+
 (define-extern mod-cell-price-oracle (function float))
 
 (defun-debug task-status->string ((arg0 task-status))
@@ -584,8 +585,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task rolling-race)
@@ -675,8 +675,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task rolling-moles)
@@ -766,8 +765,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task jungle-lurkerm)
@@ -1055,8 +1053,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village1-oracle-money1)
@@ -1080,8 +1077,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village1-oracle-money2)
@@ -1147,8 +1143,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village2-oracle-money1)
@@ -1172,8 +1167,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village2-oracle-money2)
@@ -1239,8 +1233,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village3-oracle-money1)
@@ -1264,8 +1257,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-oracle))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village3-oracle-money2)
@@ -1363,8 +1355,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village3-miner-money2)
@@ -1373,8 +1364,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village3-miner-money3)
@@ -1383,8 +1373,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task village3-miner-money4)
@@ -1393,8 +1382,7 @@
                  :condition
                  (lambda :behavior process-taskable ((arg0 task-control))
                    (the-as symbol
-                           (and *target*
-                                (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                           (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
             (new 'static
                  'task-cstage
                  :game-task (game-task cave-gnawers)
@@ -2159,8 +2147,7 @@
                               :condition
                               (lambda :behavior process-taskable ((arg0 task-control))
                                 (the-as symbol
-                                        (and *target*
-                                             (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                                        (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
                          (new 'static
                               'task-cstage
                               :game-task (game-task village1-uncle-money)
@@ -2753,8 +2740,7 @@
                               :condition
                               (lambda :behavior process-taskable ((arg0 task-control))
                                 (the-as symbol
-                                        (and *target*
-                                             (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
+                                        (and *target* (>= (the-as float (send-event *target* 'query 'pickup (pickup-type money))) (mod-cell-price-task))))))
                          (new 'static
                               'task-cstage
                               :game-task (game-task village2-warrior-money)

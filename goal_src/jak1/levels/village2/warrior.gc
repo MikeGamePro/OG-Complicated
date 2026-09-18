@@ -9,7 +9,9 @@
 (deftype warrior (process-taskable) ())
 
 (define-extern mod-cell-price-task (function float))
+
 (define-extern mod-trade-hint-task (function text-id))
+
 (define-extern mod-cell-blocked? (function symbol))
 
 (defskelgroup *warrior-sg*
@@ -82,12 +84,7 @@
               (let ((s3-0 send-event-function)
                     (v1-25 (entity-actor-lookup (-> this entity) 'alt-actor s5-2)))
                 (s3-0 (if v1-25 (-> v1-25 extra process)) s4-2)))))
-         (else
-          (set! (-> this will-talk)
-                (if (mod-cell-blocked?)
-                  #f
-                  #t))
-          (set! (-> this talk-message) (mod-trade-hint-task))))
+         (else (set! (-> this will-talk) (if (mod-cell-blocked?) #f #t)) (set! (-> this talk-message) (mod-trade-hint-task))))
        (new 'static 'spool-anim :name "warrior-resolution" :index 8 :parts 6 :command-list '((508 blackout 10) (511 blackout 0))))
       (else
        (if arg0

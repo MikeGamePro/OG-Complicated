@@ -379,8 +379,7 @@
       (if (and (logtest? (-> self fact options) (fact-options instant-collect can-collect))
                (logtest? (-> self flags) (collectable-flags can-collect))
                (!= (-> self next-state name) 'pickup)
-               (not (and (= (-> self type) fuel-cell)
-                         (mod-cell-blocked?)))
+               (not (and (= (-> self type) fuel-cell) (mod-cell-blocked?)))
                (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
         (go-virtual pickup #f (process->handle *target*))))
   :trans
@@ -516,8 +515,7 @@
            (('training)
             (level-hint-spawn (text-id training-eco-reminder) "sagevb23" (the-as entity #f) *entity-pool* (game-task none)))))
         (((pickup-type eco-green)) (sound-play "g-eco-pickup"))
-        (((pickup-type eco-green) (pickup-type eco-pill))
-         (sound-play "pill-pickup")))
+        (((pickup-type eco-green) (pickup-type eco-pill)) (sound-play "pill-pickup")))
       (runs-on-eco-pickup (-> self fact pickup-type) (ppointer->process (-> self parent))) ;; trigger hook for mod base
       (if (nonzero? (-> self part)) (kill-and-free-particles (-> self part)))
       (let ((gp-6 (handle->process (-> self pickup-handle))))

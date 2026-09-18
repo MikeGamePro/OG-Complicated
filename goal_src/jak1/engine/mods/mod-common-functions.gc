@@ -128,8 +128,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-duck-walk)
                   (= state-name 'target-attack)
                   (= state-name 'target-hit-ground-hard)
-                  (= state-name 'target-hit-ground)
-                  )))))
+                  (= state-name 'target-hit-ground))))))
 
 (define *mod-rule-slot-count* 2)
 
@@ -363,8 +362,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "WHO SCULPTED DAVID?"
        "WHAT IS THE CAPITAL OF CANADA?"
        "WHO DIRECTED THE SHINING?"
-       "HOW MANY ORBS HAVE YOU COLLECTED THIS RUN?"
-      ))
+       "HOW MANY ORBS HAVE YOU COLLECTED THIS RUN?"))
 
 (define *trivia-choices*
   (new 'static
@@ -564,8 +562,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        "UNUSED"
        "UNUSED"
        "UNUSED"
-       "UNUSED"
-       ))
+       "UNUSED"))
 
 (define *trivia-questions-used* (new 'global 'boxed-array symbol (length *trivia-questions*)))
 
@@ -597,8 +594,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       idx)))
 
 (defun mod-rule-trivia-hiding-money-total? ()
-  (and (mod-rule-active? 'rule-trivia)
-       (= (-> *MOD-quiz-bank* trivia-current-question) 47)))
+  (and (mod-rule-active? 'rule-trivia) (= (-> *MOD-quiz-bank* trivia-current-question) 47)))
 
 (defun orb-weight-multiplier ()
   (let ((orbs (max 0.0 (min 150.0 (current-orb-count))))) (- 1.0 (* 0.4 (/ orbs 100.0)))))
@@ -977,24 +973,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (the symbol
        (or (mod-rule-active? 'complication-fuel-shortage)
            (and (target-on-flut?) (mod-rule-active? 'complication-wings-tied))
-           (and *target*
-                (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0)
-                (mod-rule-active? 'complication-critical)))))
+           (and *target* (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))))
 
 (defun mod-cell-price-task ()
-  (if (mod-rule-active? 'complication-half-price)
-    (/ (-> *GAME-bank* money-task-inc) 2.0)
-    (-> *GAME-bank* money-task-inc)))
+  (if (mod-rule-active? 'complication-half-price) (/ (-> *GAME-bank* money-task-inc) 2.0) (-> *GAME-bank* money-task-inc)))
 
 (defun mod-cell-price-oracle ()
-  (if (mod-rule-active? 'complication-half-price)
-    (/ (-> *GAME-bank* money-oracle-inc) 2.0)
-    (-> *GAME-bank* money-oracle-inc)))
+  (if (mod-rule-active? 'complication-half-price) (/ (-> *GAME-bank* money-oracle-inc) 2.0) (-> *GAME-bank* money-oracle-inc)))
 
 (defun mod-trade-hint-task ()
-  (if (mod-rule-active? 'complication-half-price)
-    (text-id press-to-trade-money-cheap)
-    (text-id press-to-trade-money)))
+  (if (mod-rule-active? 'complication-half-price) (text-id press-to-trade-money-cheap) (text-id press-to-trade-money)))
 
 (defun mod-trade-hint-oracle ()
   (if (mod-rule-active? 'complication-half-price)
@@ -2491,8 +2479,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ;; Movement
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 6))
-          ((eq? id 'complication-quicksand)
-           (if (sand-level? level-name) 8 0))
+          ((eq? id 'complication-quicksand) (if (sand-level? level-name) 8 0))
           ((eq? id 'complication-invert) 4)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 7))
           ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 5))
@@ -2519,8 +2506,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
            (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 7))
           ((eq? id 'rule-management) (if (or on-racer on-flut (sole-zoomer-level? level-name) (mod-rule-active? 'rule-qte)) 0 7))
-          ((eq? id 'complication-bad-ping)
-           (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 6))
+          ((eq? id 'complication-bad-ping) (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 6))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 7))
           ;; Water
@@ -2660,9 +2646,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-qte)
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           ((eq? id 'complication-lights-out)
-             (case level-name
-                (('maincave 'robocave) 8)
-                (else 0)))
+           (case level-name
+             (('maincave 'robocave) 8)
+             (else 0)))
           (else 6))))))
 
 (defun mod-rule-fallback-candidate? ((candidate symbol))
@@ -3581,12 +3567,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (desc (mod-rule-description id))
          (break-idx (mod-rule-wrap-point desc 25)))
     (mod-draw-string-xy-scaled (mod-rule-name id)
-                           buf
-                           10
-                           row
-                           (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
-                           (font-flags shadow kerning large)
-                           0.5)
+                               buf
+                               10
+                               row
+                               (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
+                               (font-flags shadow kerning large)
+                               0.5)
     (+! row (mod-scale-px 10))
     (if (>= break-idx (length desc))
       (if (eq? id 'rule-qte)
@@ -3610,7 +3596,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (punish-break-idx (mod-rule-wrap-point punishment-str 16)))
         (if (>= punish-break-idx (length punishment-str))
           (begin
-            (mod-draw-string-xy-scaled punishment-str buf (mod-scale-px 80) row (font-color white) (font-flags shadow kerning large) 0.3)
+            (mod-draw-string-xy-scaled punishment-str
+                                       buf
+                                       (mod-scale-px 80)
+                                       row
+                                       (font-color white)
+                                       (font-flags shadow kerning large)
+                                       0.3)
             (+! row (mod-scale-px 8)))
           (begin
             (mod-rule-copy-range! (-> *MOD-rule-display-bank* wrap-line-1) punishment-str 0 punish-break-idx)
@@ -3619,20 +3611,20 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                   (+ punish-break-idx 1)
                                   (length punishment-str))
             (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
-                                   buf
-                                   (mod-scale-px 80)
-                                   row
-                                   (font-color white)
-                                   (font-flags shadow kerning large)
-                                   0.3)
+                                       buf
+                                       (mod-scale-px 80)
+                                       row
+                                       (font-color white)
+                                       (font-flags shadow kerning large)
+                                       0.3)
             (+! row (mod-scale-px 8))
             (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
-                                   buf
-                                   (mod-scale-px 80)
-                                   row
-                                   (font-color white)
-                                   (font-flags shadow kerning large)
-                                   0.3)
+                                       buf
+                                       (mod-scale-px 80)
+                                       row
+                                       (font-color white)
+                                       (font-flags shadow kerning large)
+                                       0.3)
             (+! row (mod-scale-px 8))))))
     (when show-progress?
       (mod-draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (font-flags shadow kerning large) 0.3)
@@ -3641,27 +3633,27 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                              (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start))))
                (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
           (mod-draw-string-xy-scaled (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal)
-                                 buf
-                                 (mod-scale-px 80)
-                                 row
-                                 (font-color white)
-                                 (font-flags shadow kerning large)
-                                 0.5))
+                                     buf
+                                     (mod-scale-px 80)
+                                     row
+                                     (font-color white)
+                                     (font-flags shadow kerning large)
+                                     0.5))
         (mod-draw-string-xy-scaled (string-format "~D/~D" progress goal)
+                                   buf
+                                   (mod-scale-px 80)
+                                   row
+                                   (font-color white)
+                                   (font-flags shadow kerning large)
+                                   0.5))
+      (+! row (mod-scale-px 7)))
+    (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
                                buf
-                               (mod-scale-px 80)
+                               10
                                row
                                (font-color white)
                                (font-flags shadow kerning large)
-                               0.5))
-      (+! row (mod-scale-px 7)))
-    (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
-                           buf
-                           10
-                           row
-                           (font-color white)
-                           (font-flags shadow kerning large)
-                           0.5)
+                               0.5)
     (+! row (mod-scale-px 12))
     (when (eq? id 'rule-distancing)
       (mod-draw-string-xy-scaled "DISTANCE: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
@@ -3671,12 +3663,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let* ((dist-meters (/ *closest-buzzer-dist* 4096.0))
                (tenths (the int (* dist-meters 10))))
           (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
-                                 buf
-                                 (mod-scale-px 66)
-                                 row
-                                 (font-color white)
-                                 (font-flags shadow kerning large)
-                                 0.4)))
+                                     buf
+                                     (mod-scale-px 66)
+                                     row
+                                     (font-color white)
+                                     (font-flags shadow kerning large)
+                                     0.4)))
       (+! row (mod-scale-px 8)))
     (when (eq? id 'rule-sniper)
       (mod-draw-string-xy-scaled "LAST KILL: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
@@ -3686,12 +3678,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let* ((dist-meters (/ *last-kill-dist* 4096.0))
                (tenths (the int (* dist-meters 10))))
           (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
-                                 buf
-                                 (mod-scale-px 66)
-                                 row
-                                 (font-color white)
-                                 (font-flags shadow kerning large)
-                                 0.4)))
+                                     buf
+                                     (mod-scale-px 66)
+                                     row
+                                     (font-color white)
+                                     (font-flags shadow kerning large)
+                                     0.4)))
       (+! row (mod-scale-px 8)))
     (when (eq? id 'rule-math-quiz)
       (let ((op-string (cond
@@ -3724,23 +3716,29 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                     (+ quiz-break-idx 1)
                                     (length *temp-string*))
               (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-1)
-                                     buf
-                                     10
-                                     row
-                                     (font-color white)
-                                     (font-flags shadow kerning large)
-                                     0.35)
+                                         buf
+                                         10
+                                         row
+                                         (font-color white)
+                                         (font-flags shadow kerning large)
+                                         0.35)
               (+! row (mod-scale-px 8))
               (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* wrap-line-2)
-                                     buf
-                                     10
-                                     row
-                                     (font-color white)
-                                     (font-flags shadow kerning large)
-                                     0.35)
+                                         buf
+                                         10
+                                         row
+                                         (font-color white)
+                                         (font-flags shadow kerning large)
+                                         0.35)
               (+! row (mod-scale-px 8)))))
         (format (clear *temp-string*) " ~S" choice-str)
-        (mod-draw-string-xy-scaled *temp-string* buf (mod-scale-px 20) row (font-color progress-memcard) (font-flags shadow kerning large) 0.47)
+        (mod-draw-string-xy-scaled *temp-string*
+                                   buf
+                                   (mod-scale-px 20)
+                                   row
+                                   (font-color progress-memcard)
+                                   (font-flags shadow kerning large)
+                                   0.47)
         (+! row (mod-scale-px 12))))
     (when (or (eq? id 'complication-bus-driver) (eq? id 'rule-speed))
       (mod-draw-string-xy-scaled "SPEED: " buf 10 row (font-color progress-percent) (font-flags shadow kerning large) 0.3)
@@ -3748,12 +3746,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (let* ((dist-meters (/ (-> *target* control ctrl-xz-vel) 4096.0))
              (tenths (the int (* dist-meters 10))))
         (mod-draw-string-xy-scaled (string-format "~D.~D" (/ tenths 10) (mod tenths 10))
-                               buf
-                               (mod-scale-px 66)
-                               row
-                               (font-color white)
-                               (font-flags shadow kerning large)
-                               0.4)
+                                   buf
+                                   (mod-scale-px 66)
+                                   row
+                                   (font-color white)
+                                   (font-flags shadow kerning large)
+                                   0.4)
         (if (mod-rule-active? 'complication-bus-driver)
           (mod-draw-string-xy-scaled "/20.0" buf (mod-scale-px 96) row (font-color white) (font-flags shadow kerning large) 0.4)))
       (+! row (mod-scale-px 8)))
@@ -3763,12 +3761,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (let* ((elapsed (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)))
              (time-left (max 0 (- (apply-time-limit-multiplier (seconds 12)) elapsed))))
         (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 #f)
-                               buf
-                               (mod-scale-px 66)
-                               row
-                               (font-color white)
-                               (font-flags shadow kerning large)
-                               0.4))
+                                   buf
+                                   (mod-scale-px 66)
+                                   row
+                                   (font-color white)
+                                   (font-flags shadow kerning large)
+                                   0.4))
       (+! row (mod-scale-px 8)))
     row))
 
@@ -3780,19 +3778,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (let ((time-left (max 0 (- (-> (-> *MOD-rule-punishment-bank* timed-end-times) slot) (current-time))))
                 (row-y (+ 68 (* row-count (mod-scale-px 10)))))
             (mod-draw-string-xy-scaled (mod-rule-timed-punishment-name punishment)
-                                   buf
-                                   395
-                                   row-y
-                                   (font-color white)
-                                   (font-flags shadow kerning large)
-                                   0.3)
+                                       buf
+                                       395
+                                       row-y
+                                       (font-color white)
+                                       (font-flags shadow kerning large)
+                                       0.3)
             (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
-                                   buf
-                                   (+ 395 (mod-scale-px 70))
-                                   (- row-y (mod-scale-px 2))
-                                   (font-color white)
-                                   (font-flags shadow kerning large)
-                                   0.4)
+                                       buf
+                                       (+ 395 (mod-scale-px 70))
+                                       (- row-y (mod-scale-px 2))
+                                       (font-color white)
+                                       (font-flags shadow kerning large)
+                                       0.4)
             (+! row-count 1))))))
   (none))
 
@@ -3821,12 +3819,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when rolling-id
       (mod-draw-string-xy-scaled "NEW CONDITION" buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
       (mod-draw-string-xy-scaled (mod-format-time-frame rolling-left 1 'auto)
-                             buf
-                             110
-                             57
-                             (font-color white)
-                             (font-flags shadow kerning large)
-                             0.6)))
+                                 buf
+                                 110
+                                 57
+                                 (font-color white)
+                                 (font-flags shadow kerning large)
+                                 0.6)))
   (none))
 
 (defun global-countdown-draw ()
@@ -3842,22 +3840,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                               0.4)
        ;; Draw main countdown timer
        (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* remaining-time) 2 'auto)
-                              global-buf
-                              380
-                              50
-                              (font-color red)
-                              (font-flags shadow kerning large)
-                              0.8)
+                                  global-buf
+                                  380
+                                  50
+                                  (font-color red)
+                                  (font-flags shadow kerning large)
+                                  0.8)
        ;; Draw countup timer
        (when (show-countup-timer-enabled?)
          (let ((show-hours? (> (the int (/ (-> *MOD-countdown-bank* countup-timer) (seconds 3600))) 0)))
            (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* countup-timer) 2 'auto)
-                                  global-buf
-                                  (if show-hours? 390 410)
-                                  40
-                                  (font-color white)
-                                  (font-flags shadow kerning large)
-                                  0.5)))
+                                      global-buf
+                                      (if show-hours? 390 410)
+                                      40
+                                      (font-color white)
+                                      (font-flags shadow kerning large)
+                                      0.5)))
        (mod-rule-draw-timed-punishments global-buf)
        (let ((reverted-y 72)
              (primary (mod-rule-nth-active-slot 0)))
@@ -3874,10 +3872,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (else (mod-rule-draw-rolling-slot global-buf) (mod-rule-draw-last-outcome global-buf 51)))
          (when (> (-> *MOD-rule-context-bank* last-reverted-cell-until) (current-time))
            (draw-string-xy-scaled (string-format "Reverted: ~A"
-                                                     (enum->string game-task (the game-task (-> *MOD-rule-context-bank* last-reverted-cell-task))))
-                                      global-buf
-                                      10
-                                      reverted-y
+                                                 (enum->string game-task (the game-task (-> *MOD-rule-context-bank* last-reverted-cell-task))))
+                                  global-buf
+                                  10
+                                  reverted-y
                                   (font-color red)
                                   (font-flags shadow kerning)
                                   1.0)))))

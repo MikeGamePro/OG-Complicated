@@ -6,7 +6,9 @@
 ;; DECOMP BEGINS
 
 (define-extern mod-cell-price-oracle (function float))
+
 (define-extern mod-trade-hint-oracle (function text-id))
+
 (define-extern mod-cell-blocked? (function symbol))
 
 (deftype oracle (process-taskable)
@@ -138,12 +140,7 @@
           ((= (current-task (-> this tasks)) (-> this first-task))
            (let ((a0-25 (handle->process (-> this right-eye-cell)))) (if a0-25 (deactivate a0-25))))
           (else (let ((a0-29 (handle->process (-> this left-eye-cell)))) (if a0-29 (deactivate a0-29))))))
-       (else
-        (set! (-> this will-talk)
-              (if (mod-cell-blocked?)
-                #f
-                #t))
-        (set! (-> this talk-message) (mod-trade-hint-oracle))))
+       (else (set! (-> this will-talk) (if (mod-cell-blocked?) #f #t)) (set! (-> this talk-message) (mod-trade-hint-oracle))))
      (cond
        ((= (current-task (-> this tasks)) (-> this first-task))
         (case (-> (level-get-target-inside *level*) name)

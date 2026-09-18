@@ -6,7 +6,9 @@
 ;; DECOMP BEGINS
 
 (define-extern mod-cell-price-task (function float))
+
 (define-extern mod-trade-hint-task (function text-id))
+
 (define-extern mod-cell-blocked? (function symbol))
 
 (deftype geologist (process-taskable) ())
@@ -68,12 +70,7 @@
            (set! (-> this cell-for-task) (current-task (-> this tasks)))
            (close-current! (-> this tasks))
            (send-event *target* 'get-pickup 5 (- (mod-cell-price-task))))
-          (else
-           (set! (-> this will-talk)
-                 (if (mod-cell-blocked?)
-                   #f
-                   #t))
-           (set! (-> this talk-message) (mod-trade-hint-task))))
+          (else (set! (-> this will-talk) (if (mod-cell-blocked?) #f #t)) (set! (-> this talk-message) (mod-trade-hint-task))))
         (new 'static 'spool-anim :name "geologist-resolution-money" :index 10 :parts 2 :command-list '()))))
     (else
      (if arg0

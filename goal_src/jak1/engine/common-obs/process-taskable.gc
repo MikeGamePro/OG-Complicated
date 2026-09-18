@@ -566,9 +566,7 @@
       (cond
         ((not *target*))
         ((begin
-           (let ((blocked-talk?
-                   (mod-cell-blocked?)))
-             (if blocked-talk? (set! (-> self will-talk) #f)))
+           (let ((blocked-talk? (mod-cell-blocked?))) (if blocked-talk? (set! (-> self will-talk) #f)))
            (not (-> self will-talk)))
          (if (>= (- (-> *display* game-frame-counter) (-> self last-talk)) (seconds 10)) (set! (-> self will-talk) #t)))
         ((begin
