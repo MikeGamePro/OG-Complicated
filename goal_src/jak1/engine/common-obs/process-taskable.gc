@@ -14,6 +14,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-cell-blocked? (function symbol))
+
 (defmethod process-taskable-method-52 ((this process-taskable))
   (let ((v1-1 (-> this draw shadow-ctrl)))
     (when v1-1
@@ -565,10 +567,7 @@
         ((not *target*))
         ((begin
            (let ((blocked-talk?
-                   (or (mod-rule-active? 'complication-fuel-shortage)
-                       (and *target*
-                            (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0)
-                            (mod-rule-active? 'complication-critical)))))
+                   (mod-cell-blocked?)))
              (if blocked-talk? (set! (-> self will-talk) #f)))
            (not (-> self will-talk)))
          (if (>= (- (-> *display* game-frame-counter) (-> self last-talk)) (seconds 10)) (set! (-> self will-talk) #t)))

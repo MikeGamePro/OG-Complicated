@@ -248,7 +248,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-interference
        'complication-quicksand
        'complication-lights-out
-       'rule-supercharged))
+       'rule-supercharged
+       'complication-half-price))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -972,6 +973,34 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-countdown-punishment-ticks ()
   (the int (* (the float (mod-rule-countdown-punishment-seconds)) (the float TICKS_PER_SECOND))))
 
+(defun mod-cell-blocked? ()
+  (the symbol
+       (or (mod-rule-active? 'complication-fuel-shortage)
+           (and (target-on-flut?) (mod-rule-active? 'complication-wings-tied))
+           (and *target*
+                (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0)
+                (mod-rule-active? 'complication-critical)))))
+
+(defun mod-cell-price-task ()
+  (if (mod-rule-active? 'complication-half-price)
+    (/ (-> *GAME-bank* money-task-inc) 2.0)
+    (-> *GAME-bank* money-task-inc)))
+
+(defun mod-cell-price-oracle ()
+  (if (mod-rule-active? 'complication-half-price)
+    (/ (-> *GAME-bank* money-oracle-inc) 2.0)
+    (-> *GAME-bank* money-oracle-inc)))
+
+(defun mod-trade-hint-task ()
+  (if (mod-rule-active? 'complication-half-price)
+    (text-id press-to-trade-money-cheap)
+    (text-id press-to-trade-money)))
+
+(defun mod-trade-hint-oracle ()
+  (if (mod-rule-active? 'complication-half-price)
+    (text-id press-to-trade-money-oracle-cheap)
+    (text-id press-to-trade-money-oracle)))
+
 (defun mod-rule-name ((id symbol))
   (cond
     ((eq? id 'rule-grounded) "GROUNDED")
@@ -1053,6 +1082,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-quicksand) "QUICKSAND")
     ((eq? id 'complication-lights-out) "LIGHTS OUT")
     ((eq? id 'rule-supercharged) "SUPERCHARGED")
+    ((eq? id 'complication-half-price) "LIMITED TIME OFFER")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1147,6 +1177,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE YOU\c12RE ON SAND.")
     ((eq? id 'complication-lights-out) "SORRY, WERE YOU USING THAT?")
     ((eq? id 'rule-supercharged) "COLLECT BLUE ECO.")
+    ((eq? id 'complication-half-price) "ALL CELLS ARE 50% OFF!")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1230,6 +1261,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
     ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
     ((eq? id 'rule-supercharged) (seconds 25)) ;; 25
+    ((eq? id 'complication-half-price) (seconds 20)) ;; 20
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1353,7 +1385,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-shifty)
          (eq? id 'complication-interference)
          (eq? id 'complication-quicksand)
-         (eq? id 'complication-lights-out))
+         (eq? id 'complication-lights-out)
+         (eq? id 'complication-half-price))
      'complication)
     (else 'unknown)))
 
@@ -2237,6 +2270,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('maincave 'darkcave 'firecanyon 'finalboss 'village3 'ogre 'rolling 'lavatube) #t)
     (else #f)))
 
+(defun no-half-price-level? ((level symbol))
+  (case level
+    (('training 'sunken 'snow 'swamp 'darkcave 'robocave 'sunkenb 'finalboss 'citadel) #t)
+    (else #f)))
+
 (defun hang-time-level? ((level symbol))
   (or (case level
         (('village1 'beach 'jungle 'misty 'swamp 'sunkenb 'snow 'maincave 'robocave) #t)
@@ -2371,8 +2409,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                     (else #f))))
              (if (and (oracle-level? level-name)
                       (not oracles-closed?)
-                      (>= (+ (current-orb-count) money-left) 120)
-                      (<= (- 120 (current-orb-count)) 35)
+                      (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
+                      (<= (- (mod-cell-price-oracle) (current-orb-count)) 35)
                       (not (mod-rule-active? 'complication-fuel-shortage)))
                20
                0)))
@@ -2515,6 +2553,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-side-to-side) (if is-klaww 35 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 4))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 3))
+          ((eq? id 'complication-half-price) (if (no-half-price-level? level-name) 0 3))
           ((eq? id 'rule-button-pusher) (if (or (not (button-level? level-name)) is-minigame) 0 10))
           ((eq? id 'rule-cooked) (if (or on-racer racer-lavatube (not (burn-level? level-name))) 0 9))
           ((eq? id 'complication-get-a-grip)

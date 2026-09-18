@@ -890,6 +890,7 @@
   (complicated-opts-cond-complication-quicksand #x1675)
   (complicated-opts-cond-complication-lights-out #x1676)
   (complicated-opts-cond-rule-supercharged #x1677)
+  (complicated-opts-cond-complication-half-price #x1678)
   ;; up to #x16ff reserved for future condition toggles
   (complicated-opts-cond-toggle-all-on #x1700)
   (complicated-opts-cond-toggle-all-off #x1701)
@@ -919,6 +920,8 @@
   ;; timer submenu (paired with complicated-opts-show-timer above at 0x161c)
   (complicated-opts-time-limit-multiplier #x1717)
   (complicated-opts-text-scale #x1718)
+  (press-to-trade-money-cheap #x1719)
+  (press-to-trade-money-oracle-cheap #x171a)
 
   (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change

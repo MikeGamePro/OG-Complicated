@@ -26,6 +26,8 @@
 
 (define-extern mod-rule-active? (function symbol symbol))
 
+(define-extern mod-cell-blocked? (function symbol))
+
 (declare-type vent process-drawable)
 
 (declare-type eco eco-collectable)
@@ -378,9 +380,7 @@
                (logtest? (-> self flags) (collectable-flags can-collect))
                (!= (-> self next-state name) 'pickup)
                (not (and (= (-> self type) fuel-cell)
-                         (or (mod-rule-active? 'complication-fuel-shortage)
-                             (and (target-on-flut?) (mod-rule-active? 'complication-wings-tied))
-                             (and (mod-rule-active? 'complication-critical) (> (-> (the-as fact-info-target (-> *target* fact)) health) 1)))))
+                         (mod-cell-blocked?)))
                (send-event *target* 'get-pickup (-> self fact pickup-type) (-> self fact pickup-amount)))
         (go-virtual pickup #f (process->handle *target*))))
   :trans

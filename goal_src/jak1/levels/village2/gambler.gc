@@ -5,6 +5,10 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-cell-price-task (function float))
+(define-extern mod-trade-hint-task (function text-id))
+(define-extern mod-cell-blocked? (function symbol))
+
 (deftype gambler (process-taskable) ())
 
 (defskelgroup *gambler-sg*
@@ -71,14 +75,13 @@
           (arg0
            (set! (-> this cell-for-task) (current-task (-> this tasks)))
            (close-current! (-> this tasks))
-           (send-event *target* 'get-pickup 5 (- (-> *GAME-bank* money-task-inc))))
+           (send-event *target* 'get-pickup 5 (- (mod-cell-price-task))))
           (else
            (set! (-> this will-talk)
-                 (if (or (mod-rule-active? 'complication-fuel-shortage)
-                         (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))
+                 (if (mod-cell-blocked?)
                    #f
                    #t))
-           (set! (-> this talk-message) (text-id press-to-trade-money))))
+           (set! (-> this talk-message) (mod-trade-hint-task))))
         (new 'static 'spool-anim :name "gambler-resolution-money" :index 15 :parts 2 :command-list '()))))
     (else
      (if arg0

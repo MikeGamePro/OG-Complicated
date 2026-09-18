@@ -6,6 +6,10 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-cell-price-task (function float))
+(define-extern mod-trade-hint-task (function text-id))
+(define-extern mod-cell-blocked? (function symbol))
+
 ;; WARN: rewrite_to_get_var got a none typed variable. Is there unreachable code? [OP: 47]
 (defbehavior miners-anim-loop process-taskable ()
   (when (!= (ja-group) (get-art-elem self))
@@ -299,15 +303,14 @@
           (send-event (-> this other-miner ppointer 3) 'clone (process->handle this))
           (set! (-> this cell-for-task) (current-task (-> this tasks)))
           (close-current! (-> this tasks))
-          (send-event *target* 'get-pickup 5 (- (-> *GAME-bank* money-task-inc)))
+          (send-event *target* 'get-pickup 5 (- (mod-cell-price-task)))
           (save-reminder (-> this tasks) (+ s4-3 1) 2))
          (else
           (set! (-> this will-talk)
-                (if (or (mod-rule-active? 'complication-fuel-shortage)
-                        (and (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))
+                (if (mod-cell-blocked?)
                   #f
                   #t))
-          (set! (-> this talk-message) (text-id press-to-trade-money))))
+          (set! (-> this talk-message) (mod-trade-hint-task))))
        (if (< (the-as uint s4-3) (the-as uint 3))
          (new 'static 'spool-anim :name "minershort-resolution-1-orbs" :index 7 :parts 2 :command-list '())
          (new 'static
