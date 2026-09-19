@@ -71,7 +71,7 @@
 | **KEEP IT LOW** | DO NOT JUMP KICK. | Do not kick/spin in the air. Doing it on the ground is allowed.
 | **VENDETTA** | KILL A LURKER WITH RED ECO. |
 | **HANDS ON** | CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK. | Jak must make direct contact with the crate. Using eco, Flut Flut, explosions, or the zoomer breaks this rule.
-| **STEP 1** | STAY ALIVE. | Do not die.
+| **STEP ONE** | STAY ALIVE. | Do not die.
 | **ONE FRAME** | DO A ONE-FRAME. | A one-frame is performed by spinning exactly 15 frames after jumping on a jump pad. This is toggled off for Simple and Complicated difficulties.
 | **SOCIAL DISTANCING** | DO NOT GET WITHIN 8 METERS OF A SCOUT FLY. |
 | **RED LIGHT** | DO NOT MOVE. |
@@ -126,7 +126,7 @@
 | **JOYRIDE** | HEY! THERE'S THE FLUT-FLUT! | Jak immediately mounts the Flut Flut from wherever he is.
 | **INFESTATION** | DOUBLE THE APHIDS. | The amount of bugs the Plant Boss spawns (aphids) is doubled.
 | **THIS ONE SUCKS** | CONTROLS ARE INVERTED. |
-| **LOOSE POCKETS** | BONKING OR TAKING DAMAGE DROPS 20 ORBS. |
+| **LOOSE POCKETS** | BONKING OR TAKING DAMAGE LOSES 20 ORBS. |
 | **TWISTED** | A LATER RULE MUST BE BROKEN. | A twisted rule is chosen at random. You must *break* this rule. Rules are colored orange.
 | **VIBE CHECK** | I LIKE YA CUT, G. | Jak gets smacked into the air and takes damage.
 | **INCOME TAX** | TIMER INCREMENTS ARE HALVED. | The additional time granted from cells, orbs, and flies is cut in half.
