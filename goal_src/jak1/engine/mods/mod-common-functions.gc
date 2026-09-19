@@ -2619,7 +2619,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'finalboss)
                    (eq? level-name 'village3)
                    is-klaww
-                   (string= checkpoint-name "lavatube-middle"))
+                   (string= checkpoint-name "lavatube-middle")
+                   (string= checkpoint-name "lavatube-start"))
              0
              7))
           ((eq? id 'rule-survivor)
