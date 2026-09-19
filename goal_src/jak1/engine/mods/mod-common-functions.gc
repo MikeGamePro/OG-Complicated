@@ -2337,8 +2337,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (and (not (target-on-flut?)) (or (eq? level 'sunken) (eq? level 'sunkenb)))))
 
 (defun mod-cells-purchased? ((level symbol))
-  (and (mod-villagers-closed? level)
-       (mod-oracles-closed? level)))
+  (and (mod-villagers-closed? level) (mod-oracles-closed? level)))
 
 (defun mod-cell-purchase-level? ((level symbol))
   (case level
@@ -2346,8 +2345,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (else #f)))
 
 (defun half-price-level? ((level symbol))
-  (and (mod-cell-purchase-level? level)
-       (not (mod-cells-purchased? level))))
+  (and (mod-cell-purchase-level? level) (not (mod-cells-purchased? level))))
 
 (defun burn-level? ((level symbol))
   (or (case level
