@@ -2919,9 +2919,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (else (mod-rule-punishment-name punishment))))
 
 (defun mod-rule-apply-extra-rule-punishment ((failed-slot int))
-  (when (and (>= failed-slot 0) (< failed-slot *mod-rule-slot-count*) (< (mod-rule-active-slot-count) 2))
-    (mod-rule-reroll-slot failed-slot #t)
-    (let ((extra-slot (mod-rule-first-free-slot))) (when (>= extra-slot 0) (mod-rule-reroll-slot extra-slot #t))))
+  (when (and (>= failed-slot 0) (< failed-slot *mod-rule-slot-count*))
+    (if (< (mod-rule-active-slot-count) 2)
+      (begin
+        (mod-rule-reroll-slot failed-slot #t)
+        (let ((extra-slot (mod-rule-first-free-slot))) (when (>= extra-slot 0) (mod-rule-reroll-slot extra-slot #t))))
+      (mod-rule-finish-slot failed-slot #t)))
   (none))
 
 (defun mod-rule-reset-run-and-restart ()
@@ -2988,16 +2991,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (< (current-time) (-> (-> *MOD-rule-slot-bank* slot-grace-periods) slot))))
 
 (defun mod-rule-resolve! ((slot int) (natural-outcome symbol) (ignore-grace? symbol))
-  (when (and (>= slot 0) (< slot *mod-rule-slot-count*))
+  (when (and (>= slot 0) (< slot *mod-rule-slot-count*) (-> (-> *MOD-rule-slot-bank* active-slots) slot))
     (let* ((twisted? (mod-rule-twist-marked-slot? slot))
            (effective (if twisted? (if (eq? natural-outcome 'success) 'failed 'success) natural-outcome)))
       (cond
-        ((eq? effective 'success)
+        ((and (eq? effective 'success)
+              ;; a twisted rule's natural failure inside the grace period is ignored, same as an untwisted one
+              (or (not twisted?)
+                  (not (eq? natural-outcome 'failed))
+                  ignore-grace?
+                  (not (mod-rule-slot-in-grace-period? slot))))
          (when twisted?
            (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1))
          (sound-play "buzzer-pickup")
          (set! (-> *MOD-rule-context-bank* last-outcome) (if twisted? 'twisted-success 'success))
-         (+! (-> *MOD-stats-bank* rules-followed) 1)
+         (when (eq? (mod-rule-type (-> (-> *MOD-rule-slot-bank* active-slots) slot)) 'rule)
+           (+! (-> *MOD-stats-bank* rules-followed) 1))
          (auto-save-command 'auto-save 0 0 *default-pool*)
          (mod-rule-finish-slot slot #t))
         ((or ignore-grace? (not (mod-rule-slot-in-grace-period? slot)))
@@ -3023,6 +3032,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
           (when (and id (eq? (mod-rule-type id) 'rule))
             (mod-rule-deactivate-slot slot)
+            ;; this rule was discarded by the twist before it could be followed or broken, so it no longer counts as rolled
+            (set! (-> *MOD-stats-bank* rules-rolled) (max 0 (- (-> *MOD-stats-bank* rules-rolled) 1)))
             (let ((chosen (mod-rule-pick-weighted-id)))
               (if chosen
                 (begin
@@ -4455,7 +4466,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (if (-> *MOD-rule-context-bank* game-beaten?)
       ;; This save file already beat the game.
       (when (or (-> *MOD-countdown-bank* active?) (-> *MOD-countdown-bank* lost?))
-        (global-countdown-reset))
+        (global-countdown-freeze-for-game-beaten))
       (cond
         ((> saved-time 0)
          (set! (-> *MOD-countdown-bank* remaining-time) saved-time)

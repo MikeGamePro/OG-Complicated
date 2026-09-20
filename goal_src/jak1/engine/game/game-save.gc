@@ -22,6 +22,8 @@
 
 (define-extern mod-game-beaten-set! (function symbol none))
 
+(define-extern mod-stats-reset! (function none))
+
 ;; mod: hooks for persisting the global countdown timer in the save file.
 ;; implemented in mod-common-functions.gc
 (define-extern global-countdown-save-value (function int))
@@ -910,6 +912,7 @@
 (defmethod load-game! ((this game-info) (save game-save))
   "Copy save data from a game-save to a game-info"
   (mod-game-beaten-set! #f)
+  (mod-stats-reset!)
   (mod-rng-reset-state!)
   (mod-rule-context-reset!)
   (let ((save-data (the-as game-save-tag (-> save tag))))
