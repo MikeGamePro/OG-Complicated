@@ -30,7 +30,8 @@
 | :--- | :--- |
 | **Countdown Start Time** | The global countdown's starting time, in seconds. |
 | **Time Limit Multiplier** | A multiplier applied to rules that have time limits. For example, a value of 2.0 doubles the amount of time you have; 0.5 halves. |
-| **Increments** | The amount of time, in seconds, that will be added to the timer for obtaining a Power Cell, Scout Fly, or Precursor Orb. |
+| **Collectable Increments** | The amount of time, in seconds, that will be added to the timer for obtaining a Power Cell, Scout Fly, or Precursor Orb. |
+| **Followed Rule Increment** | The amount of time, in seconds, that will be added to the timer for successfully following a rule. |
 | **Condition Toggles** | Manually choose which conditions can or cannot be rolled. |
 | **Punishment Toggles** | Manually choose which punishments can or cannot be rolled. |
 | **Speedrun Timer** | Shows an in-game timer above the global countdown timer, to track your current run's duration. |
@@ -150,3 +151,14 @@
 - This mod supports seeds, which means each run has a sequence of numbers that determines all of its RNG. The seed is displayed on the bottom-left of the screen, and you can use that seed to roll the exact same RNG for another run! This is also nice for races.
 - To input a custom seed, access the OpenGOAL toolbar by pressing Left Alt. Then select Tools -> Complicated Seed and input the seed into the box. The next run will use that seed! Leave this blank for a random seed.
 - **Note:** The seed's RNG is prone to divergence or branching based on player action. Each condition roll takes into account many factors (your location, orb count, active punishments, etc.), meaning rolls can vary wildly based on where you are and what you do at certain moments. As long as you play the same, the RNG will be the same too!
+
+## Final Score
+- The final score is just something fun I added after OutrageousJosh gave me the idea. You can see it during the credits after a completed run.
+- Here is everything that changes the score. The harder it makes the run, the more it increases the score:
+  - Countdown Start Time
+  - Time Limit Multiplier
+  - Collectable Increments
+  - Followed Rule Increment
+  - Number of conditions toggled
+  - Number of punishments toggled
+  - Final time

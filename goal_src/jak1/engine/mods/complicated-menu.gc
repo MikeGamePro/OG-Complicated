@@ -121,7 +121,8 @@
    (fly-increment float)
    (countdown-start-seconds float)
    (time-limit-multiplier float)
-   (text-scale float))
+   (text-scale float)
+   (compliance-increment float))
   (:methods
    (reset (_type_) _type_)
    (commit-to-file (_type_) none)
@@ -235,6 +236,7 @@
   (set! (-> obj countdown-start-seconds) 30.0)
   (set! (-> obj time-limit-multiplier) 1.2)
   (set! (-> obj text-scale) 0.9)
+  (set! (-> obj compliance-increment) 0.0)
   obj)
 
 (defmethod read-from-file ((obj complicated-settings) (filename string))
@@ -355,7 +357,8 @@
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
                                           (("countdown-start-seconds") (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
                                           (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file)))
-                                          (("text-scale") (set! (-> obj text-scale) (file-stream-read-float file))))))))
+                                          (("text-scale") (set! (-> obj text-scale) (file-stream-read-float file)))
+                                          (("compliance-increment") (set! (-> obj compliance-increment) (file-stream-read-float file))))))))
     (file-stream-close file))
   #t)
 
@@ -483,6 +486,7 @@
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
     (format file "  (time-limit-multiplier ~f)~%" (snap-to-step (-> obj time-limit-multiplier) 0.1))
     (format file "  (text-scale ~f)~%" (snap-to-step (-> obj text-scale) 0.1))
+    (format file "  (compliance-increment ~f)~%" (the float (the int (-> obj compliance-increment))))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -616,6 +620,10 @@
   (set! (-> *complicated-settings* countdown-start-seconds) new-val)
   (none))
 
+(defun compliance-increment-changed! ((new-val float))
+  (set! (-> *complicated-settings* compliance-increment) new-val)
+  (none))
+
 ;; ---- Increment Options Submenu ---------------------------------------------
 (define *comp-timer-options*
   (new 'static
@@ -709,7 +717,24 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [5] BACK
+       ;; [5] COMPLICANCE INCREMENT
+       (new 'static
+            'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-compliance-increment)
+            :scale #t
+            :param1 0.0
+            :param2 30.0
+            :slider-step-size 0.5
+            :on-change
+            (lambda ((val object))
+              (compliance-increment-changed! (the-as float val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [6] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -2105,6 +2130,7 @@
   (set! (-> *comp-timer-options* 2 value-to-modify) (&-> *complicated-settings* cell-increment))
   (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* orb-increment))
   (set! (-> *comp-timer-options* 4 value-to-modify) (&-> *complicated-settings* fly-increment))
+  (set! (-> *comp-timer-options* 5 value-to-modify) (&-> *complicated-settings* compliance-increment))
   (none))
 
 ;; add new options here (getter)
@@ -2155,6 +2181,9 @@
 
 (defun countdown-start-seconds-value ()
   (if *complicated-settings* (the float (the int (-> *complicated-settings* countdown-start-seconds))) 30.0))
+
+(defun compliance-increment-value ()
+  (if *complicated-settings* (the float (the int (-> *complicated-settings* compliance-increment))) 0.0))
 
 (defun mod-rule-condition-enabled? ((id symbol))
   (the symbol

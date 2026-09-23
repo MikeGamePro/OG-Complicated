@@ -65,6 +65,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern countdown-start-seconds-value (function float))
 
+(define-extern compliance-increment-value (function float))
+
 (define-extern time-limit-multiplier (function float))
 
 (define-extern text-scale-multiplier (function float))
@@ -869,11 +871,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define SCORE-TIME-SCALE 5400.0)
 
+(define RULE-FOLLOW-ESTIMATE 40.0)
+
 (defun mod-rule-collectable-inc-total ()
   (+ (* 101.0 (cell-increment-value)) (* 2000.0 (orb-increment-value)) (* 112.0 (fly-increment-value))))
 
 (defun mod-rule-inc-total ()
-  (+ (mod-rule-collectable-inc-total) (countdown-start-seconds-value)))
+  (+ (mod-rule-collectable-inc-total) (countdown-start-seconds-value) (* RULE-FOLLOW-ESTIMATE (compliance-increment-value))))
 
 (defun mod-calc-run-score ()
   (let* ((inc-total (mod-rule-inc-total))
@@ -1997,7 +2001,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-shifty)
      (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (current-time) (seconds (mod-rand-int-range 1 9)))))
     ((eq? id 'complication-vibe-check)
-     (play-custom-sfx "I like ya cut g.mp3" 30.0)
+     (play-custom-sfx "I like ya cut g.mp3" 40.0)
      (process-spawn-function process
        (lambda ()
          (let ((start-time (current-time))) (until (>= (- (current-time) start-time) (seconds 1.35)) (suspend)))
@@ -2373,7 +2377,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (cond
           ;; Resources
           ((eq? id 'rule-supercharged) (if (or is-minigame (no-blue-eco-level? level-name)) 0 6))
-          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 6))
+          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 5))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
                    (mod-rule-active? 'rule-distancing)
@@ -3006,7 +3010,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (sound-play "buzzer-pickup")
          (set! (-> *MOD-rule-context-bank* last-outcome) (if twisted? 'twisted-success 'success))
          (when (eq? (mod-rule-type (-> (-> *MOD-rule-slot-bank* active-slots) slot)) 'rule)
-           (+! (-> *MOD-stats-bank* rules-followed) 1))
+           (+! (-> *MOD-stats-bank* rules-followed) 1)
+           (global-countdown-add-seconds (compliance-increment-value)))
          (auto-save-command 'auto-save 0 0 *default-pool*)
          (mod-rule-finish-slot slot #t))
         ((or ignore-grace? (not (mod-rule-slot-in-grace-period? slot)))
