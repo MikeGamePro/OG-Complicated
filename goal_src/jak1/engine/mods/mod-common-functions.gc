@@ -121,8 +121,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (not (logtest? (-> *target* control status) (cshape-moving-flags onground)))
        (let ((state-name (-> *target* state name)))
          (not (or (= state-name 'target-edge-grab)
-                  (= state-name 'target-edge-grab-jump)
-                  (= state-name 'target-edge-grab-off)
+                  ;; (= state-name 'target-edge-grab-jump)
+                  ;; (= state-name 'target-edge-grab-off)
                   (= state-name 'target-look-around)
                   (= state-name 'target-stance)
                   (= state-name 'target-walk)
@@ -130,7 +130,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-duck-walk)
                   (= state-name 'target-attack)
                   (= state-name 'target-hit-ground-hard)
-                  (= state-name 'target-hit-ground))))))
+                  (= state-name 'target-hit-ground)
+                  (= state-name 'target-flop-hit-ground)
+                  (= state-name 'target-slide-down))))))
 
 (define *mod-rule-slot-count* 2)
 
@@ -865,7 +867,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     count))
 
 (defun mod-rule-punishment-toggle-enabled-fraction ()
-  (/ (the float (mod-rule-punishment-toggle-enabled-count)) (the float (- *mod-rule-punishment-id-count* 1))))
+  (/ (the float (mod-rule-punishment-toggle-enabled-count)) (the float *mod-rule-punishment-id-count*)))
 
 (define SCORE-MAX-INC 35780.0)
 
