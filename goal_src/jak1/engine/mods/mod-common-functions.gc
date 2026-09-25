@@ -879,7 +879,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (+ (* 101.0 (cell-increment-value)) (* 2000.0 (orb-increment-value)) (* 112.0 (fly-increment-value))))
 
 (defun mod-rule-inc-total ()
-  (+ (mod-rule-collectable-inc-total) (countdown-start-seconds-value) (* RULE-FOLLOW-ESTIMATE (compliance-increment-value))))
+  (+ (mod-rule-collectable-inc-total)
+     (countdown-start-seconds-value)
+     (* RULE-FOLLOW-ESTIMATE (compliance-increment-value))))
 
 (defun mod-calc-run-score ()
   (let* ((inc-total (mod-rule-inc-total))
@@ -2390,15 +2392,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'sunkenb))
              0
              8))
-          ((or (eq? id 'complication-unbreakable) (eq? id 'rule-distancing))
-           (if (or (< buzzer-left 1)
-                   (mod-rule-active? 'rule-buzzer-pressure)
-                   is-klaww
-                   (eq? level-name 'training)
-                   (eq? level-name 'jungleb)
-                   (eq? level-name 'finalboss))
-             0
-             6))
           ((eq? id 'rule-fuel-pressure)
            (cond
              ((or (< fuel-left 1)
@@ -2501,6 +2494,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-crate-break)
            (if (or is-klaww is-minigame (string= checkpoint-name "sunkenb-helix") (sparse-crate-level? level-name)) 0 6))
           ((eq? id 'rule-hands-on) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 6))
+          ((or (eq? id 'complication-unbreakable) (eq? id 'rule-distancing))
+           (if (or (< buzzer-left 1)
+                   (mod-rule-active? 'rule-buzzer-pressure)
+                   is-klaww
+                   (eq? level-name 'training)
+                   (eq? level-name 'jungleb)
+                   (eq? level-name 'finalboss))
+             0
+             6))
           ;; Movement
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 6))
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 6))
@@ -2644,7 +2646,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (string= checkpoint-name "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 50 0))
           ((eq? id 'complication-bus-driver) (if (or (string= checkpoint-name "firecanyon-start") on-racer) 15 0))
           ((eq? id 'rule-speed) ;; disabled
-           (if (or (string= checkpoint-name "firecanyon-start") on-racer) 25 0))
+           (if (or (and (or (eq? level-name 'ogre) (eq? level-name 'firecanyon) (string= checkpoint-name "lavatube-start")) on-racer)
+                   (string= checkpoint-name "rolling-start"))
+             15
+             0))
           ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 6))
           ((eq? id 'complication-disassociate)
            (if (and on-flut (not (or (mod-rule-active? 'complication-soul-bond) (sparse-lurker-level? level-name)))) 40 0))
@@ -3003,10 +3008,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (cond
         ((and (eq? effective 'success)
               ;; a twisted rule's natural failure inside the grace period is ignored, same as an untwisted one
-              (or (not twisted?)
-                  (not (eq? natural-outcome 'failed))
-                  ignore-grace?
-                  (not (mod-rule-slot-in-grace-period? slot))))
+              (or (not twisted?) (not (eq? natural-outcome 'failed)) ignore-grace? (not (mod-rule-slot-in-grace-period? slot))))
          (when twisted?
            (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1))
          (sound-play "buzzer-pickup")
