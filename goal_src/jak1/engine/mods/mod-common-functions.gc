@@ -2292,6 +2292,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun sparse-blue-eco-level? ((level symbol))
   (or (and (eq? level 'firecanyon) (not (task-closed? (game-task jungle-eggtop) (task-status need-resolution))))
+      (string= (current-checkpoint-name) "citadel-generator-start")
       (case level
         (('maincave 'snow 'darkcave 'finalboss 'village3 'rolling 'lavatube) #t)
         (else #f))))
