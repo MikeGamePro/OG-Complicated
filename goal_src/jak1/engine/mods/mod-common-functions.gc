@@ -2290,10 +2290,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (else #f))
       (and (eq? level 'ogre) (task-closed? (game-task snow-eggtop) (task-status need-resolution)))))
 
-(defun no-blue-eco-level? ((level symbol))
-  (case level
-    (('maincave 'darkcave 'firecanyon 'finalboss 'village3 'ogre 'rolling 'lavatube) #t)
-    (else #f)))
+(defun sparse-blue-eco-level? ((level symbol))
+  (or (and (eq? level 'firecanyon) (not (task-closed? (game-task jungle-eggtop) (task-status need-resolution))))
+      (case level
+        (('maincave 'snow 'darkcave 'finalboss 'village3 'rolling 'lavatube) #t)
+        (else #f))))
 
 (defun hang-time-level? ((level symbol))
   (or (case level
@@ -2380,7 +2381,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         0
         (cond
           ;; Resources
-          ((eq? id 'rule-supercharged) (if (or is-minigame (no-blue-eco-level? level-name)) 0 6))
+          ((eq? id 'rule-supercharged)
+           (if (string= checkpoint-name "snow-fort")
+             6
+             (if (or is-minigame
+                     (sparse-blue-eco-level? level-name))
+               0
+               6)))
           ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 5))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
@@ -2493,7 +2500,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ;; Crates
           ((eq? id 'rule-crate-break)
            (if (or is-klaww is-minigame (string= checkpoint-name "sunkenb-helix") (sparse-crate-level? level-name)) 0 6))
-          ((eq? id 'rule-hands-on) (if (or (eq? level-name 'jungleb) (no-blue-eco-level? level-name)) 0 6))
+          ((eq? id 'rule-hands-on)
+           (case level-name
+             (('darkcave 'jungleb 'firecanyon 'finalboss 'village3 'ogre 'rolling 'lavatube) 0)
+             (else 6)))
           ((or (eq? id 'complication-unbreakable) (eq? id 'rule-distancing))
            (if (or (< buzzer-left 1)
                    (mod-rule-active? 'rule-buzzer-pressure)
