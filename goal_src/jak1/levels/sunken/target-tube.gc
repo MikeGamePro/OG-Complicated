@@ -8,6 +8,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern runs-on-jak-death (function symbol none))
+
 (define *tube-mods*
   (new 'static
        'surface
@@ -585,6 +587,8 @@
   :event
     (-> target-death
         event)
+  :enter
+    (behavior () (runs-on-jak-death 'dying))
   :exit
     (behavior ()
       (logclear! (-> self state-flags) (state-flags being-attacked dying))

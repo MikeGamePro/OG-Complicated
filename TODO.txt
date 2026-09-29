@@ -1,4 +1,7 @@
-settings (in progress)
+Prevent time loss on sniper in beach
+Address cash grab count in jungleb?
+Figure out red unbreakable
+Unfreeze on glare end
 at least 50 trivia (10 more)
 
 new zoomer rule
