@@ -1753,10 +1753,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (or (target-on-racer?) (target-on-flut?)))
 
 (defun target-has-eco-type? ((eco-type pickup-type))
-  (the symbol
-       (and *target*
-            (= (-> *target* fact eco-type) eco-type)
-            (>= (-> *target* fact eco-level) 1.0))))
+  (the symbol (and *target* (= (-> *target* fact eco-type) eco-type) (>= (-> *target* fact eco-level) 1.0))))
 
 (defun mod-rule-trigger-red-light ()
   (when (mod-rule-active? 'rule-red-light)
@@ -1811,10 +1808,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-random-available-punishment ((rule-id symbol))
   (let ((selected 'punishment-countdown)
         (running-total 0))
-      (when (and (not (or (eq? rule-id 'rule-for-billy)
-                          (and (eq? rule-id 'rule-sniper) (eq? (current-level-name) 'beach))))
-                (punishment-toggle-enabled? 'punishment-countdown)
-                (mod-rule-punishment-rollable? 'punishment-countdown))
+    (when (and (not (or (eq? rule-id 'rule-for-billy) (and (eq? rule-id 'rule-sniper) (eq? (current-level-name) 'beach))))
+               (punishment-toggle-enabled? 'punishment-countdown)
+               (mod-rule-punishment-rollable? 'punishment-countdown))
       (let ((w 10))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
@@ -1998,6 +1994,67 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (else (none)))
   (none))
 
+(define *mod-rgyb-handles* (new 'global 'boxed-array handle 128))
+
+(define *mod-rgyb-count* 0)
+
+(defun mod-rgyb-opposite-eco ((typ pickup-type))
+  (cond
+    ((= typ (pickup-type eco-blue)) (pickup-type eco-yellow))
+    ((= typ (pickup-type eco-yellow)) (pickup-type eco-blue))
+    (else typ)))
+
+(defun mod-rgyb-refresh-one ((p eco-collectable))
+  (let* ((ent (-> p entity))
+         (cluster? (and ent (nonzero? ent) (= (-> ent extra process) p)))
+         (state-name (-> p state name))
+         (collected? (or (= state-name 'die) (= state-name 'pickup)))
+         (skip? (if cluster? (logtest? (-> ent extra perm status) (entity-perm-status dead)) collected?)))
+    (when (not skip?)
+      (if (nonzero? (-> p part)) (kill-and-free-particles (-> p part)))
+      (if (nonzero? (-> p sound)) (stop! (-> p sound)))
+      (cond
+        (cluster?
+         ;; entity-placed: rebirth from the entity so init-from-entity! re-derives the original type
+         (deactivate p)
+         (set! (-> ent extra process) (the-as process #f))
+         (entity-birth-no-kill ent)
+         ;; keep already-collected clusters collected
+         (if (and collected? (-> ent extra process)) (send-event (-> ent extra process) 'die)))
+        (else
+         ;; drop: no entity, so spawn a replacement of the right type and copy its state over
+         (let* ((cur (-> p fact pickup-type))
+                (want (if (mod-rule-active? 'complication-rgyb) cur (mod-rgyb-opposite-eco cur)))
+                (new-ptr (birth-pickup-at-point (-> p root trans) want 1.0 #f *active-pool* (the-as fact-info #f))))
+           (when new-ptr
+             (let ((np (the-as eco-collectable (ppointer->process new-ptr))))
+               (set! (-> np flags) (-> p flags))
+               (set! (-> np base quad) (-> p base quad))
+               (set! (-> np root transv quad) (-> p root transv quad))
+               (set! (-> np birth-time) (-> p birth-time))
+               (set! (-> np fadeout-timeout) (-> p fadeout-timeout))
+               (set! (-> np fact options) (-> p fact options))
+               (deactivate p))))))))
+  (none))
+
+(defun mod-rgyb-refresh-eco-clusters ()
+  (process-spawn-function process
+    (lambda ()
+      (suspend)
+      (suspend)
+      ;; refreshing spawns/kills eco processes, so never do it mid-iteration
+      (set! *mod-rgyb-count* 0)
+      (iterate-process-tree *active-pool*
+                            (lambda ((p process))
+                              (when (and (or (type-type? (-> p type) eco-blue) (type-type? (-> p type) eco-yellow)) (< *mod-rgyb-count* 128))
+                                (set! (-> *mod-rgyb-handles* *mod-rgyb-count*) (process->handle p))
+                                (+! *mod-rgyb-count* 1))
+                              #f)
+                            *null-kernel-context*)
+      (dotimes (i *mod-rgyb-count*)
+        (let ((p (the-as eco-collectable (handle->process (-> *mod-rgyb-handles* i))))) (when p (mod-rgyb-refresh-one p))))))
+  (none))
+
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'rule-qte) (set! (-> *MOD-rule-context-bank* qte-target-button) (mod-rand-int-range 0 4)))
@@ -2006,6 +2063,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hitlist) (dotimes (slot 3) (set! (-> *mod-rule-unique-enemy-killed-types* slot) #f)))
     ((eq? id 'rule-double-kill) (set! (-> *MOD-rule-context-bank* last-kill-time) 0))
     ((eq? id 'rule-distancing) (set! *closest-buzzer-dist* 1000000000.0))
+    ((eq? id 'complication-rgyb) (mod-rgyb-refresh-eco-clusters))
     ((eq? id 'rule-hang-time) (set! (-> *MOD-rule-context-bank* hang-time-air-start) (current-time)))
     ((eq? id 'complication-get-a-grip) (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (current-time)))
     ((eq? id 'complication-bus-driver) (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (current-time)))
@@ -2055,6 +2113,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-cumbersome) (orb-weight-reset!))
           ((eq? id 'complication-bad-ping) (input-delay-enable! #f 0.0))
           ((eq? id 'complication-lights-out) (mod-rule-lights-out-deactivate!))
+          ((eq? id 'complication-rgyb) (mod-rgyb-refresh-eco-clusters))
           ((and *target* (eq? id 'complication-glare))
            (logclear! (-> *target* mask) (process-mask sleep))
            (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0))
@@ -2393,12 +2452,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (cond
           ;; Resources
           ((eq? id 'rule-supercharged)
-           (if (string= checkpoint-name "snow-fort")
-             6
-             (if (or is-minigame
-                     (sparse-blue-eco-level? level-name))
-               0
-               6)))
+           (if (string= checkpoint-name "snow-fort") 6 (if (or is-minigame (sparse-blue-eco-level? level-name)) 0 6)))
           ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 5))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
@@ -2630,7 +2684,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              (is-minigame 0)
              ((or (eq? level-name 'robocave) (string= checkpoint-name "sunkenb-helix")) 6)
-             ((eq? level-name 'finalboss) 3)
+             ((eq? level-name 'finalboss) 4)
              ((launcher-level? level-name) 8)
              (else 0)))
           ((eq? id 'rule-for-billy)

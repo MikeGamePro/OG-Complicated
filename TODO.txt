@@ -4,5 +4,4 @@ new zoomer rule
 add plunger-lurker as kill
 maybe rename: keep it low, one frame, bloodlust
 maybe add settings for timer placement
-rgyb refresh (or swap powerup)
 
