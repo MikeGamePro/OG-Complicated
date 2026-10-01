@@ -1162,7 +1162,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
     ((eq? id 'rule-math-quiz) "ANSWER CORRECTLY.       (USE D-PAD)")
     ((eq? id 'rule-trivia) "ANSWER CORRECTLY.")
-    ((eq? id 'complication-bad-ping) "YOU HAVE 120MS INPUT DELAY.")
+    ((eq? id 'complication-bad-ping) "YOU HAVE 120 MS INPUT DELAY.")
     ((eq? id 'rule-green-pilled) "COLLECT 50 SMALL GREEN ECO PILLS.")
     ((eq? id 'rule-button-pusher) "PUSH A BUTTON.")
     ((eq? id 'rule-loyal-customer) "BUY AN ORACLE CELL.")
@@ -1238,14 +1238,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-jak-rabbit) (seconds 45)) ;; 45
     ((eq? id 'rule-vendetta) (apply-time-limit-multiplier (seconds 35))) ;; 35
     ((eq? id 'rule-hands-on) (seconds 60)) ;; 60
-    ((eq? id 'complication-eco-reserve) (seconds 60)) ;; 60
+    ((eq? id 'complication-eco-reserve) (seconds 45)) ;; 45
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-distancing) (seconds 60)) ;; 60
     ((eq? id 'rule-red-light) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 40)) ;; 40
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
-    ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 120))) ;; 120
+    ((eq? id 'rule-for-billy) (apply-time-limit-multiplier (seconds 130))) ;; 130
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
     ((eq? id 'complication-overclock) (seconds 60)) ;; 60
     ((eq? id 'rule-speed) (apply-time-limit-multiplier (seconds 60))) ;; 60
@@ -2434,7 +2434,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (and (mod-cell-purchase-level? level-name)
                     (not (mod-oracles-closed? level-name))
                     (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
-                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 35)
+                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 30)
                     (not (mod-rule-active? 'complication-fuel-shortage)))
              6
              0))
@@ -2529,7 +2529,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 5))
           ((eq? id 'complication-quicksand) (if (sand-level? level-name) 8 0))
           ((eq? id 'complication-invert) 4)
-          ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 7))
+          ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 6))
           ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 5))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
@@ -2537,7 +2537,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
              ((and (eq? id 'rule-grounded) (or (mod-rule-active? 'rule-hang-time) (mod-rule-active? 'rule-qte))) 0)
              ((and (eq? id 'rule-grounded) is-klaww) 2)
-             ((eq? id 'rule-grounded) 7)
+             ((eq? id 'rule-grounded) 6)
              ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 3)
              (is-klaww 2)
              (else 5)))
@@ -2552,11 +2552,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((eq? level-name 'training) 3)
              (else 6)))
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
-           (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 7))
-          ((eq? id 'rule-management) (if (or on-racer on-flut (sole-zoomer-level? level-name) (mod-rule-active? 'rule-qte)) 0 7))
+           (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 6))
+          ((eq? id 'rule-management) (if (or on-racer on-flut (sole-zoomer-level? level-name) (mod-rule-active? 'rule-qte)) 0 6))
           ((eq? id 'complication-bad-ping) (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 5))
           ((eq? id 'complication-loose-pockets)
-           (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 7))
+           (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 6))
           ;; Water
           ((eq? id 'complication-drought)
            (cond
@@ -2678,8 +2678,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-fuel-shortage)
            (if (or (eq? level-name 'training)
                    (eq? level-name 'finalboss)
+                   (eq? level-name 'lavatube)
                    (mod-rule-active? 'rule-loyal-customer)
-                   (string= checkpoint-name "lavatube-middle")
                    (and (string= checkpoint-name "citadel-elevator")
                         (task-closed? (game-task citadel-sage-green) (task-status need-resolution))))
              0
@@ -2699,7 +2699,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
           ((eq? id 'complication-lights-out)
            (case level-name
-             (('maincave 'robocave) 8)
+             (('maincave 'robocave) 10)
              (else 0)))
           (else 6))))))
 
@@ -2931,7 +2931,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
     ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 4 MINUTES")
-    ((eq? punishment 'punishment-delay) "200MS INPUT DELAY FOR 1 MINUTE")
+    ((eq? punishment 'punishment-delay) "200 MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")

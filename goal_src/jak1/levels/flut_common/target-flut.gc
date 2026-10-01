@@ -266,7 +266,8 @@
                                            (angle 'up))))))
        (('change-mode)
         (case (-> arg3 param 0)
-          (('grab) (go target-flut-grab))))
+          (('grab) (go target-flut-grab))
+          (('fishing) (go target-fishing (process->handle (the-as process (-> arg3 param 1)))))))
        (('clone-anim) (go target-flut-clone-anim (process->handle (the-as process (-> arg3 param 0)))))
        (else (target-generic-event-handler arg0 arg1 arg2 arg3))))))
 
