@@ -119,7 +119,7 @@
 | **JAK RABBIT** | JUMP HEIGHTS ARE DOUBLED. |
 | **ECO RESERVE** | YELLOW ECO PAUSES TIMER. | The countdown timer is paused as long as you have yellow eco in your meter.
 | **SEEING RED** | RED ECO PAUSES TIMER. | The countdown timer is paused as long as you have red eco in your meter.
-| **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Currently, live clusters are not updated. They need to respawn to swap or swap back. Eco vents will grant the opposite powerup.
+| **RGYB** | BLUE AND YELLOW ECO ARE SWAPPED. | Clusters will respawn as the opposite type, and vents will grant the opposite powerup.
 | **BUTTER FINGERS** | JAK CANNOT GRAB LEDGES. |
 | **OVERCLOCK** | CITADEL DISCS ARE FASTER. | The large disc platforms in Citadel (pizzas) rotate faster.
 | **BAD PING** | YOU HAVE 120MS INPUT DELAY. |
@@ -142,7 +142,7 @@
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 | **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
 | **QUICKSAND** | TIMER DRAINS TWICE AS FAST WHILE ON SAND. |
-| **LIGHTS OUT** | SORRY, WERE YOU USING THAT? | Makes the level very dark. Only rolls in Spider Cave. |
+| **LIGHTS OUT** | SORRY, WERE YOU USING THAT? | Makes the level very dark. Only rolls in Spider Cave.
 | **LIMITED TIME OFFER** | POWER CELLS ARE 50% OFF! | Purchasing power cells from villagers and oracles costs half as much.
 
 </details>
