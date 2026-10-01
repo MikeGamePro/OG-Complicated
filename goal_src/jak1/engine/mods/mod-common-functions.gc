@@ -1186,7 +1186,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-express-delivery) "RETURN THE MUSE.          OR SUFFER MY CURSE.")
     ((eq? id 'rule-qte) "PRESS ")
     ((eq? id 'complication-mirror) "THE WORLD IS MIRRORED.")
-    ((eq? id 'complication-no-double-jump) "JAK FORGOT HOW TO DOUBLE JUMP.")
+    ((eq? id 'complication-no-double-jump) "JAK AND FLUT FLUT FORGOT HOW TO DOUBLE JUMP.")
     ((eq? id 'rule-hang-time) "STAY AIRBORNE FOR 3 CONSECUTIVE SECONDS.")
     ((eq? id 'complication-unbreakable) "SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO.")
     ((eq? id 'complication-get-a-grip)
@@ -1196,7 +1196,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-palate-change) "EELS ARE GOOD, YELLOWS ARE BAD.")
     ((eq? id 'complication-jak-be-nimble) "JAK BE QUICK.")
     ((eq? id 'rule-no-harm) "DO NOT KILL ANY LURKERS.")
-    ((eq? id 'complication-soul-bond) "KILLING A LURKER KILLS YOU TOO.")
+    ((eq? id 'complication-soul-bond) "IF A LURKER DIES, YOU DO TOO.")
     ((eq? id 'complication-shifty) "JAK RANDOMLY TELEPORTS SHORT DISTANCES.")
     ((eq? id 'complication-interference) "ECO PIXELATES THE SCREEN.")
     ((eq? id 'complication-quicksand) "THE TIMER DRAINS TWICE AS FAST WHILE YOU\c12RE ON SAND.")
@@ -1282,7 +1282,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-no-harm) (seconds 40)) ;; 40
     ((eq? id 'complication-soul-bond) (seconds 40)) ;; 40
     ((eq? id 'complication-shifty) (seconds 45)) ;; 45
-    ((eq? id 'complication-interference) (seconds 60)) ;; 60
+    ((eq? id 'complication-interference) (seconds 45)) ;; 45
     ((eq? id 'complication-quicksand) (seconds 30)) ;; 30
     ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
     ((eq? id 'rule-supercharged) (apply-time-limit-multiplier (seconds 25))) ;; 25
@@ -2531,6 +2531,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-rule-active? 'rule-lurker-pressure)
                    (mod-rule-active? 'complication-disassociate)
                    (eq? level-name 'jungleb)
+                   (string= checkpoint-name "sunkenb-helix")
                    (eq? level-name 'finalboss))
              0
              7))
@@ -2553,7 +2554,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 15))
           ((eq? id 'complication-eco-reserve)
            (cond
-             ((or (eq? level-name 'finalboss) is-klaww) 15)
+             ((or (eq? level-name 'finalboss) is-klaww) 10)
              ((yellow-eco-level? level-name) 5)
              (else 0)))
           ((eq? id 'complication-red-stop) ;; disabled

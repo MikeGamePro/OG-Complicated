@@ -552,6 +552,7 @@
                   (* 0.003921569 (the float (-> *cpad-list* cpads (-> self control unknown-cpad-info00 number) abutton (abutton-idx x)))))) ;; og:preserve-this abutton indexing
       (if (logtest? (-> self control status) (cshape-moving-flags onsurf)) (go target-flut-hit-ground))
       (if (and (cpad-pressed? (-> self control cpad number) x)
+               (not (mod-rule-active? 'complication-no-double-jump))
                (< (vector-dot (-> self control dynam gravity-normal) (-> self control transv)) 40960.0)
                (and (not (logtest? (-> self water flag) (water-flag touch-water)))
                     (not (logtest? (-> self state-flags) (state-flags prevent-jump)))
