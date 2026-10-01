@@ -1162,7 +1162,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-speed) "REACH A SPEED OF 40 METERS PER SECOND.")
     ((eq? id 'rule-math-quiz) "ANSWER CORRECTLY.       (USE D-PAD)")
     ((eq? id 'rule-trivia) "ANSWER CORRECTLY.")
-    ((eq? id 'complication-bad-ping) "YOU HAVE 120 MS INPUT DELAY.")
+    ((eq? id 'complication-bad-ping) "YOU HAVE 120-MS INPUT DELAY.")
     ((eq? id 'rule-green-pilled) "COLLECT 50 SMALL GREEN ECO PILLS.")
     ((eq? id 'rule-button-pusher) "PUSH A BUTTON.")
     ((eq? id 'rule-loyal-customer) "BUY AN ORACLE CELL.")
@@ -2310,6 +2310,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! (-> *mod-rule-recent-rolls* 0) id)))
   (none))
 
+(defun mod-rule-forget-roll! ((id symbol))
+  (when id
+    (let ((slot 0)
+          (found -1))
+      (while (and (< slot 8) (< found 0))
+        (when (= (-> *mod-rule-recent-rolls* slot) id)
+          (set! found slot))
+        (+! slot 1))
+      (when (>= found 0)
+        (let ((i found))
+          (while (< i 7)
+            (set! (-> *mod-rule-recent-rolls* i) (-> *mod-rule-recent-rolls* (+ i 1)))
+            (+! i 1))
+          (set! (-> *mod-rule-recent-rolls* 7) #f)))))
+  (none))
+
 (defun mod-rule-recent-roll-factor ((id symbol))
   (let ((slot 0)
         (factor 8)
@@ -2986,7 +3002,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-fall-damage) "MORE FALL DAMAGE FOR 2 MINUTES")
     ((eq? punishment 'punishment-trip) "TRIP RANDOMLY FOR 2 MINUTES")
     ((eq? punishment 'punishment-edge) "NO LEDGE GRABS FOR 4 MINUTES")
-    ((eq? punishment 'punishment-delay) "200 MS INPUT DELAY FOR 1 MINUTE")
+    ((eq? punishment 'punishment-delay) "200-MS INPUT DELAY FOR 1 MINUTE")
     ((eq? punishment 'punishment-crash) "CRASH THE GAME")
     ((eq? punishment 'punishment-iframes) "NO I-FRAMES FOR 3 MINUTES")
     ((eq? punishment 'punishment-camera) "INVERTED CAMERA FOR 2 MINUTES")
@@ -3119,6 +3135,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (mod-rule-deactivate-slot slot)
             ;; this rule was discarded by the twist before it could be followed or broken, so it no longer counts as rolled
             (set! (-> *MOD-stats-bank* rules-rolled) (max 0 (- (-> *MOD-stats-bank* rules-rolled) 1)))
+            (mod-rule-forget-roll! id)
             (let ((chosen (mod-rule-pick-weighted-id)))
               (if chosen
                 (begin
