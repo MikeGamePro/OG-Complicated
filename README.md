@@ -94,6 +94,7 @@
 | **HANG TIME** | STAY AIRBORNE FOR 3 CONSECUTIVE SECONDS. | Landing, grabbing a ledge, or entering goggles resets the progress.
 | **DO NO HARM** | DO NOT KILL ANY LURKERS. |
 | **SUPERCHARGED** | COLLECT BLUE ECO. |
+| **KEEP ROLLING** | ROLL 30 TIMES. |
 
 </details>
 <details>
@@ -132,13 +133,13 @@
 | **VIBE CHECK** | I LIKE YA CUT, G. | Jak gets smacked into the air and takes damage.
 | **INCOME TAX** | TIMER INCREMENTS ARE HALVED. | The additional time granted from cells, orbs, and flies is cut in half.
 | **MIRRORED** | THE WORLD IS MIRRORED. |
-| **ONE AND DONE** | JAK FORGOT HOW TO DOUBLE JUMP. |
+| **ONE AND DONE** | JAK AND FLUT FLUT FORGOT HOW TO DOUBLE JUMP. |
 | **UNBREAKABLE** | SCOUT FLY CRATES CAN ONLY BE BROKEN WITH ECO. | You will need to use either blue, yellow, or dark eco to break scout fly crates.
 | **GET A GRIP** | FOR EVERY X SECONDS A LEDGE IS NOT GRABBED, YOU DIE. | A timer counts down from X seconds; if it reaches 0, you die. Grabbing a ledge resets it. The time limit scales with your Time Limit Multiplier.
 | **FAST REEL** | YOUR REEL SPEED HAS INCREASED! | The fish during the fish minigame move faster.
 | **PALATE CHANGE** | EELS ARE GOOD, YELLOWS ARE BAD. | Their effects are swapped: eels grant 5 pounds, and yellows fail the minigame.
 | **JAK BE NIMBLE** | JAK BE QUICK. | Jak moves much faster.
-| **SOUL BOND** | KILLING A LURKER KILLS YOU TOO. |
+| **SOUL BOND** | IF A LURKER DIES, YOU DO TOO. |
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 | **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
 | **QUICKSAND** | TIMER DRAINS TWICE AS FAST WHILE ON SAND. |

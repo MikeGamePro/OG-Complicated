@@ -1818,6 +1818,7 @@
   :enter
     (behavior ()
       ;; (mod-rule-trigger-failure 'rule-red-light)
+      (mod-rule-counter-add-progress 'rule-keep-rolling 1)
       (set-time! (-> self state-time))
       (set! (-> self control mod-surface) *wheel-mods*)
       (+! (-> self control unknown-int50) 1)

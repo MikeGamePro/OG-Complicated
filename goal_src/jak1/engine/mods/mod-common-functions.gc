@@ -252,7 +252,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-quicksand
        'complication-lights-out
        'rule-supercharged
-       'complication-half-price))
+       'complication-half-price
+       'rule-keep-rolling))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -1108,6 +1109,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-lights-out) "LIGHTS OUT")
     ((eq? id 'rule-supercharged) "SUPERCHARGED")
     ((eq? id 'complication-half-price) "LIMITED TIME OFFER")
+    ((eq? id 'rule-keep-rolling) "KEEP ROLLING")
     (else "UNKNOWN")))
 
 (defun apply-time-limit-multiplier ((base-time time-frame))
@@ -1203,6 +1205,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-lights-out) "SORRY, WERE YOU USING THAT?")
     ((eq? id 'rule-supercharged) "COLLECT BLUE ECO.")
     ((eq? id 'complication-half-price) "POWER CELLS ARE 50% OFF!")
+    ((eq? id 'rule-keep-rolling) "ROLL 30 TIMES.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1287,6 +1290,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-lights-out) (seconds 30)) ;; 30
     ((eq? id 'rule-supercharged) (apply-time-limit-multiplier (seconds 25))) ;; 25
     ((eq? id 'complication-half-price) (seconds 20)) ;; 20
+    ((eq? id 'rule-keep-rolling) (seconds 35)) ;; 35
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1314,6 +1318,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-touch-grass) 'event-once)
     ((eq? id 'rule-hang-time) 'counter)
     ((eq? id 'rule-supercharged) 'event-once)
+    ((eq? id 'rule-keep-rolling) 'counter)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1327,6 +1332,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-green-pilled) 50)
     ((eq? id 'rule-sagging-sails) 3)
     ((eq? id 'rule-hang-time) 3)
+    ((eq? id 'rule-keep-rolling) 30)
     (else 0)))
 
 (defun mod-rule-type ((id symbol))
@@ -1367,7 +1373,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-touch-grass)
          (eq? id 'rule-hang-time)
          (eq? id 'rule-no-harm)
-         (eq? id 'rule-supercharged))
+         (eq? id 'rule-supercharged)
+         (eq? id 'rule-keep-rolling))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1841,7 +1848,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (not (or (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss) (eq? (current-level-name) 'lavatube)))
                (punishment-toggle-enabled? 'punishment-money)
                (mod-rule-punishment-rollable? 'punishment-money))
-      (let ((w 10))
+      (let ((w (if (>= (current-cell-count) 72) 5 10)))
         (+! running-total w)
         (when (< (mod-rand-punish-int-range 0 running-total) w)
           (set! selected 'punishment-money))))
@@ -2596,8 +2603,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              6))
           ;; Movement
+          ((eq? id 'complication-no-double-jump) (if on-racer 0 5))
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 5))
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 5))
+          ((eq? id 'rule-keep-rolling) (if (or is-minigame is-klaww (target-on-racer-or-flut?)) 0 4))
           ((eq? id 'complication-quicksand) (if (sand-level? level-name) 8 0))
           ((eq? id 'complication-invert) 4)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 6))
@@ -2750,6 +2759,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (eq? level-name 'training)
                    (eq? level-name 'finalboss)
                    (eq? level-name 'lavatube)
+                   is-minigame
                    (mod-rule-active? 'rule-loyal-customer)
                    (and (string= checkpoint-name "citadel-elevator")
                         (task-closed? (game-task citadel-sage-green) (task-status need-resolution))))
