@@ -2455,6 +2455,56 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (else #f))
       (string= (current-checkpoint-name) "ogre-start")))
 
+;; Pairs of rules that must never be active together
+(define *mod-rule-conflict-pairs*
+  (new 'static
+       'boxed-array
+       :type
+       symbol
+       'rule-sniper 'rule-flop-this
+       'rule-lurker-pressure 'rule-no-harm
+       'rule-lurker-pressure 'complication-soul-bond
+       'rule-hitlist 'rule-no-harm
+       'rule-double-kill 'rule-no-harm
+       'complication-soul-bond 'complication-disassociate
+       'rule-buzzer-pressure 'rule-distancing
+       'complication-fuel-shortage 'rule-loyal-customer
+       'rule-grounded 'rule-hang-time
+       'rule-grounded 'rule-qte
+       'rule-die 'rule-survivor
+       'rule-red-light 'rule-qte
+       'rule-management 'rule-qte
+       'rule-management 'complication-joyride
+       'rule-keep-it-low 'complication-joyride
+       'complication-sizeable 'complication-joyride
+       'complication-butter-fingers 'complication-joyride
+       'rule-keep-rolling 'complication-joyride
+       'complication-get-a-grip 'complication-joyride
+       'rule-math-quiz 'rule-trivia
+       'rule-landlubber 'complication-drought
+       'rule-buzzer-pressure 'complication-unbreakable
+       'rule-fuel-pressure 'complication-fuel-shortage
+       'complication-rotten-eggs 'rule-money-pressure
+       'rule-green-pilled 'complication-eco-allergy
+       'complication-get-a-grip 'rule-butter-fingers
+       'rule-red-light 'complication-bus-driver
+       'complication-fuel-shortage 'complication-wings-tied
+       'rule-for-billy 'rule-express-delivery
+       'rule-survivor 'complication-ohko
+       'rule-survivor 'complication-vibe-check
+       'complication-rotten-eggs 'rule-loyal-customer))
+
+(defun mod-rule-conflicts-with-active? ((id symbol))
+  (let ((i 0)
+        (hit #f))
+    (while (and (< i (-> *mod-rule-conflict-pairs* length)) (not hit))
+      (let ((a (-> *mod-rule-conflict-pairs* i))
+            (b (-> *mod-rule-conflict-pairs* (+ i 1))))
+        (when (or (and (= id a) (mod-rule-active? b)) (and (= id b) (mod-rule-active? a)))
+          (set! hit #t)))
+      (+! i 2))
+    hit))
+
 (defun mod-rule-roll-priority ((id symbol))
   (if (not (mod-rule-condition-enabled? id))
     0
@@ -2473,13 +2523,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted)))
         0
         (cond
+          ((mod-rule-conflicts-with-active? id) 0)
           ;; Resources
           ((eq? id 'rule-supercharged)
            (if (string= checkpoint-name "snow-fort") 6 (if (or is-minigame (sparse-blue-eco-level? level-name)) 0 6)))
           ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 5))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
-                   (mod-rule-active? 'rule-distancing)
                    is-minigame
                    is-klaww
                    (eq? level-name 'jungleb)
@@ -2499,8 +2549,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               0)
              ((or (eq? level-name 'village1)
                   (eq? level-name 'village2)
-                  (eq? level-name 'village3)
-                  (mod-rule-active? 'complication-fuel-shortage))
+                  (eq? level-name 'village3))
               3)
              (else 8)))
           ((eq? id 'rule-money-pressure)
@@ -2511,8 +2560,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (and (mod-cell-purchase-level? level-name)
                     (not (mod-oracles-closed? level-name))
                     (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
-                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 30)
-                    (not (mod-rule-active? 'complication-fuel-shortage)))
+                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 30))
              6
              0))
           ;; Enemies
@@ -2520,29 +2568,21 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
              ((eq? id 'complication-glare) 8)
-             ((or (target-fishing?)
-                  (mod-rule-active? 'rule-no-harm)
-                  (mod-rule-active? 'complication-soul-bond)
-                  (eq? level-name 'finalboss))
-              0)
+             ((or (target-fishing?) (eq? level-name 'finalboss)) 0)
              (else 8)))
-          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) (mod-rule-active? 'rule-no-harm) is-minigame) 0 7))
+          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 7))
           ((eq? id 'rule-double-kill)
            (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
                    is-minigame
                    is-klaww
                    (eq? level-name 'finalboss)
-                   (eq? level-name 'sunkenb)
-                   (mod-rule-active? 'rule-no-harm))
+                   (eq? level-name 'sunkenb))
              0
              7))
           ((eq? id 'rule-no-harm) ;; disabled
            (if (or (sparse-lurker-level? level-name)
                    is-minigame
                    is-klaww
-                   (mod-rule-active? 'rule-hitlist)
-                   (mod-rule-active? 'rule-lurker-pressure)
-                   (mod-rule-active? 'rule-double-kill)
                    (eq? level-name 'jungleb)
                    (eq? level-name 'finalboss))
              0
@@ -2551,27 +2591,23 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (sparse-lurker-level? level-name)
                    is-minigame
                    is-klaww
-                   (mod-rule-active? 'rule-lurker-pressure)
-                   (mod-rule-active? 'complication-disassociate)
                    (eq? level-name 'jungleb)
                    (string= checkpoint-name "sunkenb-helix")
                    (eq? level-name 'finalboss))
              0
              7))
           ((eq? id 'rule-sniper)
-           (if (and (not (mod-rule-active? 'rule-flop-this))
-                    (or (case level-name
-                          (('swamp 'beach 'snow 'robocave 'darkcave) #t)
-                          (else #f))
-                        (and (eq? level-name 'maincave) (not (task-closed? (game-task cave-gnawers) (task-status need-resolution))))))
+           (if (or (case level-name
+                     (('swamp 'beach 'snow 'robocave 'darkcave) #t)
+                     (else #f))
+                   (and (eq? level-name 'maincave) (not (task-closed? (game-task cave-gnawers) (task-status need-resolution)))))
              7
              0))
           ((eq? id 'rule-flop-this)
            (if (or (case level-name
                      (('training 'lavatube 'village3 'village2 'village1 'rolling 'ogre 'finalboss) #t)
                      (else #f))
-                   (target-billy-game?)
-                   (mod-rule-active? 'rule-sniper))
+                   (target-billy-game?))
              0
              9))
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 15))
@@ -2595,7 +2631,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 6)))
           ((or (eq? id 'complication-unbreakable) (eq? id 'rule-distancing))
            (if (or (< buzzer-left 1)
-                   (mod-rule-active? 'rule-buzzer-pressure)
                    is-klaww
                    (eq? level-name 'training)
                    (eq? level-name 'jungleb)
@@ -2606,7 +2641,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-no-double-jump) (if on-racer 0 5))
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 5))
           ((eq? id 'complication-jak-be-nimble) (if (target-on-racer-or-flut?) 0 5))
-          ((eq? id 'rule-keep-rolling) (if (or is-minigame is-klaww (target-on-racer-or-flut?)) 0 4))
+          ((eq? id 'rule-keep-rolling) (if (or is-minigame is-klaww racer-lavatube (sole-zoomer-level? level-name) (target-on-racer-or-flut?)) 0 4))
           ((eq? id 'complication-quicksand) (if (sand-level? level-name) 8 0))
           ((eq? id 'complication-invert) 4)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 6))
@@ -2614,8 +2649,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
              ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
-             ((or is-minigame (mod-rule-active? 'rule-survivor)) 0)
-             ((and (eq? id 'rule-grounded) (or (mod-rule-active? 'rule-hang-time) (mod-rule-active? 'rule-qte))) 0)
+             (is-minigame 0)
              ((and (eq? id 'rule-grounded) is-klaww) 2)
              ((eq? id 'rule-grounded) 6)
              ((or (eq? level-name 'beach) (eq? level-name 'rolling)) 3)
@@ -2623,17 +2657,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 5)))
           ((eq? id 'rule-red-light)
            (cond
-             ((or (mod-rule-active? 'rule-qte) is-minigame) 0)
+             (is-minigame 0)
              ((or (eq? level-name 'finalboss) is-klaww) 1)
              (else 3)))
           ((eq? id 'complication-butter-fingers) ;; disabled
            (cond
-             ((or (sole-zoomer-level? level-name) on-racer on-flut) 0)
+             ((or (sole-zoomer-level? level-name) (target-on-racer-or-flut?) racer-lavatube) 0)
              ((eq? level-name 'training) 3)
              (else 6)))
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
-           (if (or on-racer on-flut (sole-zoomer-level? level-name)) 0 6))
-          ((eq? id 'rule-management) (if (or on-racer on-flut (sole-zoomer-level? level-name) (mod-rule-active? 'rule-qte)) 0 6))
+           (if (or racer-lavatube (target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 6))
+          ((eq? id 'rule-management) (if (or racer-lavatube (target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 6))
           ((eq? id 'complication-bad-ping) (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 5))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 6))
@@ -2645,14 +2679,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 7)))
           ((eq? id 'rule-landlubber)
            (cond
-             ((mod-rule-active? 'complication-drought) 0)
              ((water-level? level-name) 6)
              ((or (eq? level-name 'misty)
                   (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave)))
               6)
              (else 0)))
           ;; Special
-          ((eq? id 'rule-hang-time) (if (or is-minigame (mod-rule-active? 'rule-grounded) (not (hang-time-level? level-name))) 0 5))
+          ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 5))
           ((eq? id 'complication-vibe-check)
            (cond
              (is-minigame 0)
@@ -2678,7 +2711,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    is-klaww
                    (eq? level-name 'finalboss)
                    (eq? level-name 'lavatube)
-                   (mod-rule-active? 'complication-joyride)
                    (mod-rule-timed-punishment-active? 'punishment-edge)
                    (target-on-racer-or-flut?))
              0
@@ -2702,8 +2734,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                         (grass-level? level-name)))
              9
              0))
-          ((eq? id 'rule-math-quiz) (if (or (mod-rule-active? 'rule-trivia) (eq? level-name 'training)) 0 3))
-          ((eq? id 'rule-trivia) (if (or (mod-rule-active? 'rule-math-quiz) (eq? level-name 'training)) 0 3))
+          ((eq? id 'rule-math-quiz) (if (eq? level-name 'training) 0 3))
+          ((eq? id 'rule-trivia) (if (eq? level-name 'training) 0 3))
           ((eq? id 'complication-overclock)
            (if (and (eq? level-name 'citadel) (not (string= checkpoint-name "citadel-elevator"))) 20 0))
           ((eq? id 'rule-one-frame)
@@ -2734,7 +2766,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              6))
           ((eq? id 'rule-survivor)
            (cond
-             ((or (mod-rule-active? 'rule-die) (eq? level-name 'training) (eq? level-name 'village1)) 0)
+             ((or (eq? level-name 'training) (eq? level-name 'village1)) 0)
              ((or (eq? level-name 'village1) (eq? level-name 'village2)) 3)
              (else 6)))
           ((eq? id 'complication-eco-allergy)
@@ -2753,14 +2785,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0))
           ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 6))
           ((eq? id 'complication-disassociate)
-           (if (and on-flut (not (or (mod-rule-active? 'complication-soul-bond) (sparse-lurker-level? level-name)))) 40 0))
+           (if (and on-flut (not (sparse-lurker-level? level-name))) 40 0))
           ((eq? id 'complication-wings-tied) (if (and on-flut (not (eq? level-name 'finalboss))) 20 0))
           ((eq? id 'complication-fuel-shortage)
            (if (or (eq? level-name 'training)
                    (eq? level-name 'finalboss)
                    (eq? level-name 'lavatube)
                    is-minigame
-                   (mod-rule-active? 'rule-loyal-customer)
                    (and (string= checkpoint-name "citadel-elevator")
                         (task-closed? (game-task citadel-sage-green) (task-status need-resolution))))
              0
@@ -2776,8 +2807,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0))
              0
              4))
-          ((eq? id 'rule-qte)
-           (if (or (mod-rule-active? 'rule-management) (mod-rule-active? 'rule-grounded) (mod-rule-active? 'rule-red-light)) 0 5))
+          ((eq? id 'rule-qte) 5)
           ((eq? id 'complication-lights-out)
            (case level-name
              (('maincave 'robocave) 10)
@@ -2789,6 +2819,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (mod-rule-condition-enabled? candidate)
        (not (mod-rule-active? candidate))
        (not (mod-rule-pending? candidate))
+       (not (mod-rule-conflicts-with-active? candidate))
        (not (and (eq? (mod-rule-type candidate) 'rule)
                  (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted))))
        (not (and (eq? candidate 'complication-twisted)
