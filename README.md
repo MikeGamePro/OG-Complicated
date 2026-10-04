@@ -139,7 +139,7 @@
 | **FAST REEL** | YOUR REEL SPEED HAS INCREASED! | The fish during the fish minigame move faster.
 | **PALATE CHANGE** | EELS ARE GOOD, YELLOWS ARE BAD. | Their effects are swapped: eels grant 5 pounds, and yellows fail the minigame.
 | **JAK BE NIMBLE** | JAK BE QUICK. | Jak moves much faster.
-| **SOUL BOND** | IF A LURKER DIES, YOU DO TOO. |
+| **SOUL BOND** | IF A LURKER DIES, YOU DIE TOO. |
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 | **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
 | **QUICKSAND** | TIMER DRAINS TWICE AS FAST WHILE ON SAND. |
