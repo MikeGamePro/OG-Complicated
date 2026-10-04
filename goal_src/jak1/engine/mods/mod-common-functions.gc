@@ -2476,7 +2476,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-fuel-pressure 'complication-fuel-shortage
        'complication-rotten-eggs 'rule-money-pressure
        'rule-green-pilled 'complication-eco-allergy
-       'complication-get-a-grip 'rule-butter-fingers
+       'complication-get-a-grip 'complication-butter-fingers
        'rule-red-light 'complication-bus-driver
        'complication-fuel-shortage 'complication-wings-tied
        'rule-for-billy 'rule-express-delivery
