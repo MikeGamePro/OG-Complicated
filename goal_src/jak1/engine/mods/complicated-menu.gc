@@ -1900,21 +1900,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [5] KLAWW ASSIST
-       (new 'static
-            'game-option
-            :option-type (game-option-type on-off)
-            :name (text-id complicated-opts-klaww-assist)
-            :scale #t
-            :on-change
-            (lambda ((val object))
-              (klaww-assist-changed! (the-as symbol val))
-              (none))
-            :on-confirm
-            (lambda ()
-              (commit-to-file *complicated-settings*)
-              (none)))
-       ;; [6] FISH ASSIST
+       ;; [5] FISH ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -1923,6 +1909,20 @@
             :on-change
             (lambda ((val object))
               (fish-assist-changed! (the-as symbol val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [6] KLAWW ASSIST
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-klaww-assist)
+            :scale #t
+            :on-change
+            (lambda ((val object))
+              (klaww-assist-changed! (the-as symbol val))
               (none))
             :on-confirm
             (lambda ()
@@ -2038,8 +2038,8 @@
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; Complicated options mappings
   (set! (-> *complicated-options* 4 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* klaww-assist?))
   (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* text-scale))
   ;; Punishment toggle mappings
   (set! (-> *punishment-toggle-options* 0 value-to-modify) (&-> *complicated-settings* punishment-toggle-fall-damage?))
