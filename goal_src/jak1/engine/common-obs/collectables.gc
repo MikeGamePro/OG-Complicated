@@ -730,6 +730,10 @@
           (ja-post)
           (with-pc
             (if (-> *pc-settings* money-starburst?) (spawn (-> self part) (-> self root root-prim world-sphere)))))
+        (if (and (-> self actor-pause)
+                 (not (logtest? (-> self flags) (collectable-flags trans)))
+                 (not (mod-rule-active? 'complication-hidden-treasure)))
+          (logior! (-> self mask) (process-mask actor-pause)))
         (suspend))))
 
 (defstate notice-blue (money)

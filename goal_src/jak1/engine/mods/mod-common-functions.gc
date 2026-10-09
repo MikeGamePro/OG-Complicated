@@ -674,13 +674,22 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-orb-weight-bank* last-applied-orbs) -1.0)
   (none))
 
-(defun refresh-money-actors ()
+(defun refresh-money-actors ((wake? symbol))
   (iterate-process-tree *active-pool*
                         (lambda ((p process))
                           (when (type-type? (-> p type) money)
                             (logclear! (-> (the-as money p) draw status) (draw-status hidden))
-                            (restore-collide-with-as (-> (the-as money p) root))))
-                        *null-kernel-context*))
+                            (restore-collide-with-as (-> (the-as money p) root)))
+                          #t)
+                        *null-kernel-context*)
+  (when wake?
+    (iterate-process-tree *active-pool*
+                          (lambda ((p process))
+                            (when (type-type? (-> p type) money)
+                              (logclear! (-> p mask) (process-mask actor-pause)))
+                            #t)
+                          *null-kernel-context*))
+  (none))
 
 (define *mod-rule-all-cell-tasks*
   (new 'static
@@ -1217,11 +1226,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hitlist) (apply-time-limit-multiplier (seconds 50))) ;; 50
     ((eq? id 'rule-double-kill) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-sniper) (apply-time-limit-multiplier (seconds 75))) ;; 75
-    ((eq? id 'rule-money-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
-    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
-    ((eq? id 'rule-buzzer-pressure) (apply-time-limit-multiplier (seconds 40))) ;; 40
+    ((eq? id 'rule-money-pressure) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-fuel-pressure) (apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-buzzer-pressure) (apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
-    ((eq? id 'complication-brittle-bones) (seconds 50)) ;; 50
+    ((eq? id 'complication-brittle-bones) (seconds 45)) ;; 45
     ((eq? id 'complication-rotten-eggs) (seconds 45)) ;; 45
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
     ((eq? id 'rule-keep-it-low) (seconds 90)) ;; 90
@@ -1950,7 +1959,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-reapply-slot-visual-effect ((id symbol))
   (cond
     ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #t))
-    ((eq? id 'complication-hidden-treasure) (refresh-money-actors))
+    ((eq? id 'complication-hidden-treasure) (refresh-money-actors #f))
     ((eq? id 'complication-cumbersome) (orb-weight-apply!))
     ((eq? id 'complication-interference) (when (mod-rule-low-res-should-apply?) (mod-rule-apply-low-res!)))
     ((eq? id 'complication-invisible-man)
@@ -2105,7 +2114,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (cond
           ((and *target* (or (eq? id 'complication-ohko) (eq? id 'rule-survivor)))
            (set! (-> (the-as fact-info-target (-> *target* fact)) health) 3.0))
-          ((eq? id 'complication-hidden-treasure) (refresh-money-actors))
+          ((eq? id 'complication-hidden-treasure) (refresh-money-actors #t))
           ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #f))
           ((eq? id 'complication-cumbersome) (orb-weight-reset!))
           ((eq? id 'complication-bad-ping) (input-delay-enable! #f 0.0))
@@ -2526,7 +2535,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((or (< fuel-left 1)
                   is-minigame
-                  is-klaww
+                  (eq? level-name 'ogre)
                   (eq? level-name 'jungleb)
                   (string= checkpoint-name "lavatube-start")
                   racer-lavatube
@@ -3197,33 +3206,36 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     result))
 
+(defun mod-rule-math-quiz-handle-input ()
+  (when (mod-rule-active? 'rule-math-quiz)
+    (when (cpad-pressed? 0 up)
+      (+! (-> *MOD-quiz-bank* math-current-guess) 1)
+      (sound-play "cursor-up-down"))
+    (when (cpad-pressed? 0 down)
+      (-! (-> *MOD-quiz-bank* math-current-guess) 1)
+      (sound-play "cursor-up-down"))
+    (when (cpad-pressed? 0 right)
+      (+! (-> *MOD-quiz-bank* math-current-guess) 5)
+      (sound-play "cursor-up-down"))
+    (when (cpad-pressed? 0 left)
+      (-! (-> *MOD-quiz-bank* math-current-guess) 5)
+      (sound-play "cursor-up-down"))
+    (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
+      (let ((slot (mod-rule-find-active-slot 'rule-math-quiz)))
+        (when (>= slot 0)
+          (mod-rule-resolve! slot
+                             (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
+                             #t)))))
+  (none))
+
 (defun mod-rule-update-math-quiz ()
+  (mod-rule-math-quiz-handle-input)
   (when (mod-rule-active? 'rule-math-quiz)
     (let ((slot (mod-rule-find-active-slot 'rule-math-quiz)))
-      (when (>= slot 0)
-        (let ((time-left (- (-> (-> *MOD-rule-slot-bank* slot-end-times) slot) (current-time))))
-          (when (<= time-left 0)
-            (mod-rule-resolve! slot
-                               (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
-                               #t)
-            (none))
-          (when (cpad-pressed? 0 up)
-            (+! (-> *MOD-quiz-bank* math-current-guess) 1)
-            (sound-play "cursor-up-down"))
-          (when (cpad-pressed? 0 down)
-            (-! (-> *MOD-quiz-bank* math-current-guess) 1)
-            (sound-play "cursor-up-down"))
-          (when (cpad-pressed? 0 right)
-            (+! (-> *MOD-quiz-bank* math-current-guess) 5)
-            (sound-play "cursor-up-down"))
-          (when (cpad-pressed? 0 left)
-            (-! (-> *MOD-quiz-bank* math-current-guess) 5)
-            (sound-play "cursor-up-down"))
-          (when (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2)))
-            (mod-rule-resolve! slot
-                               (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
-                               #t)
-            (none))))))
+      (when (and (>= slot 0) (<= (- (-> (-> *MOD-rule-slot-bank* slot-end-times) slot) (current-time)) 0))
+        (mod-rule-resolve! slot
+                           (if (= (-> *MOD-quiz-bank* math-current-guess) (-> *MOD-quiz-bank* math-answer)) 'success 'failed)
+                           #t))))
   (none))
 
 (defun mod-rule-reroll-id ((id symbol))
@@ -3488,44 +3500,49 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! (-> (-> *MOD-quiz-bank* trivia-shuffle-map) j) temp))))
   (none))
 
+(defun mod-rule-trivia-handle-input ()
+  (when (mod-rule-active? 'rule-trivia)
+    (let ((q-idx (-> *MOD-quiz-bank* trivia-current-question)))
+      (when (!= q-idx (-> *MOD-quiz-bank* trivia-last-tracked-question))
+        (set! (-> *MOD-quiz-bank* trivia-last-tracked-question) q-idx)
+        (shuffle-trivia-choices q-idx)
+        (set! (-> *MOD-quiz-bank* trivia-current-guess) -1)))
+    (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
+      (cond
+        ((< (-> *MOD-quiz-bank* trivia-current-guess) 0) (set! (-> *MOD-quiz-bank* trivia-current-guess) 0))
+        ((>= (-> *MOD-quiz-bank* trivia-current-guess) 3) (set! (-> *MOD-quiz-bank* trivia-current-guess) 0))
+        (else (+! (-> *MOD-quiz-bank* trivia-current-guess) 1)))
+      (sound-play "cursor-up-down"))
+    (when (or (cpad-pressed? 0 down) (cpad-pressed? 0 left))
+      (cond
+        ((<= (-> *MOD-quiz-bank* trivia-current-guess) 0) (set! (-> *MOD-quiz-bank* trivia-current-guess) 3))
+        (else (-! (-> *MOD-quiz-bank* trivia-current-guess) 1)))
+      (sound-play "cursor-up-down"))
+    (when (and (>= (-> *MOD-quiz-bank* trivia-current-guess) 0)
+               (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
+      (let ((slot (mod-rule-find-active-slot 'rule-trivia)))
+        (when (>= slot 0)
+          (mod-rule-resolve! slot
+                             (if (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) (-> *MOD-quiz-bank* trivia-current-guess))
+                                    (get-trivia-answer (-> *MOD-quiz-bank* trivia-current-question)))
+                               'success
+                               'failed)
+                             #t)))))
+  (none))
+
 (defun mod-rule-update-trivia ()
+  (mod-rule-trivia-handle-input)
   (when (mod-rule-active? 'rule-trivia)
     (let ((slot (mod-rule-find-active-slot 'rule-trivia)))
-      (when (>= slot 0)
-        (let* ((q-idx (-> *MOD-quiz-bank* trivia-current-question)))
-          (when (!= q-idx (-> *MOD-quiz-bank* trivia-last-tracked-question))
-            (set! (-> *MOD-quiz-bank* trivia-last-tracked-question) q-idx)
-            (shuffle-trivia-choices q-idx)
-            (set! (-> *MOD-quiz-bank* trivia-current-guess) -1))
-          (let* ((base-choice-idx (* q-idx 4))
-                 (time-left (- (-> (-> *MOD-rule-slot-bank* slot-end-times) slot) (current-time))))
-            (when (<= time-left 0)
-              (mod-rule-resolve! slot
-                                 (if (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) (-> *MOD-quiz-bank* trivia-current-guess)) (get-trivia-answer q-idx))
-                                   'success
-                                   'failed)
-                                 #t)
-              (none))
-            (when (or (cpad-pressed? 0 up) (cpad-pressed? 0 right))
-              (cond
-                ((< (-> *MOD-quiz-bank* trivia-current-guess) 0) (set! (-> *MOD-quiz-bank* trivia-current-guess) 0))
-                ((>= (-> *MOD-quiz-bank* trivia-current-guess) 3) (set! (-> *MOD-quiz-bank* trivia-current-guess) 0))
-                (else (+! (-> *MOD-quiz-bank* trivia-current-guess) 1)))
-              (sound-play "cursor-up-down"))
-            (when (or (cpad-pressed? 0 down) (cpad-pressed? 0 left))
-              (cond
-                ((<= (-> *MOD-quiz-bank* trivia-current-guess) 0) (set! (-> *MOD-quiz-bank* trivia-current-guess) 3))
-                (else (-! (-> *MOD-quiz-bank* trivia-current-guess) 1)))
-              (sound-play "cursor-up-down"))
-            (when (and (>= (-> *MOD-quiz-bank* trivia-current-guess) 0)
-                       (or (and (cpad-hold? 0 l2) (cpad-pressed? 0 r2)) (and (cpad-hold? 0 r2) (cpad-pressed? 0 l2))))
-              (mod-rule-resolve! slot
-                                 (if (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) (-> *MOD-quiz-bank* trivia-current-guess)) (get-trivia-answer q-idx))
-                                   'success
-                                   'failed)
-                                 #t)
-              (none))))))
-    (none)))
+      (when (and (>= slot 0) (<= (- (-> (-> *MOD-rule-slot-bank* slot-end-times) slot) (current-time)) 0))
+        (let ((guess (-> *MOD-quiz-bank* trivia-current-guess)))
+          (mod-rule-resolve! slot
+                             (if (and (>= guess 0)
+                                      (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) guess) (get-trivia-answer (-> *MOD-quiz-bank* trivia-current-question))))
+                               'success
+                               'failed)
+                             #t)))))
+  (none))
 
 (defun mod-rule-shift-all-timers! ((elapsed time-frame))
   (dotimes (slot *mod-rule-slot-count*)
@@ -3555,7 +3572,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (mod-rule-shift-all-timers! elapsed)
           (set! elapsed 0))
         (cond
-          ((global-countdown-paused?) (when (> elapsed 0) (mod-rule-shift-all-timers! elapsed)))
+          ((global-countdown-paused?)
+           (when (> elapsed 0)
+             (mod-rule-shift-all-timers! elapsed))
+           (mod-rule-math-quiz-handle-input)
+           (mod-rule-trivia-handle-input))
           (else
            ;; (+! (-> *MOD-countdown-bank* countup-timer) elapsed)
            (when (and (> (-> *MOD-rule-context-bank* mean-look-clear-time) 0)

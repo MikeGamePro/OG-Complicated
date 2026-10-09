@@ -458,19 +458,17 @@
            (s5-0 (-> arg3 param 3))
            (attack-type (-> arg3 param 1))) ; Capture the attack/event type
        (case attack-type
-         (('explode)
-          (if (not (and *target* (or (= (-> *target* state name) 'target-tube) (= (-> *target* state name) 'target-tube-jump))))
-            (mod-rule-trigger-failure 'rule-hands-on)))
+         (('explode) (if (not (= (-> arg0 type symbol) 'bully)) (mod-rule-trigger-failure 'rule-hands-on)))
          (('eco-yellow 'darkeco 'flut-bonk 'flut-attack 'racer) (mod-rule-trigger-failure 'rule-hands-on)))
        (case (-> self defense)
-        (('iron)
-        (case (if (and (mod-rule-active? 'complication-unbreakable)
-                        (!= attack-type 'eco-yellow)
-                        (!= attack-type 'darkeco)
-                        (not (and (= (-> arg0 type) target)
-                                  (target-has-eco-type? (pickup-type eco-red)))))
-                  'none
-                  attack-type)
+         (('iron)
+          (case (if
+             (and (mod-rule-active? 'complication-unbreakable)
+                  (!= attack-type 'eco-yellow)
+                  (!= attack-type 'darkeco)
+                  (not (and (= (-> arg0 type) target) (target-has-eco-type? (pickup-type eco-red)))))
+             'none
+             attack-type)
             (('flop 'uppercut 'explode 'darkeco 'eco-yellow 'bonk 'racer 'tube 'flut-bonk 'flut-attack)
              (if (and (logtest? (-> self fact options) (fact-options require-zoomer))
                       *target*
