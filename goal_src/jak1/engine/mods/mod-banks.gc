@@ -124,7 +124,8 @@
    (bus-driver-activate-time time-frame)
    (bus-driver-grace-period  time-frame)
    (shifty-next-time         time-frame)
-   (fisher-missed-count      int32)))
+   (fisher-missed      int32)
+   (fisher-caught     int32)))
 
 (define *MOD-rule-context-bank*
   (new 'static
@@ -145,7 +146,8 @@
        :bus-driver-activate-time 0
        :bus-driver-grace-period (seconds 2)
        :shifty-next-time 0
-       :fisher-missed-count 0))
+       :fisher-missed 0
+       :fisher-caught 0))
 
 (deftype mod-rng-bank (structure)
   ((content-state uint)

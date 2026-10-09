@@ -1072,7 +1072,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hands-on) "HANDS ON")
     ((eq? id 'complication-eco-reserve) "ECO RESERVE")
     ((eq? id 'complication-red-stop) "SEEING RED")
-    ((eq? id 'rule-one-frame) "ONE FRAME")
+    ((eq? id 'rule-one-frame) "SPIN TO WIN")
     ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
     ((eq? id 'rule-red-light) "RED LIGHT")
     ((eq? id 'complication-rgyb) "RGYB")
@@ -1576,7 +1576,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (if (>= (current-time) (-> (-> *MOD-rule-punishment-bank* timed-end-times) slot))
           (begin
             (mod-rule-end-timed-punishment punishment)
-            (mod-rule-clear-timed-punishment-slot slot))
+            (mod-rule-clear-timed-punishment-slot slot)
+            (sound-play "menu-stats"))
           (begin
             (when (and (eq? punishment 'punishment-trip) (>= (current-time) (-> (-> *MOD-rule-punishment-bank* timed-next-ticks) slot)))
               (set! (-> (-> *MOD-rule-punishment-bank* timed-next-ticks) slot)
@@ -2648,7 +2649,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
            (if (or racer-lavatube (target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 6))
           ((eq? id 'rule-management) (if (or racer-lavatube (target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 6))
-          ((eq? id 'complication-bad-ping) (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 5))
+          ((eq? id 'complication-bad-ping) (if (mod-rule-timed-punishment-active? 'punishment-delay) 0 4))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 6))
           ;; Water
@@ -2706,7 +2707,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              4))
           ((or (eq? id 'complication-fast-reel) (eq? id 'complication-palate-change)) (if (target-fishing?) 50 0))
-          ((eq? id 'rule-sagging-sails) (if (and (target-fishing?) (< (-> *MOD-rule-context-bank* fisher-missed-count) 5)) 50 0))
+          ((eq? id 'rule-sagging-sails)
+          (if (and (target-fishing?)
+                    (< (-> *MOD-rule-context-bank* fisher-missed) 5)
+                    (<= (-> *MOD-rule-context-bank* fisher-caught) 160))
+            50
+            0))
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 20 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))

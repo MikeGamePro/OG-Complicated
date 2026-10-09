@@ -1274,7 +1274,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [29] ONE FRAME
+       ;; [29] SPIN TO WIN
        (new 'static
             'game-option
             :option-type (game-option-type on-off)

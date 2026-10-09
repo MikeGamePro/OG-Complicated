@@ -73,7 +73,7 @@
 | **VENDETTA** | KILL A LURKER WITH RED ECO. |
 | **HANDS ON** | CRATES MAY ONLY BE BROKEN BY DIRECT CONTACT FROM JAK. | Jak must make direct contact with the crate. Using eco, Flut Flut, explosions, or the zoomer breaks this rule.
 | **STEP ONE** | STAY ALIVE. | Do not die.
-| **ONE FRAME** | DO A ONE-FRAME. | A one-frame is performed by spinning exactly 15 frames after jumping on a jump pad. This is toggled off for Simple and Complicated difficulties.
+| **SPIN TO WIN** | DO A ONE-FRAME. | A one-frame is performed by spinning exactly 15 frames after jumping on a jump pad. This is toggled off for Simple and Complicated difficulties.
 | **SOCIAL DISTANCING** | DO NOT GET WITHIN 8 METERS OF A SCOUT FLY. |
 | **RED LIGHT** | DO NOT MOVE. |
 | **FOR BILLY** | PROTECT FARTHY'S SNACKS. DO NOT LEAVE BOGGY SWAMP. | You must complete the rats minigame, and also not leave Boggy Swamp.
