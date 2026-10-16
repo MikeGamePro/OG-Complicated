@@ -143,7 +143,7 @@
 | **SOUL BOND** | IF A LURKER DIES, YOU DIE TOO. |
 | **SHIFTY** | JAK RANDOMLY TELEPORTS SHORT DISTANCES. | Jak will be slightly shifted in a random direction at random moments.
 | **INTERFERENCE** | ECO PIXELATES THE SCREEN. | The game resolution is reduced by 90% while you have an eco power-up.
-| **QUICKSAND** | TIMER DRAINS TWICE AS FAST WHILE ON SAND. |
+| **QUICKSAND** | THE TIMER DRAINS TWICE AS FAST WHILE YOU'RE ON SAND. |
 | **LIGHTS OUT** | SORRY, WERE YOU USING THAT? | Makes the level very dark. Only rolls in Spider Cave.
 | **LIMITED TIME OFFER** | POWER CELLS ARE 50% OFF! | Purchasing power cells from villagers and oracles costs half as much.
 

@@ -2859,7 +2859,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'misty))
              194
              0))
-          ((eq? id 'rule-side-to-side) (if is-klaww 753 0))
+          ((eq? id 'rule-side-to-side) (if is-klaww 640 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 41))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 32))
           ((eq? id 'complication-half-price) (if (half-price-level? level-name) 50 0))
@@ -2947,7 +2947,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-interference) (if (or (mod-target-fishing?) (eq? level-name 'village3)) 0 42)) ;; disabled
           ((eq? id 'complication-heating-balloons)
            (if (or (string= checkpoint-name "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 538 0))
-          ((eq? id 'complication-bus-driver) (if (or (string= checkpoint-name "firecanyon-start") on-racer) 258 0))
+          ((eq? id 'complication-bus-driver) (if (or (string= checkpoint-name "firecanyon-start") on-racer) 242 0))
           ((eq? id 'rule-speed) ;; disabled
            (if (or (and (or (eq? level-name 'ogre) (eq? level-name 'firecanyon) (string= checkpoint-name "lavatube-start")) on-racer)
                    (string= checkpoint-name "rolling-start"))
