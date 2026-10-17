@@ -1432,8 +1432,8 @@
              (label-width (the int (mod-string-width label-str passes-flags label-scale)))
              (credits-width (the int
                                  (mod-string-width (string-format "(~D/~D)" (-> *MOD-pass-bank* credits) (pass-credits-required-value))
-                                                        passes-flags
-                                                        credits-scale)))
+                                                   passes-flags
+                                                   credits-scale)))
              (center-x (+ (-> this text-x) (* (-> this x-sgn) (-> this offset))))
              (line-x (- center-x (/ (+ passes-width gap label-width) 2)))
              (credits-x (+ center-x 20 (- (/ credits-width 2))))

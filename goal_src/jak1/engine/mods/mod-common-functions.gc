@@ -111,9 +111,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defmacro current-cutscene ()
   `(-> *art-control* active-stream))
 
+;; fake button presses
 (defmacro set-cpad-pressed! (pad-idx &rest buttons)
   `(logior! (cpad-pressed ,pad-idx) (pad-buttons ,@buttons)))
 
+;; fake held buttons
 (defmacro set-cpad-hold! (pad-idx &rest buttons)
   `(logior! (cpad-hold ,pad-idx) (pad-buttons ,@buttons)))
 
@@ -267,6 +269,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
+;; True if every villager trade for this level group is already done.
 (defun mod-villagers-closed? ((level symbol))
   (cond
     ((or (eq? level 'village1) (eq? level 'beach))
@@ -283,6 +286,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (task-closed? (game-task village3-miner-money4) (task-status need-resolution))))
     (else #f)))
 
+;; True if every oracle trade for this level group is already done.
 (defun mod-oracles-closed? ((level symbol))
   (cond
     ((or (eq? level 'village1) (eq? level 'beach))
@@ -296,6 +300,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (task-closed? (game-task village3-oracle-money2) (task-status need-resolution))))
     (else #f)))
 
+;; Integer avalanche hash; scrambles a uint into a well-mixed one.
 (defun mod-rng-hash-u32 ((x uint))
   (set! x (logxor x (shr x 16)))
   (set! x (* x (the uint #x7feb352d)))
@@ -311,6 +316,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((imgui-seed (the uint (complicated-get-seed))))
     (if (!= imgui-seed 0) (logand imgui-seed (the uint #x7fffffff)) (logand (mod-rng-random-seed) (the uint #x7fffffff)))))
 
+;; Derive the two RNG stream states (content and punishment) from one master seed. Never leaves a state at 0.
 (defun mod-rng-seed-all! ((master-seed uint))
   (let ((content-hash (mod-rng-hash-u32 (+ master-seed (the uint 1))))
         (punish-hash (mod-rng-hash-u32 (+ master-seed (the uint 2)))))
@@ -318,6 +324,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *MOD-rng-bank* punish-state) (if (= punish-hash 0) (the uint 1) punish-hash)))
   (none))
 
+;; Advance the content RNG one xorshift32 step. Content (rule rolls, quizzes) and punishment use
+;; separate streams so one can't disturb the other.
 (defun mod-rng-content-next-u32 ()
   (let ((x (-> *MOD-rng-bank* content-state)))
     (set! x (logxor x (shl x 13)))
@@ -342,6 +350,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! r (mod-rng-content-next-u32)))
     (+ lo (the int (mod r bound)))))
 
+;; Same as mod-rand-int-range but uses the punishment stream.
 (defun mod-rand-punish-int-range ((lo int) (hi int))
   (let* ((bound (the uint (- hi lo)))
          (threshold (mod (- (the uint 0) bound) bound))
@@ -684,6 +693,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-orb-weight-bank* last-applied-orbs) -1.0)
   (none))
 
+;; Unhide every orb and restore its collision.
 (defun mod-refresh-money-actors ((wake? symbol))
   (iterate-process-tree *active-pool*
                         (lambda ((p process))
@@ -870,6 +880,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task village3-oracle-money1)
        (game-task village3-oracle-money2)))
 
+;; Bounds-checked array lookup; returns #f when idx is out of range.
 (defun mod-symbol-at ((ids (array symbol)) (idx int))
   (if (and (>= idx 0) (< idx (-> ids length))) (-> ids idx) #f))
 
@@ -888,6 +899,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! i 1))
     (the int result)))
 
+;; Inverse of mod-pack-symbols for a single slot's byte.
 (defun mod-unpack-symbol ((bits uint) (slot int) (ids (array symbol)))
   (mod-symbol-at ids (the int (logand (shr bits (* slot 8)) (the uint #xff)))))
 
@@ -925,9 +937,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define *mod-rule-follow-estimate* 40.0)
 
+;; Total seconds obtainable from every collectable at the current increment settings.
 (defun mod-collectable-inc-total ()
   (+ (* 101.0 (cell-increment-value)) (* 2000.0 (orb-increment-value)) (* 112.0 (fly-increment-value))))
 
+;; Collectable total + countdown start time + estimated compliance bonus.
 (defun mod-inc-total ()
   (+ (mod-collectable-inc-total)
      (countdown-start-seconds-value)
@@ -973,12 +987,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-game-beaten-save-value ()
   (if (-> *MOD-rule-context-bank* game-beaten?) 1 0))
 
-;; mod: setter used by other files (e.g. robotboss.gc, game-save.gc)
 (defun mod-game-beaten-set! ((val symbol))
   (set! (-> *MOD-rule-context-bank* game-beaten?) val)
   (none))
 
-;; mod: called by robotboss.gc when the final light eco is picked up
+;; Called when the final light eco is picked up.
 (defun mod-finalize-run-stats! ()
   (set! (-> *MOD-stats-bank* final-remaining-time) (-> *MOD-countdown-bank* remaining-time))
   (set! (-> *MOD-stats-bank* final-time) (-> *MOD-countdown-bank* countup-timer))
@@ -993,7 +1006,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('unfathomable) "Unfathomable")
     (else "Custom")))
 
-;; mod: called by pckernel.gc's update-discord-rpc
 (defun mod-discord-info-fill! ((info discord-info))
   (set! (-> info difficulty) (mod-difficulty-display-name))
   (set! (-> info countdown-active?) (-> *MOD-countdown-bank* active?))
@@ -1099,6 +1111,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-stats-bank* conditions-skipped) value)
   (none))
 
+;; Seconds lost by the time loss punishment. Baseline scaled by how generous the increments are.
 (defun mod-countdown-punishment-seconds ()
   (let* ((scaled (* (-> *MOD-tuning-bank* countdown-punishment-baseline-seconds)
                     (/ (mod-collectable-inc-total) (-> *MOD-tuning-bank* countdown-punishment-baseline-inc-total))))
@@ -1705,6 +1718,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (set! (-> (-> *MOD-rule-slot-bank* slot-progress) slot) 0)))))))
   (none))
 
+;; Mark a slot as pending a new roll.
 (defun mod-rule-schedule-slot ((slot int) (id symbol) (apply-buffer symbol))
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*) id)
     (set! (-> (-> *MOD-rule-slot-bank* pending-slots) slot) id)
@@ -1712,6 +1726,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (+ (current-time) (if apply-buffer (-> *MOD-tuning-bank* roll-buffer-time) 0))))
   (none))
 
+;; ID of the first active slot.
 (defun mod-rule-current-active-id ()
   (let ((slot 0)
         (found #f)
@@ -1724,6 +1739,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     result))
 
+;; Ticks remaining on the first active slot.
 (defun mod-rule-current-time-left ()
   (let ((slot 0)
         (found #f)
@@ -1736,6 +1752,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     result))
 
+;; True if any loaded level has a fuel-cell actor for this task.
 (defun mod-task-has-fuel-cell-entity? ((task game-task))
   (let ((level-idx 0)
         (found #f))
@@ -1964,6 +1981,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-target-has-eco-type? ((eco-type pickup-type))
   (the symbol (and *target* (= (-> *target* fact eco-type) eco-type) (>= (-> *target* fact eco-level) 1.0))))
 
+;; Toggle Jak's mesh invisibility by zeroing every effect's envmap-usage.
 (defun mod-target-mesh-invis-set! ((on symbol))
   (when (and on (not (-> *MOD-target-mesh-bank* invis-active?)))
     (set! (-> *MOD-target-mesh-bank* invis-active?) #t)
@@ -1991,6 +2009,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (set! idx (+ idx 1)))))))
   (none))
 
+;; True if an active slot already has this punishment assigned.
 (defun mod-punishment-used-by-active-slot? ((punishment symbol))
   (let ((slot 0)
         (used #f))
@@ -2008,6 +2027,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   `(when (and ,@conds (punishment-toggle-enabled? ',sym) (mod-punishment-rollable? ',sym))
     (let ((w ,weight)) (+! running-total w) (when (< (mod-rand-punish-int-range 0 running-total) w) (set! selected ',sym)))))
 
+;; Defaults to time loss if nothing else is chosen.
 (defun mod-random-available-punishment ((rule-id symbol))
   (let ((selected 'punishment-countdown)
         (running-total 0))
@@ -2094,6 +2114,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-set-platform-gravity! 'sunken *qbert-plat-constants* factor))
   (none))
 
+;; Apply or re-apply the one-time effect of a condition.
 (defun mod-rule-reapply-slot-visual-effect ((id symbol))
   (cond
     ((eq? id 'complication-mirror) (set! *mod-mirror-active?* #t))
@@ -2150,6 +2171,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((= typ (pickup-type eco-yellow)) (pickup-type eco-blue))
     (else typ)))
 
+;; RGYB: rebuild one eco pickup so it matches the current swap state.
 (defun mod-rule-rgyb-refresh-one ((p eco-collectable))
   (let* ((ent (-> p entity))
          (cluster? (and ent (nonzero? ent) (= (-> ent extra process) p)))
@@ -2183,6 +2205,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (deactivate p))))))))
   (none))
 
+;; RGYB: collect handles of all blue/yellow eco processes then refresh each.
 (defun mod-rule-rgyb-refresh-eco-clusters ()
   (process-spawn-function process
     (lambda ()
@@ -2198,7 +2221,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                               #f)
                             *null-kernel-context*)
       (dotimes (i *mod-rule-rgyb-count*)
-        (let ((p (the-as eco-collectable (handle->process (-> *mod-rule-rgyb-handles* i))))) (when p (mod-rule-rgyb-refresh-one p))))))
+        (let ((p (the-as eco-collectable (handle->process (-> *mod-rule-rgyb-handles* i)))))
+          (when p
+            (mod-rule-rgyb-refresh-one p))))))
   (none))
 
 (defun mod-rule-start-palate-change-grace! ()
@@ -2209,6 +2234,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-rule-palate-change-grace-active? ()
   (> (-> *MOD-rule-context-bank* palate-change-grace-until) (current-time)))
 
+;; (0 +, 1 -, 2 *)
 (defun mod-math-quiz-compute-answer! ()
   (cond
     ((= (-> *MOD-quiz-bank* math-op) 0)
@@ -2219,6 +2245,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (set! (-> *MOD-quiz-bank* math-answer) (* (-> *MOD-quiz-bank* math-val1) (-> *MOD-quiz-bank* math-val2)))))
   (none))
 
+;; Per-condition setup when it activates.
 (defun mod-rule-on-activate ((id symbol))
   (cond
     ((eq? id 'rule-qte) (set! (-> *MOD-rule-context-bank* qte-target-button) (mod-rand-int-range 0 4)))
@@ -2257,6 +2284,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-reapply-slot-visual-effect id)
   (none))
 
+;; Deactivate a slot and undo the condition's effects.
 (defun mod-rule-deactivate-slot ((slot int))
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*))
     (when (= slot (-> *MOD-rule-context-bank* twist-marked-slot))
@@ -2314,12 +2342,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-clear-slot slot))
   (none))
 
+;; Grace period after activation during which a failure is ignored.
 (defun mod-rule-grace-duration ((id symbol))
   (cond
     ((eq? id 'rule-side-to-side) (seconds 2))
     ((eq? id 'rule-qte) (seconds 0.7))
     (else (seconds 1.25))))
 
+;; Activate a condition in a slot. Useful!
 (defun mod-rule-activate-slot ((slot int) (id symbol))
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*) id)
     (mod-rule-deactivate-slot slot)
@@ -2354,6 +2384,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (mod-clear-timed-punishment-slot slot)))
   (none))
 
+;; Clear the ring buffer of enemy hits made by the player.
 (defun mod-clear-player-hit-cache ()
   (dotimes (idx 64)
     (set! (-> *MOD-hit-bank* player-hit-handles idx) (the-as handle #f))
@@ -2390,11 +2421,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) 0)
   (none))
 
+;; Full reset!
 (defun mod-rules-reset ()
   (mod-rules-reset-core)
   (mod-stats-reset!)
   (none))
 
+;; Stop the countdown process and clear rules after the game is beaten.
 (defun mod-global-countdown-freeze-for-game-beaten ()
   (kill-by-name 'global-countdown *active-pool*)
   (mod-rules-reset-core)
@@ -2402,6 +2435,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-countdown-bank* lost?) #f)
   (none))
 
+;; Format ticks as [H:]M:SS with 0-3 decimals.
 (defun mod-format-time-frame ((tf time-frame) (decimal-digits int) (hours-mode symbol))
   (let* ((ticks (max 0 (the int tf)))
          (total-seconds (the int (/ ticks (seconds 1))))
@@ -2469,6 +2503,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-target-billy-game? ()
   (if (not *target*) #f (let ((mode (send-event *target* 'query 'mode))) (= mode 'target-billy-game))))
 
+;; Push a rolled id onto the 8-entry recent-roll history.
 (defun mod-rule-record-roll! ((id symbol))
   (when id
     (let ((slot 7))
@@ -2478,6 +2513,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! (-> *mod-rule-recent-rolls* 0) id)))
   (none))
 
+;; Remove an id from the history (used when a rule is discarded by a twist).
 (defun mod-rule-forget-roll! ((id symbol))
   (when id
     (let ((slot 0)
@@ -2494,6 +2530,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (set! (-> *mod-rule-recent-rolls* 7) #f)))))
   (none))
 
+;; Recency factor: position in the history. Multiplied into a roll weight so recent rolls are less likely.
 (defun mod-rule-recent-roll-factor ((id symbol))
   (let ((slot 0)
         (factor 8)
@@ -2505,6 +2542,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1))
     factor))
 
+;; True in places where Jak is always on the zoomer.
 (defun sole-zoomer-level? ((level symbol))
   (or (string= (current-checkpoint-name) "firecanyon-start")
       (eq? level 'rolling)
@@ -2601,6 +2639,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (task-complete? *game-info* (game-task beach-flutflut))))
       (and (not (mod-target-on-flut?)) (or (eq? level 'sunken) (eq? level 'sunkenb)))))
 
+;; True if all villager and oracle cells in the area are bought.
 (defun mod-cells-purchased? ((level symbol))
   (and (mod-villagers-closed? level) (mod-oracles-closed? level)))
 
@@ -2657,8 +2696,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-survivor 'complication-vibe-check
        'complication-rotten-eggs 'rule-loyal-customer))
 
+;; True if the twist state forbids rolling this id (rules while a twist is pending/marked; twist while
+;; one is already in progress). Shared by weighted and fallback picking.
 (defun mod-rule-twist-blocks? ((id symbol))
-  "True if the twist state forbids rolling this id. Shared by the weighted and fallback paths so they cannot drift."
   (cond
     ((eq? (mod-rule-type id) 'rule)
      (or (>= (-> *MOD-rule-context-bank* twist-marked-slot) 0) (mod-rule-active? 'complication-twisted)))
@@ -2679,6 +2719,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! i 2))
     hit))
 
+;; Roll weight for a condition.
 (defun mod-rule-roll-priority ((id symbol))
   (if (not (mod-condition-enabled? id))
     0
@@ -2978,6 +3019,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           (else 35))))))
 
+;; Eligibility for the fallback roll: enabled, not active/pending, no conflict, not twist-blocked.
 (defun mod-rule-fallback-candidate? ((candidate symbol))
   (and candidate
        (mod-condition-enabled? candidate)
@@ -2986,6 +3028,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (not (mod-rule-conflicts-with-active? candidate))
        (not (mod-rule-twist-blocks? candidate))))
 
+;; Used when weights are all 0: uniformly pick one eligible enabled condition, or #f if none.
 (defun mod-rule-pick-fallback-id ()
   (let ((idx 0)
         (count 0))
@@ -3021,6 +3064,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((priority (-> *mod-rule-weight-scratch* idx)))
     (if (or (<= priority 0) ignore-recency?) priority (* priority (mod-rule-recent-roll-factor (mod-rule-id-from-index idx))))))
 
+;; Weighted random roll. If all are 0, retries ignoring recency; if still 0 uses the fallback.
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
         (total 0)
@@ -3115,6 +3159,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-reroll-slot (if (>= slot 0) slot (-> *MOD-rule-context-bank* current-slot)) apply-buffer))
   (none))
 
+;; Re-roll punishments for active rules.
 (defun mod-refresh-active-rule-punishments ()
   (when (mod-can-revert-collected-cell?)
     (dotimes (slot *mod-rule-slot-count*)
@@ -3205,6 +3250,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (if (= (/ ticks (seconds 60)) 1) "MINUTE" "MINUTES")
     (if (= (/ ticks (seconds 1)) 1) "SECOND" "SECONDS")))
 
+;; Build text like "LABEL 2 MINUTES" from a label and a punishment's duration.
 (defun mod-timed-punishment-text ((label string) (punishment symbol))
   (let ((d (mod-punishment-duration punishment)))
     (string-format "~S ~D ~S" label (mod-duration-amount d) (mod-duration-unit d))))
@@ -3380,6 +3426,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-rule-use-pass!))
   (none))
 
+;; When a twist lands, discard other active rules and re-roll replacements in those slots.
 (defun mod-rule-clear-other-active-rules! ((exclude-slot int))
   (let ((slot 0))
     (while (< slot *mod-rule-slot-count*)
@@ -3399,6 +3446,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (+! slot 1)))
   (none))
 
+;; Mark this slot as twisted, clear the pending count, and clear other rules.
 (defun mod-rule-twist-check-and-mark! ((slot int) (id symbol))
   (when (and (>= (-> *MOD-rule-context-bank* twist-pending-count) 0)
              (= (-> *MOD-stats-bank* rules-rolled) (-> *MOD-rule-context-bank* twist-pending-count)))
@@ -3414,6 +3462,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;;   (mod-rule-resolve! slot 'failed #f)
 ;;   (none))
 
+;; Slot timer ran out. Rules that fell short fail.
 (defun mod-rule-handle-slot-expiry ((slot int))
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*))
     (let ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
@@ -3670,20 +3719,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (and *setting-control* (-> *setting-control* current movie))
       (and *target* (logtest? (-> *target* state-flags) (state-flags grabbed)))))
 
+;; Step a value until it differs from the answer and the other two options.
 (defun mod-trivia-dynamic-dedup ((val int) (answer int) (other1 int) (other2 int) (step int))
   (while (or (= val answer) (= val other1) (= val other2))
     (set! val (+ val step)))
   val)
 
+;; Add or subtract mag from base (flips to add if the result would go negative).
 (defun mod-trivia-dynamic-delta ((base int) (mag int) (sign int))
   (if (= sign 0) (if (>= (- base mag) 0) (- base mag) (+ base mag)) (+ base mag)))
 
+;; Derive a wrong-answer value from the seed bits.
 (defun mod-trivia-dynamic-offset ((base int) (seed int) (shift int) (step int) (count int))
   (let* ((bits (shr seed shift))
          (mag (* step (+ 1 (mod (logand bits 7) count))))
          (sign (logand (shr bits 3) 1)))
     (mod-trivia-dynamic-delta base mag sign)))
 
+;; Build the choice string for a dynamic question (orbs collected, rules broken, etc).
 (defun mod-trivia-dynamic-choice-str ((answer int) (shuffled-idx int) (count int))
   (let* ((seed (-> *MOD-quiz-bank* trivia-dynamic-seed))
          (step-divisor 15)
@@ -3792,12 +3845,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (let ((guess (-> *MOD-quiz-bank* trivia-current-guess)))
           (mod-rule-resolve! slot
                              (if (and (>= guess 0)
-                                      (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) guess) (mod-get-trivia-answer (-> *MOD-quiz-bank* trivia-current-question))))
+                                      (= (-> (-> *MOD-quiz-bank* trivia-shuffle-map) guess)
+                                         (mod-get-trivia-answer (-> *MOD-quiz-bank* trivia-current-question))))
                                'success
                                'failed)
                              #t)))))
   (none))
 
+;; Push every timer forward by elapsed so paused time doesn't count.
 (defun mod-shift-all-timers! ((elapsed time-frame))
   (dotimes (slot *mod-rule-slot-count*)
     (when (-> (-> *MOD-rule-slot-bank* active-slots) slot)
@@ -3818,6 +3873,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* shifty-next-time) (+ (-> *MOD-rule-context-bank* shifty-next-time) elapsed))
   (none))
 
+;; Main rule loop.
 (defbehavior mod-rule-manager-proc process ()
   (when (not (-> *MOD-countdown-bank* lost?))
     (loop
@@ -3898,6 +3954,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (mod-rule-spawn-manager)
   (none))
 
+;; First active slot at or after start-slot, or -1.
 (defun mod-rule-nth-active-slot ((start-slot int))
   (let ((slot (max 0 start-slot)))
     (while (and (< slot *mod-rule-slot-count*) (not (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
@@ -3923,6 +3980,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (set! found i)))))
     found))
 
+;; Copy characters [start, end) of src into dst and terminate it.
 (defun mod-copy-range! ((dst string) (src string) (start int) (end int))
   (let ((j 0))
     (dotimes (i (- end start))
@@ -3931,6 +3989,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> dst data j) 0))
   dst)
 
+;; Draw a string with the menu text-scale multiplier applied.
 (defun mod-draw-string-xy-scaled ((str string) (buf dma-buffer) (x int) (y int) (color font-color) (flags font-flags) (scale float))
   (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier))))
 
@@ -3968,6 +4027,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)))))
   (none))
 
+;; Index to wrap a line at.
 (defun mod-wrap-point ((str string) (max-len int))
   (let ((len (length str)))
     (if (<= len max-len)
@@ -3986,6 +4046,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (defun mod-tenths-str ((val float))
   (let ((tenths (the int (* val 10.0)))) (string-format "~D.~D" (/ tenths 10) (mod tenths 10))))
 
+;; Draw text wrapped to at most two lines. Returns the next row y.
 (defun mod-rule-draw-wrapped! ((buf dma-buffer) (id symbol) (str string) (max-len int) (x int) (y int) (scale float) (row-step int))
   (let ((break-idx (mod-wrap-point str max-len))
         (dy (mod-scale-px row-step)))
@@ -4004,6 +4065,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-draw-string-xy-scaled value buf (mod-scale-px 66) value-y (font-color white) (font-flags shadow kerning large) 0.4)
     (+ value-y (mod-scale-px 8))))
 
+;; Draw one slot's HUD block: name, description, punishment, progress, timer,
+;; pass hint, plus extras for some rules (distance, last kill, etc). Returns the next row y.
 (defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int))
   (let* ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot))
          (punishment (-> (-> *MOD-rule-slot-bank* slot-punishments) slot))
@@ -4152,6 +4215,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (+! row-count 1))))))
   (none))
 
+;; (good job, broken, twisted, pass)
 (defun mod-rule-draw-last-outcome ((buf dma-buffer) (y int))
   (cond
     ((eq? (-> *MOD-rule-context-bank* last-outcome) 'success)
@@ -4187,6 +4251,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                  0.6)))
   (none))
 
+;; Draw the whole HUD.
 (defun mod-global-countdown-draw ()
   (cond
     ((-> *MOD-countdown-bank* active?)
@@ -4273,6 +4338,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (font-flags shadow kerning large) 1.0)))
   (none))
 
+;; Countdown loop: advance timers and draw the HUD every frame.
 (defbehavior mod-global-countdown-proc process ()
   (loop
     (when (and (-> *MOD-countdown-bank* active?) (not (-> *MOD-countdown-bank* lost?)))
@@ -4516,9 +4582,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-timed-punishments-save-value ()
-  (mod-pack-symbols (-> *MOD-punishment-bank* timed-punishments)
-                    *mod-punishment-ids*
-                    *mod-timed-punishment-slot-count*))
+  (mod-pack-symbols (-> *MOD-punishment-bank* timed-punishments) *mod-punishment-ids* *mod-timed-punishment-slot-count*))
 
 (defun mod-timed-punishment-times-save-value ((group int))
   (let ((result (the uint 0))
@@ -4543,8 +4607,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (slot 0))
     (while (< slot *mod-timed-punishment-slot-count*)
       (let ((idx (if legacy? (the int (logand (shr bits (* slot 4)) (the uint #xf))) (the int (logand (shr bits (* slot 8)) (the uint #xff))))))
-        (set! (-> (-> *MOD-punishment-bank* timed-saved-ids) slot)
-              (if (= idx empty-val) #f (mod-punishment-id-from-index idx))))
+        (set! (-> (-> *MOD-punishment-bank* timed-saved-ids) slot) (if (= idx empty-val) #f (mod-punishment-id-from-index idx))))
       (+! slot 1)))
   (none))
 
@@ -4729,6 +4792,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     :name 'global-countdown)
   (none))
 
+;; Start a new run.
 (defun global-countdown-start ()
   (let ((active-seed (mod-rng-active-seed)))
     (mod-rng-seed-all! active-seed)
