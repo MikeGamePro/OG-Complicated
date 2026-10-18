@@ -830,12 +830,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task beach-buzzer)
        (game-task misty-buzzer)
        (game-task jungle-buzzer)
-       (game-task jungle-lurkerm)
+      ;;  (game-task jungle-lurkerm)
        (game-task firecanyon-buzzer)
        (game-task sunken-buzzer)
        (game-task rolling-buzzer)
-       (game-task rolling-moles)
-       (game-task rolling-race)
+      ;;  (game-task rolling-moles)
+      ;;  (game-task rolling-race)
        (game-task swamp-buzzer)
        (game-task ogre-buzzer)
        (game-task snow-buzzer)
@@ -850,7 +850,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        (game-task beach-pelican)
        (game-task beach-seagull)
        (game-task misty-cannon)
-       (game-task misty-muse)
+      ;;  (game-task misty-muse)
        (game-task misty-bike)
        (game-task rolling-robbers)
        (game-task rolling-plants)
@@ -2741,8 +2741,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((mod-rule-conflicts-with-active? id) 0)
           ;; Resources
           ((eq? id 'rule-supercharged)
-           (if (string= checkpoint-name "snow-fort") 116 (if (or is-minigame (sparse-blue-eco-level? level-name)) 0 69)))
-          ((eq? id 'complication-critical) (if (or (< fuel-left 1) (eq? level-name 'finalboss)) 0 50))
+           (if (string= checkpoint-name "snow-fort") 116 (if (or is-minigame (and (mod-rule-active? 'complication-rgyb) (not (yellow-eco-level? level-name))) (sparse-blue-eco-level? level-name)) 0 69)))
+          ((eq? id 'complication-critical) (if (or is-minigame (< fuel-left 1) (eq? level-name 'finalboss)) 0 50))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
                    is-minigame
@@ -2850,7 +2850,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 50))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
-             ((or (eq? level-name 'training) (eq? level-name 'finalboss)) 0)
+             ((or (eq? level-name 'training) (string= checkpoint-name "finalboss-fight")) 0)
              (is-minigame 0)
              ((and (eq? id 'rule-grounded) is-klaww) 16)
              ((eq? id 'rule-grounded) 40)
@@ -2860,7 +2860,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-red-light)
            (cond
              (is-minigame 0)
-             ((or (eq? level-name 'finalboss) is-klaww) 9)
+             ((or (string= checkpoint-name "finalboss-fight") is-klaww) 9)
              (else 26)))
           ((eq? id 'complication-butter-fingers) ;; disabled
            (cond
@@ -2892,7 +2892,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 85))
           ((eq? id 'complication-vibe-check)
            (cond
-             (is-minigame 0)
+             (is-minigame (string= checkpoint-name "finalboss-fight") 0)
              ((< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 40)
              (else 20)))
           ((eq? id 'rule-express-delivery)
