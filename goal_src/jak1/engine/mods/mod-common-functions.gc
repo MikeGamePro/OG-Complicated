@@ -265,7 +265,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-lights-out
        'rule-supercharged
        'complication-half-price
-       'rule-keep-rolling))
+       'rule-keep-rolling
+       'complication-energy-boost
+       'rule-uncharted
+       'rule-bonecracker))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -959,19 +962,26 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (score-weight 0.8)
          (conditions-weight 0.055)
          (punishments-weight 0.012)
+         (completion-baseline 69.0)
+         (completion-weight 0.05)
+         (completion (calculate-completion (the-as progress #f)))
+         (completion-factor (+ 1.0 (* completion-weight (- (/ completion completion-baseline) 1.0))))
          (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
          (effective-conditions-mult (+ 1.0 (* (- 1.0 (mod-enabled-condition-fraction)) conditions-weight)))
          (effective-punishments-mult (+ 1.0 (* (- 1.0 (mod-punishment-toggle-enabled-fraction)) punishments-weight)))
          (score 0.0))
     (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
     (let ((base-score (* max-score (+ (* time-weight time-factor) (* score-weight (- 1.0 inc-norm))))))
-      (set! score (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult)))
+      (set! score
+            (* completion-factor (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult))))
     (format #t
-            "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f "
+            "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f completion ~f completion-factor ~f "
             inc-total
             inc-norm
             final-time-seconds
-            time-factor)
+            time-factor
+            completion
+            completion-factor)
     (format #t
             "eff-mult ~f eff-cond-mult ~f eff-punish-mult ~f score ~f~%"
             effective-mult
@@ -1224,6 +1234,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-supercharged) "SUPERCHARGED")
     ((eq? id 'complication-half-price) "LIMITED TIME OFFER")
     ((eq? id 'rule-keep-rolling) "KEEP ROLLING")
+    ((eq? id 'complication-energy-boost) "ENERGY BOOST")
+    ((eq? id 'rule-uncharted) "UNCHARTED")
+    ((eq? id 'rule-bonecracker) "BONECRACKER")
     (else "UNKNOWN")))
 
 (defun mod-apply-time-limit-multiplier ((base-time time-frame))
@@ -1321,6 +1334,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-supercharged) "COLLECT BLUE ECO.")
     ((eq? id 'complication-half-price) "POWER CELLS ARE 50% OFF!")
     ((eq? id 'rule-keep-rolling) "ROLL 30 TIMES.")
+    ((eq? id 'complication-energy-boost) "HAVE SOME ECO.")
+    ((eq? id 'rule-uncharted) "ENTER AN AREA YOU HAVE NOT BEEN TO YET.")
+    ((eq? id 'rule-bonecracker) "KNOCK DOWN A BONE BRIDGE.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1406,6 +1422,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-supercharged) (mod-apply-time-limit-multiplier (seconds 25))) ;; 25
     ((eq? id 'complication-half-price) (seconds 20)) ;; 20
     ((eq? id 'rule-keep-rolling) (seconds 35)) ;; 35
+    ((eq? id 'complication-energy-boost) (seconds 5)) ;; 5
+    ((eq? id 'complication-uncharted) (mod-apply-time-limit-multiplier (seconds 30))) ;; 30
+    ((eq? id 'rule-bonecracker) (mod-apply-time-limit-multiplier (seconds 35))) ;; 35
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1434,6 +1453,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hang-time) 'counter)
     ((eq? id 'rule-supercharged) 'event-once)
     ((eq? id 'rule-keep-rolling) 'counter)
+    ((eq? id 'rule-bonecracker) 'event-once)
     (else 'none)))
 
 (defun mod-rule-counter-goal ((id symbol))
@@ -1488,7 +1508,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-hang-time)
          (eq? id 'rule-no-harm)
          (eq? id 'rule-supercharged)
-         (eq? id 'rule-keep-rolling))
+         (eq? id 'rule-keep-rolling)
+         (eq? id 'rule-uncharted)
+         (eq? id 'rule-bonecracker))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -1532,7 +1554,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'complication-interference)
          (eq? id 'complication-quicksand)
          (eq? id 'complication-lights-out)
-         (eq? id 'complication-half-price))
+         (eq? id 'complication-half-price)
+         (eq? id 'complication-energy-boost))
      'complication)
     (else 'unknown)))
 
@@ -2269,6 +2292,25 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (and (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) (mod-target-on-racer?))
              (target-attack-up *target* 'attack 'explode)
              (send-event *target* 'attack #f (static-attack-info ((shove-back (meters 999)) (shove-up (meters 20))))))))))
+    ((eq? id 'complication-energy-boost)
+     (let* ((no-green? (and *target*
+                            (let ((fact (the-as fact-info-target (-> *target* fact))))
+                              (and (>= (-> fact health) (-> fact health-max)) (>= (-> fact eco-pill) (-> *FACT-bank* eco-pill-max-default))))))
+        (pick (mod-rand-int-range 0 (if no-green? 3 4)))
+        (eco-type
+          (case pick
+            ((0) (pickup-type eco-red))
+            ((1) (pickup-type eco-blue))
+            ((2) (pickup-type eco-yellow))
+            (else (pickup-type eco-green)))))
+       (when *target*
+         (if (= eco-type (pickup-type eco-blue))
+           (begin
+             (protect ((-> *target* event-hook))
+               (set! (-> *target* event-hook) target-generic-event-handler)
+               (send-event *target* 'get-pickup eco-type (-> *FACT-bank* eco-full-inc)))
+             (send-event *target* 'boost (-> *FACT-bank* eco-single-inc)))
+           (send-event *target* 'get-pickup eco-type (-> *FACT-bank* eco-full-inc))))))
     ((eq? id 'rule-trivia)
      (set! (-> *MOD-quiz-bank* trivia-current-question) (mod-trivia-pick-question))
      (set! (-> *MOD-quiz-bank* trivia-current-guess) -1)
@@ -2824,6 +2866,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              85))
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 290))
+          ((eq? id 'rule-bonecracker) (if (eq? level-name 'misty) 150 0)) ;; disabled
           ((eq? id 'complication-eco-reserve)
            (cond
              ((or (eq? level-name 'finalboss) is-klaww) 110)
@@ -3020,6 +3063,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 42)))
           ((eq? id 'complication-twisted) 40)
           ((eq? id 'rule-qte) 35)
+          ((eq? id 'complication-energy-boost) is-minigame 0 35)
+          ((eq? id 'rule-uncharted) 0) ;; disabled
           ((eq? id 'complication-lights-out)
            (case level-name
              (('maincave 'robocave) 321)
@@ -3029,6 +3074,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; Eligibility for the fallback roll: enabled, not active/pending, no conflict, not twist-blocked.
 (defun mod-rule-fallback-candidate? ((candidate symbol))
   (and candidate
+       (or (not (eq? candidate 'rule-bonecracker)) (eq? (the symbol (current-level-name)) 'misty))
        (mod-condition-enabled? candidate)
        (not (mod-rule-active? candidate))
        (not (mod-rule-pending? candidate))

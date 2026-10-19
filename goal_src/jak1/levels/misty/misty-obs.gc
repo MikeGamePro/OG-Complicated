@@ -7,6 +7,8 @@
 
 ;; DECOMP BEGINS
 
+(define-extern mod-rule-counter-add-progress (function symbol int none))
+
 (defpartgroup group-windturbine-particles
   :id 191
   :bounds (static-bspherem 0 0 0 12)
@@ -1110,6 +1112,7 @@
     (behavior ((arg0 symbol))
       (process-entity-status! self (entity-perm-status complete) #t)
       (when (not arg0)
+        (mod-rule-counter-add-progress 'rule-bonecracker 1)
         (process-spawn part-tracker
                        :init
                        part-tracker-init

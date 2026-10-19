@@ -124,6 +124,9 @@
    (rule-supercharged? symbol)
    (complication-half-price? symbol)
    (rule-keep-rolling? symbol)
+   (rule-uncharted? symbol)
+   (complication-energy-boost? symbol)
+   (rule-bonecracker? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -244,6 +247,9 @@
   (set! (-> obj rule-supercharged?) #t)
   (set! (-> obj complication-half-price?) #t)
   (set! (-> obj rule-keep-rolling?) #f)
+  (set! (-> obj rule-uncharted?) #f)
+  (set! (-> obj complication-energy-boost?) #t)
+  (set! (-> obj rule-bonecracker?) #f)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -465,6 +471,9 @@
                                           (("rule-supercharged?") (set! (-> obj rule-supercharged?) (file-stream-read-symbol file)))
                                           (("complication-half-price?") (set! (-> obj complication-half-price?) (file-stream-read-symbol file)))
                                           (("rule-keep-rolling?") (set! (-> obj rule-keep-rolling?) (file-stream-read-symbol file)))
+                                          (("rule-uncharted?") (set! (-> obj rule-uncharted?) (file-stream-read-symbol file)))
+                                          (("complication-energy-boost?") (set! (-> obj complication-energy-boost?) (file-stream-read-symbol file)))
+                                          (("rule-bonecracker?") (set! (-> obj rule-bonecracker?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -600,6 +609,9 @@
     (format file "  (rule-supercharged? ~A)~%" (-> obj rule-supercharged?))
     (format file "  (complication-half-price? ~A)~%" (-> obj complication-half-price?))
     (format file "  (rule-keep-rolling? ~A)~%" (-> obj rule-keep-rolling?))
+    (format file "  (rule-uncharted? ~A)~%" (-> obj rule-uncharted?))
+    (format file "  (complication-energy-boost? ~A)~%" (-> obj complication-energy-boost?))
+    (format file "  (rule-bonecracker? ~A)~%" (-> obj rule-bonecracker?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1897,6 +1909,35 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [81] UNCHARTED (disabled)
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-uncharted)
+            :scale #t
+            :option-disabled-func
+            (lambda ()
+              #t))
+       ;; [82] ENERGY BOOST
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-complication-energy-boost)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [83] BONECRACKER
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-bonecracker)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -2244,6 +2285,9 @@
   (set! (-> *condition-toggle-options* 78 value-to-modify) (&-> *complicated-settings* rule-supercharged?))
   (set! (-> *condition-toggle-options* 79 value-to-modify) (&-> *complicated-settings* complication-half-price?))
   (set! (-> *condition-toggle-options* 80 value-to-modify) (&-> *complicated-settings* rule-keep-rolling?))
+  (set! (-> *condition-toggle-options* 81 value-to-modify) (&-> *complicated-settings* rule-uncharted?))
+  (set! (-> *condition-toggle-options* 82 value-to-modify) (&-> *complicated-settings* complication-energy-boost?))
+  (set! (-> *condition-toggle-options* 83 value-to-modify) (&-> *complicated-settings* rule-bonecracker?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2395,4 +2439,7 @@
          ((eq? id 'rule-supercharged) (-> *complicated-settings* rule-supercharged?))
          ((eq? id 'complication-half-price) (-> *complicated-settings* complication-half-price?))
          ((eq? id 'rule-keep-rolling) (-> *complicated-settings* rule-keep-rolling?))
+         ((eq? id 'rule-uncharted) (-> *complicated-settings* rule-uncharted?))
+         ((eq? id 'complication-energy-boost) (-> *complicated-settings* complication-energy-boost?))
+         ((eq? id 'rule-bonecracker) (-> *complicated-settings* rule-bonecracker?))
          (else #t))))
