@@ -126,7 +126,8 @@
   :enter
     (behavior ()
       (blocking-plane-destroy)
-      (if (not *allow-flutflut-anywhere*) (blocking-plane-spawn (the-as curve-control (-> self path-target))))
+      (if (and (not *allow-flutflut-anywhere*) (not (mod-rule-active? 'complication-joyride)))
+        (blocking-plane-spawn (the-as curve-control (-> self path-target))))
       (none))
   :exit
     (-> (method-of-type flutflut wait-for-start)
@@ -204,7 +205,8 @@
   :enter
     (behavior ()
       (blocking-plane-destroy)
-      (if (not *allow-flutflut-anywhere*) (blocking-plane-spawn (the-as curve-control (-> self path-flut))))
+      (if (and (not *allow-flutflut-anywhere*) (not (mod-rule-active? 'complication-joyride)))
+        (blocking-plane-spawn (the-as curve-control (-> self path-flut))))
       (none))
   :code
     (behavior ()
@@ -248,7 +250,7 @@
   (set! (-> this auto-get-off) #f)
   (move-to-ground (-> this root) 40960.0 40960.0 #t (collide-kind background))
   (set! (-> this cell) (the-as handle #f))
-  (if (not *allow-flutflut-anywhere*)
+  (if (and (not *allow-flutflut-anywhere*) (not (mod-rule-active? 'complication-joyride)))
     (blocking-plane-spawn (the-as curve-control
                                   (if (and *target* (logtest? (-> *target* control root-prim prim-core action) (collide-action flut)))
                                     (-> this path-flut)

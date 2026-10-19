@@ -8,6 +8,8 @@
 
 (define-extern mod-rule-active? (function symbol symbol))
 
+(define-extern mod-rule-counter-add-progress (function symbol int none))
+
 (define-extern mod-timed-punishment-active? (function symbol symbol))
 
 ;; DECOMP BEGINS
@@ -41,8 +43,11 @@
                (set! (-> self fact buzzer) 0.0)
                (set! (-> self fact buzzer)
                      (pickup-collectable! (-> self fact) (pickup-type buzzer) (the float (logior -65536 v1-22)) (the-as handle #f)))))
-           (if (and (zero? (-> *game-info* enter-level-time (-> s5-1 index))) (>= (-> *level-task-data-remap* length) (-> s5-1 index)))
-             (set-time! (-> *game-info* enter-level-time (-> *level-task-data-remap* (+ (-> s5-1 index) -1))))))
+           (when (and (> (-> s5-1 index) 0) (>= (-> *level-task-data-remap* length) (-> s5-1 index)))
+             (let ((level-index (-> *level-task-data-remap* (+ (-> s5-1 index) -1))))
+               (when (zero? (-> *game-info* enter-level-time level-index))
+                 (mod-rule-counter-add-progress 'rule-uncharted 1)
+                 (set-time! (-> *game-info* enter-level-time level-index))))))
          (send-event (ppointer->process (-> *hud-parts* buzzers)) 'sync)
          (format #t "GAMEPLAY: enter ~A~%" (-> arg3 param 0)))))
     (('get-attack-count)

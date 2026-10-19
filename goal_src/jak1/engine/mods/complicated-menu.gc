@@ -247,7 +247,7 @@
   (set! (-> obj rule-supercharged?) #t)
   (set! (-> obj complication-half-price?) #t)
   (set! (-> obj rule-keep-rolling?) #f)
-  (set! (-> obj rule-uncharted?) #f)
+  (set! (-> obj rule-uncharted?) #t)
   (set! (-> obj complication-energy-boost?) #t)
   (set! (-> obj rule-bonecracker?) #f)
   (set! (-> obj cell-increment) 30.0)
@@ -1909,15 +1909,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [81] UNCHARTED (disabled)
+       ;; [81] UNCHARTED
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
             :name (text-id complicated-opts-cond-rule-uncharted)
             :scale #t
-            :option-disabled-func
+            :on-confirm
             (lambda ()
-              #t))
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [82] ENERGY BOOST
        (new 'static
             'game-option
