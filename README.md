@@ -96,6 +96,8 @@
 | **DO NO HARM** | DO NOT KILL ANY LURKERS. |
 | **SUPERCHARGED** | COLLECT BLUE ECO. |
 | **KEEP ROLLING** | ROLL 30 TIMES. |
+| **BONECRACKER** | KNOCK DOWN A BONE BRIDGE. |
+| **UNCHARTED** | VISIT A LEVEL YOU HAVE NOT BEEN TO YET. |
 
 </details>
 <details>
@@ -146,6 +148,7 @@
 | **QUICKSAND** | THE TIMER DRAINS TWICE AS FAST WHILE YOU'RE ON SAND. |
 | **LIGHTS OUT** | SORRY, WERE YOU USING THAT? | Makes the level very dark. Only rolls in Spider Cave.
 | **LIMITED TIME OFFER** | POWER CELLS ARE 50% OFF! | Purchasing power cells from villagers and oracles costs half as much.
+| **ENERGY BOOST** | HAVE SOME ECO. | Gives a full meter of a random eco type (red, green, blue, or yellow).
 
 </details>
 
