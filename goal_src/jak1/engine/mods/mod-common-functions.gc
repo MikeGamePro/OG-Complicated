@@ -1422,7 +1422,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-supercharged) (mod-apply-time-limit-multiplier (seconds 25))) ;; 25
     ((eq? id 'complication-half-price) (seconds 20)) ;; 20
     ((eq? id 'rule-keep-rolling) (seconds 35)) ;; 35
-    ((eq? id 'complication-energy-boost) (seconds 5)) ;; 5
+    ((eq? id 'complication-energy-boost) (seconds 4)) ;; 4
     ((eq? id 'rule-uncharted) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-bonecracker) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     (else (seconds 30))))
@@ -3105,7 +3105,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 42)))
           ((eq? id 'complication-twisted) 40)
           ((eq? id 'rule-qte) 35)
-          ((eq? id 'complication-energy-boost) is-minigame 0 35)
+          ((eq? id 'complication-energy-boost) (if is-minigame 0 35))
           ((eq? id 'complication-lights-out)
            (case level-name
              (('maincave 'robocave) 321)
