@@ -127,6 +127,7 @@
    (rule-uncharted? symbol)
    (complication-energy-boost? symbol)
    (rule-bonecracker? symbol)
+   (rule-orb-hunt? symbol)
    (cell-increment float)
    (orb-increment float)
    (fly-increment float)
@@ -250,6 +251,7 @@
   (set! (-> obj rule-uncharted?) #t)
   (set! (-> obj complication-energy-boost?) #t)
   (set! (-> obj rule-bonecracker?) #f)
+  (set! (-> obj rule-orb-hunt?) #t)
   (set! (-> obj cell-increment) 30.0)
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
@@ -474,6 +476,7 @@
                                           (("rule-uncharted?") (set! (-> obj rule-uncharted?) (file-stream-read-symbol file)))
                                           (("complication-energy-boost?") (set! (-> obj complication-energy-boost?) (file-stream-read-symbol file)))
                                           (("rule-bonecracker?") (set! (-> obj rule-bonecracker?) (file-stream-read-symbol file)))
+                                          (("rule-orb-hunt?") (set! (-> obj rule-orb-hunt?) (file-stream-read-symbol file)))
                                           (("cell-increment") (set! (-> obj cell-increment) (file-stream-read-float file)))
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
@@ -612,6 +615,7 @@
     (format file "  (rule-uncharted? ~A)~%" (-> obj rule-uncharted?))
     (format file "  (complication-energy-boost? ~A)~%" (-> obj complication-energy-boost?))
     (format file "  (rule-bonecracker? ~A)~%" (-> obj rule-bonecracker?))
+    (format file "  (rule-orb-hunt? ~A)~%" (-> obj rule-orb-hunt?))
     (format file "  (countdown-start-seconds ~f)~%" (the float (the int (-> obj countdown-start-seconds))))
     (format file "  (cell-increment ~f)~%" (the float (the int (-> obj cell-increment))))
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
@@ -1939,6 +1943,16 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [84] ORB HUNT
+       (new 'static
+            'game-option
+            :option-type (game-option-type on-off)
+            :name (text-id complicated-opts-cond-rule-orb-hunt)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
        ;; [--] TOGGLE ALL ON
        (new 'static
             'game-option
@@ -2289,6 +2303,7 @@
   (set! (-> *condition-toggle-options* 81 value-to-modify) (&-> *complicated-settings* rule-uncharted?))
   (set! (-> *condition-toggle-options* 82 value-to-modify) (&-> *complicated-settings* complication-energy-boost?))
   (set! (-> *condition-toggle-options* 83 value-to-modify) (&-> *complicated-settings* rule-bonecracker?))
+  (set! (-> *condition-toggle-options* 84 value-to-modify) (&-> *complicated-settings* rule-orb-hunt?))
   ;; Timer options mappings
   (set! (-> *comp-timer-options* 0 value-to-modify) (&-> *complicated-settings* countdown-start-seconds))
   (set! (-> *comp-timer-options* 1 value-to-modify) (&-> *complicated-settings* time-limit-multiplier))
@@ -2443,4 +2458,5 @@
          ((eq? id 'rule-uncharted) (-> *complicated-settings* rule-uncharted?))
          ((eq? id 'complication-energy-boost) (-> *complicated-settings* complication-energy-boost?))
          ((eq? id 'rule-bonecracker) (-> *complicated-settings* rule-bonecracker?))
+         ((eq? id 'rule-orb-hunt) (-> *complicated-settings* rule-orb-hunt?))
          (else #t))))

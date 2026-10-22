@@ -895,6 +895,7 @@
   (complicated-opts-cond-rule-uncharted #x167a)
   (complicated-opts-cond-complication-energy-boost #x167b)
   (complicated-opts-cond-rule-bonecracker #x167c)
+  (complicated-opts-cond-rule-orb-hunt #x167d)
   ;; up to #x16ff reserved for future condition toggles
   (complicated-opts-cond-toggle-all-on #x1700)
   (complicated-opts-cond-toggle-all-off #x1701)

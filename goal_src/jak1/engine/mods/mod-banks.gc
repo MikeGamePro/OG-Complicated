@@ -304,3 +304,14 @@
        :player-hit-modes
        (new 'static 'boxed-array :type symbol :length 64 :allocated-length 64)
        :player-hit-write-idx 0))
+
+(deftype mod-orb-hunt-bank (structure)
+  ((orb-handle handle)
+   (spawned?   symbol)))
+
+(define *MOD-orb-hunt-bank*
+  (new 'static
+       'mod-orb-hunt-bank
+       :spawned? #f))
+
+(set! (-> *MOD-orb-hunt-bank* orb-handle) (the-as handle #f))

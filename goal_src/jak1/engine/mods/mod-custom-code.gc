@@ -63,17 +63,15 @@
   (mod-rule-update-speed)
   (none))
 
-(defun runs-on-orb-pickup ((parent process-tree))
+(defun runs-on-orb-pickup ((parent process-tree) (orb process))
   (let* ((from-cache? (and parent (type-type? (-> parent type) orb-cache-top))))
-    ;; Code here runs on ANY orb pickup
     (mod-global-countdown-add-seconds (orb-increment-value))
     (mod-rule-trigger-rotten-eggs)
     (mod-on-orb-pickup 1)
+    (mod-orb-hunt-on-orb-pickup orb)
     (when from-cache?
-      ;; Code here runs only if the orb was from an orb cache
       )
     (when (not from-cache?)
-      ;; Code here runs only if the orb was NOT from an orb cache
       ))
   (none))
 

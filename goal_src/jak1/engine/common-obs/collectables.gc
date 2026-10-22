@@ -12,7 +12,7 @@
 ;; name in dgo: collectables
 ;; dgos: GAME, ENGINE
 
-(define-extern runs-on-orb-pickup (function process-tree none))
+(define-extern runs-on-orb-pickup (function process-tree process none))
 
 (define-extern runs-on-fly-pickup (function none))
 
@@ -765,7 +765,7 @@
       (logclear! (-> self mask) (process-mask actor-pause))
       (clear-collide-with-as (-> self root))
       (process-entity-status! self (entity-perm-status dead) #t)
-      (runs-on-orb-pickup (ppointer->process (-> self parent))) ;; trigger hook for mod base
+      (runs-on-orb-pickup (ppointer->process (-> self parent)) self) ;; trigger hook for mod base
       (convert-to-hud-object self (the-as hud (ppointer->process (-> *hud-parts* money)))))
   :exit
     (behavior ()
