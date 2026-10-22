@@ -104,6 +104,10 @@
 
 (define-extern mod-rule-active-slots-resume-from-save (function int none))
 
+(define-extern mod-rule-active-slots-extra-save-value (function int))
+
+(define-extern mod-rule-active-slots-extra-resume-from-save (function int none))
+
 (define-extern mod-rule-slot0-end-time-save-value (function int))
 
 (define-extern mod-rule-slot0-end-time-resume-from-save (function int none))
@@ -116,6 +120,14 @@
 
 (define-extern mod-rule-slot2-end-time-resume-from-save (function int none))
 
+(define-extern mod-rule-slot3-end-time-save-value (function int))
+
+(define-extern mod-rule-slot3-end-time-resume-from-save (function int none))
+
+(define-extern mod-rule-slot4-end-time-save-value (function int))
+
+(define-extern mod-rule-slot4-end-time-resume-from-save (function int none))
+
 (define-extern mod-rule-twist-marked-slot-save-value (function int))
 
 (define-extern mod-rule-twist-marked-slot-resume-from-save (function int none))
@@ -123,6 +135,10 @@
 (define-extern mod-slot-punishments-save-value (function int))
 
 (define-extern mod-slot-punishments-resume-from-save (function int none))
+
+(define-extern mod-slot-punishments-extra-save-value (function int))
+
+(define-extern mod-slot-punishments-extra-resume-from-save (function int none))
 
 (define-extern mod-timed-punishments-save-value (function int))
 
@@ -140,9 +156,17 @@
 
 (define-extern mod-rule-pending-slots-resume-from-save (function int none))
 
+(define-extern mod-rule-pending-slots-extra-save-value (function int))
+
+(define-extern mod-rule-pending-slots-extra-resume-from-save (function int none))
+
 (define-extern mod-rule-pending-times-save-value (function int))
 
 (define-extern mod-rule-pending-times-resume-from-save (function int none))
+
+(define-extern mod-rule-pending-times-extra-save-value (function int))
+
+(define-extern mod-rule-pending-times-extra-resume-from-save (function int none))
 
 (define-extern mod-rule-slot-progress0-save-value (function int))
 
@@ -151,6 +175,10 @@
 (define-extern mod-rule-slot-progress1-save-value (function int))
 
 (define-extern mod-rule-slot-progress1-resume-from-save (function int none))
+
+(define-extern mod-rule-slot-progress-extra-save-value (function int))
+
+(define-extern mod-rule-slot-progress-extra-resume-from-save (function int none))
 
 (define-extern mod-math-quiz-state-save-value (function int))
 
@@ -849,15 +877,18 @@
                                                                                                           (let ((a0-106 (the-as game-save-tag (&+ v1-113 272))))
                                                                                                             (set! (-> a0-106 elt-type) (game-save-elt mod-rule-active-slots))
                                                                                                             (set! (-> a0-106 elt-count) 0)
-                                                                                                            (set! (-> a0-106 user-uint64) (the-as uint (mod-rule-active-slots-save-value))))
+                                                                                                            (set! (-> a0-106 user-uint64) (the-as uint (mod-rule-active-slots-save-value)))
+                                                                                                            (set! (-> a0-106 user-uint32 1) (the-as uint (mod-rule-active-slots-extra-save-value))))
                                                                                                           (let ((a0-107 (the-as game-save-tag (&+ v1-113 288))))
                                                                                                             (set! (-> a0-107 elt-type) (game-save-elt mod-rule-slot0-end-time))
                                                                                                             (set! (-> a0-107 elt-count) 0)
-                                                                                                            (set! (-> a0-107 user-uint64) (the-as uint (mod-rule-slot0-end-time-save-value))))
+                                                                                                            (set! (-> a0-107 user-uint64) (the-as uint (mod-rule-slot0-end-time-save-value)))
+                                                                                                            (set! (-> a0-107 user-uint32 1) (the-as uint (mod-rule-slot3-end-time-save-value))))
                                                                                                           (let ((a0-108 (the-as game-save-tag (&+ v1-113 304))))
                                                                                                             (set! (-> a0-108 elt-type) (game-save-elt mod-rule-slot1-end-time))
                                                                                                             (set! (-> a0-108 elt-count) 0)
-                                                                                                            (set! (-> a0-108 user-uint64) (the-as uint (mod-rule-slot1-end-time-save-value))))
+                                                                                                            (set! (-> a0-108 user-uint64) (the-as uint (mod-rule-slot1-end-time-save-value)))
+                                                                                                            (set! (-> a0-108 user-uint32 1) (the-as uint (mod-rule-slot4-end-time-save-value))))
                                                                                                           (let ((a0-109 (the-as game-save-tag (&+ v1-113 320))))
                                                                                                             (set! (-> a0-109 elt-type) (game-save-elt mod-rule-slot2-end-time))
                                                                                                             (set! (-> a0-109 elt-count) 0)
@@ -869,7 +900,8 @@
                                                                                                           (let ((a0-111 (the-as game-save-tag (&+ v1-113 352))))
                                                                                                             (set! (-> a0-111 elt-type) (game-save-elt mod-rule-slot-punishments))
                                                                                                             (set! (-> a0-111 elt-count) 0)
-                                                                                                            (set! (-> a0-111 user-uint64) (the-as uint (mod-slot-punishments-save-value))))
+                                                                                                            (set! (-> a0-111 user-uint64) (the-as uint (mod-slot-punishments-save-value)))
+                                                                                                            (set! (-> a0-111 user-uint32 1) (the-as uint (mod-slot-punishments-extra-save-value))))
                                                                                                           (let ((a0-112 (the-as game-save-tag (&+ v1-113 368))))
                                                                                                             (set! (-> a0-112 elt-type) (game-save-elt mod-rule-timed-punishments))
                                                                                                             (set! (-> a0-112 elt-count) 0)
@@ -885,11 +917,13 @@
                                                                                                           (let ((a0-115 (the-as game-save-tag (&+ v1-113 416))))
                                                                                                             (set! (-> a0-115 elt-type) (game-save-elt mod-rule-pending-slots))
                                                                                                             (set! (-> a0-115 elt-count) 0)
-                                                                                                            (set! (-> a0-115 user-uint64) (the-as uint (mod-rule-pending-slots-save-value))))
+                                                                                                            (set! (-> a0-115 user-uint64) (the-as uint (mod-rule-pending-slots-save-value)))
+                                                                                                            (set! (-> a0-115 user-uint32 1) (the-as uint (mod-rule-pending-slots-extra-save-value))))
                                                                                                           (let ((a0-116 (the-as game-save-tag (&+ v1-113 432))))
                                                                                                             (set! (-> a0-116 elt-type) (game-save-elt mod-rule-pending-times))
                                                                                                             (set! (-> a0-116 elt-count) 0)
-                                                                                                            (set! (-> a0-116 user-uint64) (the-as uint (mod-rule-pending-times-save-value))))
+                                                                                                            (set! (-> a0-116 user-uint64) (the-as uint (mod-rule-pending-times-save-value)))
+                                                                                                            (set! (-> a0-116 user-uint32 1) (the-as uint (mod-rule-pending-times-extra-save-value))))
                                                                                                           (let ((a0-117 (the-as game-save-tag (&+ v1-113 448))))
                                                                                                             (set! (-> a0-117 elt-type) (game-save-elt mod-rule-slot-progress0))
                                                                                                             (set! (-> a0-117 elt-count) 0)
@@ -897,7 +931,8 @@
                                                                                                           (let ((a0-118 (the-as game-save-tag (&+ v1-113 464))))
                                                                                                             (set! (-> a0-118 elt-type) (game-save-elt mod-rule-slot-progress1))
                                                                                                             (set! (-> a0-118 elt-count) 0)
-                                                                                                            (set! (-> a0-118 user-uint64) (the-as uint (mod-rule-slot-progress1-save-value))))
+                                                                                                            (set! (-> a0-118 user-uint64) (the-as uint (mod-rule-slot-progress1-save-value)))
+                                                                                                            (set! (-> a0-118 user-uint32 1) (the-as uint (mod-rule-slot-progress-extra-save-value))))
                                                                                                           (let ((a0-119 (the-as game-save-tag (&+ v1-113 480))))
                                                                                                             (set! (-> a0-119 elt-type) (game-save-elt mod-math-quiz-state))
                                                                                                             (set! (-> a0-119 elt-count) 0)
@@ -966,17 +1001,21 @@
           ((= a0-1 (game-save-elt mod-rng-seed-display))
            (mod-rng-seed-display-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-active-slots))
-           (mod-rule-active-slots-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-active-slots-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-active-slots-extra-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-slot0-end-time))
-           (mod-rule-slot0-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-slot0-end-time-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-slot3-end-time-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-slot1-end-time))
-           (mod-rule-slot1-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-slot1-end-time-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-slot4-end-time-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-slot2-end-time))
            (mod-rule-slot2-end-time-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-twist-marked-slot))
            (mod-rule-twist-marked-slot-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-slot-punishments))
-           (mod-slot-punishments-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-slot-punishments-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-slot-punishments-extra-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-timed-punishments))
            (mod-timed-punishments-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-timed-punishment-times0))
@@ -984,13 +1023,16 @@
           ((= a0-1 (game-save-elt mod-rule-timed-punishment-times1))
            (mod-rule-timed-punishment-times1-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-pending-slots))
-           (mod-rule-pending-slots-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-pending-slots-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-pending-slots-extra-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-pending-times))
-           (mod-rule-pending-times-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-pending-times-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-pending-times-extra-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-rule-slot-progress0))
            (mod-rule-slot-progress0-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-rule-slot-progress1))
-           (mod-rule-slot-progress1-resume-from-save (the-as int (-> save-data user-uint64))))
+           (mod-rule-slot-progress1-resume-from-save (the-as int (-> save-data user-uint64)))
+           (mod-rule-slot-progress-extra-resume-from-save (the-as int (-> save-data user-uint32 1))))
           ((= a0-1 (game-save-elt mod-math-quiz-state))
            (mod-math-quiz-state-resume-from-save (the-as int (-> save-data user-uint64))))
           ((= a0-1 (game-save-elt mod-math-quiz-guess))
