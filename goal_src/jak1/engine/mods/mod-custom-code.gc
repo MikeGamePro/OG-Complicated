@@ -69,10 +69,8 @@
     (mod-rule-trigger-rotten-eggs)
     (mod-on-orb-pickup 1)
     (mod-orb-hunt-on-orb-pickup orb)
-    (when from-cache?
-      )
-    (when (not from-cache?)
-      ))
+    (when from-cache?)
+    (when (not from-cache?)))
   (none))
 
 (defun runs-on-fly-pickup ()
