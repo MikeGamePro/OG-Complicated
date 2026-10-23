@@ -1525,7 +1525,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-math-quiz) (mod-apply-time-limit-multiplier (seconds 20))) ;; 20
     ((eq? id 'rule-trivia) (mod-apply-time-limit-multiplier (seconds 15))) ;; 15
     ((eq? id 'complication-bad-ping) (seconds 45)) ;; 45
-    ((eq? id 'rule-green-pilled) (mod-apply-time-limit-multiplier (seconds 75))) ;; 75
+    ((eq? id 'rule-green-pilled) (mod-apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'rule-button-pusher) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-loyal-customer) (mod-apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'complication-invisible-man) (seconds 50)) ;; 50
@@ -1783,7 +1783,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-iframes) (seconds 180))
     ((eq? punishment 'punishment-camera) (seconds 120))
     ((eq? punishment 'punishment-ohko) (seconds 120))
-    ((eq? punishment 'punishment-kick) (seconds 180))
+    ((eq? punishment 'punishment-kick) (seconds 240))
     ((eq? punishment 'punishment-pause) (seconds 180))
     (else 0)))
 
@@ -1864,7 +1864,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (when (and (eq? punishment 'punishment-pause) (>= (current-time) (-> (-> *MOD-punishment-bank* timed-next-ticks) slot)))
               ;; schedule from now (not +=) so a long menu stay can't cause a burst of catch-up rolls
               (set! (-> (-> *MOD-punishment-bank* timed-next-ticks) slot) (+ (current-time) (seconds 1)))
-              (when (= (mod-rand-punish-int-range 0 20) 0)
+              (when (= (mod-rand-punish-int-range 0 10) 0)
                 (when (mod-can-menu-pause?)
                   (activate-progress *dproc* (progress-screen fuel-cell))))))))))
   (none))
@@ -2214,7 +2214,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                          (>= (current-orb-count) (-> *MOD-tuning-bank* money-punishment-min-orbs))
                          (not (or (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss) (eq? (current-level-name) 'lavatube))))
     (consider-punishment punishment-warp 8 (!= (-> (level-get-target-inside *level*) name) 'training))
-    (consider-punishment punishment-revert-cell 8 (mod-can-revert-collected-cell?))
+    (consider-punishment punishment-revert-cell
+                         8
+                         (mod-can-revert-collected-cell?)
+                         (not (and (or (eq? (current-level-name) 'lavatube)
+                                       (eq? (current-level-name) 'citadel)
+                                       (eq? (current-level-name) 'finalboss))
+                                   (< (current-cell-count) 90))))
     (consider-punishment punishment-extra-rule 10 (< (mod-rule-active-slot-count) 2))
     (consider-punishment punishment-crash 6 (not (eq? rule-id 'rule-qte)))
     (consider-punishment punishment-delay 10 (not (mod-rule-active? 'complication-bad-ping)))
@@ -2978,7 +2984,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                      (sparse-blue-eco-level? level-name))
                0
                67)))
-          ((eq? id 'complication-critical) (if (or is-minigame (< fuel-left 1) (eq? level-name 'finalboss)) 0 48))
+          ((eq? id 'complication-critical) (if (or is-minigame (< fuel-left 1) (eq? level-name 'finalboss)) 0 55))
           ((eq? id 'rule-buzzer-pressure)
            (if (or (< buzzer-left 3)
                    is-minigame
@@ -3004,7 +3010,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-money-pressure)
            (if (or (<= money-left 50) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'jungleb) deep-lavatube) 0 46))
           ((eq? id 'complication-hidden-treasure)
-           (if (or is-klaww (eq? level-name 'finalboss) (string= checkpoint-name "firecanyon-start") deep-lavatube) 0 51))
+           (if (or is-klaww (eq? level-name 'finalboss) (string= checkpoint-name "firecanyon-start") deep-lavatube) 0 45))
           ((eq? id 'rule-loyal-customer)
            (if (and (mod-cell-purchase-level? level-name)
                     (not (mod-oracles-closed? level-name))
@@ -3056,16 +3062,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 374 0))
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 290))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 435 0))
-          ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 25))
+          ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))
           ((eq? id 'complication-eco-reserve)
            (cond
              ((or (eq? level-name 'finalboss) is-klaww) 96)
-             ((yellow-eco-level? level-name) 48)
+             ((yellow-eco-level? level-name) 40)
              (else 0)))
           ((eq? id 'complication-red-stop) ;; disabled
            (if (red-eco-level? level-name) 112 0))
           ((eq? id 'complication-ohko) (if (mod-timed-punishment-active? 'punishment-ohko) 0 37)) ;; disabled
-          ((eq? id 'complication-invisible-man) (if on-racer 0 59))
+          ((eq? id 'complication-invisible-man) (if on-racer 0 40))
           ((eq? id 'complication-double-aphids) ;; disabled
            (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 312 0))
           ;; Crates
@@ -3111,8 +3117,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
            (if (or racer-lavatube (mod-target-on-racer-or-flut?) (sole-zoomer-level? level-name))
              0
-             (if (eq? id 'rule-keep-it-low) (if (mod-timed-punishment-active? 'punishment-kick) 0 57) 63)))
-          ((eq? id 'rule-management) (if (or racer-lavatube (mod-target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 57))
+             (if (eq? id 'rule-keep-it-low) (if (mod-timed-punishment-active? 'punishment-kick) 0 60) 43)))
+          ((eq? id 'rule-management) (if (or racer-lavatube (mod-target-on-racer-or-flut?) (sole-zoomer-level? level-name)) 0 60))
           ((eq? id 'complication-bad-ping) (if (mod-timed-punishment-active? 'punishment-delay) 0 37))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 54))
@@ -3121,26 +3127,26 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((no-drought-level? level-name) 0)
              ((or (eq? level-name 'rolling) (eq? level-name 'training)) 38)
-             (else 90)))
+             (else 80)))
           ((eq? id 'rule-landlubber)
            (cond
              ((water-level? level-name) 99)
              ((or (eq? level-name 'misty)
                   (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave)))
-              99)
+              90)
              (else 0)))
           ;; Special
           ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 84))
           ((eq? id 'complication-vibe-check)
            (cond
-             (is-minigame (string= checkpoint-name "finalboss-fight") 0)
+             ((or is-minigame (string= checkpoint-name "finalboss-fight")) 0)
              ((< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 46)
-             (else 23)))
+             (else 20)))
           ((eq? id 'rule-express-delivery)
            (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
                         (task-closed? (game-task misty-muse) (task-status need-introduction)))
                    (eq? level-name 'misty))
-             174
+             100
              0))
           ((eq? id 'rule-side-to-side) (if is-klaww 640 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 38))
