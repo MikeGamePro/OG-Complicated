@@ -135,7 +135,8 @@
    (time-limit-multiplier float)
    (text-scale float)
    (compliance-increment float)
-   (pass-credits-required float))
+   (pass-credits-required float)
+   (target-slot-count float))
   (:methods
    (reset (_type_) _type_)
    (commit-to-file (_type_) none)
@@ -260,6 +261,7 @@
   (set! (-> obj text-scale) 0.9)
   (set! (-> obj compliance-increment) 0.0)
   (set! (-> obj pass-credits-required) 10.0)
+  (set! (-> obj target-slot-count) 1.0)
   obj)
 
 (defun complicated-settings-apply-preset! ((obj complicated-settings) (preset symbol))
@@ -484,6 +486,7 @@
                                           (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file)))
                                           (("text-scale") (set! (-> obj text-scale) (file-stream-read-float file)))
                                           (("compliance-increment") (set! (-> obj compliance-increment) (file-stream-read-float file)))
+                                          (("target-slot-count") (set! (-> obj target-slot-count) (file-stream-read-float file)))
                                           (("pass-credits-required") (set! (-> obj pass-credits-required) (file-stream-read-float file))))))))
     (file-stream-close file)
     (complicated-settings-migrate! obj filename))
@@ -624,6 +627,7 @@
     (format file "  (text-scale ~f)~%" (snap-to-step (-> obj text-scale) 0.1))
     (format file "  (compliance-increment ~f)~%" (the float (the int (-> obj compliance-increment))))
     (format file "  (pass-credits-required ~f)~%" (the float (the int (+ (-> obj pass-credits-required) 0.5))))
+    (format file "  (target-slot-count ~f)~%" (the float (the int (+ (-> obj target-slot-count) 0.5))))
     (format file "  )~%")
     (file-stream-close file))
   #t)
@@ -707,6 +711,10 @@
 
 (defun pass-credits-required-changed! ((new-val float))
   (set! (-> *complicated-settings* pass-credits-required) new-val)
+  (none))
+
+(defun target-slot-count-changed! ((new-val float))
+  (set! (-> *complicated-settings* target-slot-count) new-val)
   (none))
 
 ;; ---- Increment Options Submenu ---------------------------------------------
@@ -2104,7 +2112,24 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [9] RESTORE DEFAULTS
+       ;; [9] ACTIVE CONDITIONS
+       (new 'static
+            'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-target-slot-count)
+            :scale #t
+            :param1 1.0
+            :param2 5.0
+            :slider-step-size 1.0
+            :on-change
+            (lambda ((val object))
+              (target-slot-count-changed! (the-as float val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [--] RESTORE DEFAULTS
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
@@ -2115,7 +2140,7 @@
               (reset *complicated-settings*)
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [10] BACK
+       ;; [--] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -2200,6 +2225,7 @@
   (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* klaww-assist?))
   (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* text-scale))
   (set! (-> *complicated-options* 8 value-to-modify) (&-> *complicated-settings* pass-credits-required))
+  (set! (-> *complicated-options* 9 value-to-modify) (&-> *complicated-settings* target-slot-count))
   ;; Punishment toggle mappings
   (set! (-> *punishment-toggle-options* 0 value-to-modify) (&-> *complicated-settings* punishment-toggle-fall-damage?))
   (set! (-> *punishment-toggle-options* 1 value-to-modify) (&-> *complicated-settings* punishment-toggle-trip?))
@@ -2369,6 +2395,9 @@
 
 (defun pass-credits-required-value ()
   (if *complicated-settings* (max 5 (min 100 (the int (+ (-> *complicated-settings* pass-credits-required) 0.5)))) 10))
+
+(defun target-slot-count-value ()
+  (if *complicated-settings* (max 1 (min 5 (the int (+ (-> *complicated-settings* target-slot-count) 0.5)))) 1))
 
 (defun mod-condition-enabled? ((id symbol))
   (the symbol

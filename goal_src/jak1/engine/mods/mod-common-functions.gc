@@ -93,6 +93,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern mod-rule-counter-add-progress (function symbol int none))
 
+(define-extern target-slot-count-value (function int))
+
 ;; Macros can be used more-or-less just like functions
 (defmacro current-cell-count ()
   `(-> *game-info* fuel))
@@ -148,13 +150,16 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   (= state-name 'target-flop-hit-ground)
                   (= state-name 'target-slide-down))))))
 
-(define *mod-rule-slot-count* 2)
+(define *mod-rule-slot-count* 5)
 
 (define *mod-rule-recent-rolls* (new 'global 'boxed-array symbol 8))
 
 (define *mod-unique-enemy-killed-types* (new 'global 'boxed-array symbol 3))
 
 (define *mod-timed-punishment-slot-count* 8)
+
+(defun mod-rule-target-slot-count ()
+  (max 1 (min *mod-rule-slot-count* (target-slot-count-value))))
 
 ;; Append new penalties only.
 (define *mod-punishment-ids*
@@ -748,7 +753,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (('jungle)
        (orb-hunt-spot 282.23 23.04 -176.68)
        (orb-hunt-spot 377.06 29.07 -352.79)
-       (orb-hunt-spot 35.27 26.37 -265.09)
+       (orb-hunt-spot 435.27 26.37 -265.09)
        (orb-hunt-spot 382.12 36.83 -220.95))
       (('jungleb)
        (orb-hunt-spot 362.29 -47.85 -240.90)
@@ -811,7 +816,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (when (handle->process h)
           (let ((orb (the-as money (handle->process h))))
             (set-vector! (-> orb draw color-mult) 1.0 0.0 6.0 1.0)
-            (set! (-> (-> orb root)scale x) 1.5)(set! (-> (-> orb root)scale y) 1.5)(set! (-> (-> orb root)scale z) 1.5))
+            (set! (-> (-> orb root) scale x) 1.5)
+            (set! (-> (-> orb root) scale y) 1.5)
+            (set! (-> (-> orb root) scale z) 1.5))
           (set! (-> *MOD-orb-hunt-bank* orb-handle) h)
           (set! (-> *MOD-orb-hunt-bank* spawned?) #t)))))
   (none))
@@ -1773,6 +1780,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> (-> *MOD-rule-slot-bank* slot-grace-periods) slot) 0))
   (none))
 
+;; Remember the last outcome shown in a slot's band.
+(defun mod-rule-set-slot-outcome! ((slot int) (outcome symbol))
+  (when (and (>= slot 0) (< slot *mod-rule-slot-count*))
+    (set! (-> (-> *MOD-rule-slot-bank* slot-outcomes) slot) outcome))
+  (set! (-> *MOD-rule-context-bank* last-outcome) outcome)
+  (none))
+
+(defun mod-rule-clear-slot-outcomes! ()
+  (dotimes (slot *mod-rule-slot-count*)
+    (set! (-> (-> *MOD-rule-slot-bank* slot-outcomes) slot) 'none))
+  (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
+  (none))
+
 (defun mod-punishment-duration ((punishment symbol))
   (cond
     ((eq? punishment 'punishment-blind) (seconds 10))
@@ -1864,7 +1884,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (when (and (eq? punishment 'punishment-pause) (>= (current-time) (-> (-> *MOD-punishment-bank* timed-next-ticks) slot)))
               ;; schedule from now (not +=) so a long menu stay can't cause a burst of catch-up rolls
               (set! (-> (-> *MOD-punishment-bank* timed-next-ticks) slot) (+ (current-time) (seconds 1)))
-              (when (= (mod-rand-punish-int-range 0 10) 0)
+              (when (= (mod-rand-punish-int-range 0 11) 0)
                 (when (mod-can-menu-pause?)
                   (activate-progress *dproc* (progress-screen fuel-cell))))))))))
   (none))
@@ -1891,6 +1911,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> (-> *MOD-rule-slot-bank* pending-slots) slot) id)
     (set! (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot)
           (+ (current-time) (if apply-buffer (-> *MOD-tuning-bank* roll-buffer-time) 0))))
+  (none))
+
+;; Schedule rolls into free slots until the target count is reached.
+(defun mod-rule-fill-to-target! ()
+  (let ((free (mod-rule-first-free-slot)))
+    (while (and (>= free 0) (< (mod-rule-active-slot-count) (mod-rule-target-slot-count)))
+      (mod-rule-schedule-slot free 'mod-rule-pending-roll #t)
+      (set! free (mod-rule-first-free-slot))))
   (none))
 
 ;; ID of the first active slot.
@@ -2217,11 +2245,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (consider-punishment punishment-revert-cell
                          8
                          (mod-can-revert-collected-cell?)
-                         (not (and (or (eq? (current-level-name) 'lavatube)
-                                       (eq? (current-level-name) 'citadel)
-                                       (eq? (current-level-name) 'finalboss))
+                         (not (and (or (eq? (current-level-name) 'lavatube) (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss))
                                    (< (current-cell-count) 90))))
-    (consider-punishment punishment-extra-rule 10 (< (mod-rule-active-slot-count) 2))
+    (consider-punishment punishment-extra-rule 10 (<= (+ (mod-rule-active-slot-count) 2) *mod-rule-slot-count*))
     (consider-punishment punishment-crash 6 (not (eq? rule-id 'rule-qte)))
     (consider-punishment punishment-delay 10 (not (mod-rule-active? 'complication-bad-ping)))
     (consider-punishment punishment-blind 10)
@@ -2549,7 +2575,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*) id)
     (mod-rule-deactivate-slot slot)
     (set! (-> (-> *MOD-rule-slot-bank* active-slots) slot) id)
-    (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
+    (mod-rule-set-slot-outcome! slot 'none)
     (if (or (eq? id 'rule-qte)
             (eq? id 'rule-math-quiz)
             (eq? id 'rule-trivia)
@@ -2606,7 +2632,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* twist-pending-count) -1)
   (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
   (set! (-> *MOD-rule-context-bank* palate-change-grace-until) 0)
-  (set! (-> *MOD-rule-context-bank* last-outcome) 'none)
+  (mod-rule-clear-slot-outcomes!)
   (set! (-> *MOD-rule-context-bank* qte-target-button) 0)
   (set! (-> *MOD-rule-context-bank* hang-time-air-start) 0)
   (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) 0)
@@ -3379,7 +3405,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-finish-slot ((slot int) (apply-buffer symbol))
-  (if (> (mod-rule-active-slot-count) 1) (mod-rule-deactivate-slot slot) (mod-rule-reroll-slot slot apply-buffer))
+  (if (> (mod-rule-active-slot-count) (mod-rule-target-slot-count))
+    (mod-rule-deactivate-slot slot)
+    (mod-rule-reroll-slot slot apply-buffer))
   (none))
 
 (defun mod-rule-counter-add-progress ((id symbol) (amount int))
@@ -3515,7 +3543,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-warp) "WARP TO GEYSER")
     ((eq? punishment 'punishment-countdown) (string-format "LOSE ~D SECONDS" (mod-countdown-punishment-seconds)))
     ((eq? punishment 'punishment-revert-cell) "REVERT A RANDOM CELL")
-    ((eq? punishment 'punishment-extra-rule) "EXTRA CONDITION")
+    ((eq? punishment 'punishment-extra-rule) "+2 CONDITIONS")
     ((eq? punishment 'punishment-blind) (mod-timed-punishment-text "BLIND FOR" punishment))
     ((eq? punishment 'punishment-fall-damage) (mod-timed-punishment-text "MORE FALL DAMAGE FOR" punishment))
     ((eq? punishment 'punishment-trip) (mod-timed-punishment-text "TRIP RANDOMLY FOR" punishment))
@@ -3550,10 +3578,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-apply-extra-rule-punishment ((failed-slot int))
   (when (and (>= failed-slot 0) (< failed-slot *mod-rule-slot-count*))
-    (if (< (mod-rule-active-slot-count) 2)
+    (if (<= (+ (mod-rule-active-slot-count) 2) *mod-rule-slot-count*)
       (begin
         (mod-rule-reroll-slot failed-slot #t)
-        (let ((extra-slot (mod-rule-first-free-slot))) (when (>= extra-slot 0) (mod-rule-reroll-slot extra-slot #t))))
+        (dotimes (i 2)
+          (let ((extra-slot (mod-rule-first-free-slot))) (when (>= extra-slot 0) (mod-rule-reroll-slot extra-slot #t)))))
       (mod-rule-finish-slot failed-slot #t)))
   (none))
 
@@ -3629,7 +3658,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (when twisted?
            (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1))
          (sound-play "buzzer-pickup")
-         (set! (-> *MOD-rule-context-bank* last-outcome) (if twisted? 'twisted-success 'success))
+         (mod-rule-set-slot-outcome! slot (if twisted? 'twisted-success 'success))
          (when (eq? (mod-rule-type (-> (-> *MOD-rule-slot-bank* active-slots) slot)) 'rule)
            (+! (-> *MOD-stats-bank* rules-followed) 1)
            (mod-pass-add-credit!)
@@ -3642,7 +3671,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (sound-play "caught-eel")
          (+! (-> *MOD-stats-bank* rules-broken) 1)
          (auto-save-command 'auto-save 0 0 *default-pool*)
-         (set! (-> *MOD-rule-context-bank* last-outcome) (if twisted? 'twisted-failed 'failed))
+         (mod-rule-set-slot-outcome! slot (if twisted? 'twisted-failed 'failed))
          (let ((punishment (or (-> (-> *MOD-rule-slot-bank* slot-punishments) slot)
                                (mod-random-available-punishment (-> (-> *MOD-rule-slot-bank* active-slots) slot)))))
            (if (eq? punishment 'punishment-extra-rule)
@@ -3659,7 +3688,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (eq? (-> (-> *MOD-rule-slot-bank* active-slots) slot) 'complication-twisted)
       (set! (-> *MOD-rule-context-bank* twist-pending-count) -1))
     (sound-play "cursor-options")
-    (set! (-> *MOD-rule-context-bank* last-outcome) 'skipped)
+    (mod-rule-set-slot-outcome! slot 'skipped)
     (auto-save-command 'auto-save 0 0 *default-pool*)
     (mod-rule-finish-slot slot #t))
   (none))
@@ -4159,6 +4188,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-handle-pass-input)
            (mod-rule-update-shifty)
            (mod-orb-hunt-update)
+           (mod-rule-fill-to-target!)
            (when (mod-rule-active? 'complication-get-a-grip)
              (when (>= (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)) (mod-apply-time-limit-multiplier (seconds 12)))
                (if (and *target* (or (= (-> *target* state name) 'target-tube) (= (-> *target* state name) 'target-tube-jump)))
@@ -4251,9 +4281,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> dst data j) 0))
   dst)
 
+(define *mod-hud-dry-run* #f)
+
 ;; Draw a string with the menu text-scale multiplier applied.
 (defun mod-draw-string-xy-scaled ((str string) (buf dma-buffer) (x int) (y int) (color font-color) (flags font-flags) (scale float))
-  (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier))))
+  (unless *mod-hud-dry-run*
+    (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier)))))
 
 ;; scales a row-spacing/indent pixel offset by the same multiplier as the HUD text
 (defun mod-scale-px ((n int))
@@ -4329,7 +4362,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 ;; Draw one slot's HUD block: name, description, punishment, progress, timer,
 ;; pass hint, plus extras for some rules (distance, last kill, etc). Returns the next row y.
-(defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int))
+(defun mod-rule-desc-essential? ((id symbol))
+  (or (eq? id 'rule-qte) (eq? id 'complication-twisted)))
+
+(defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int) (compact? symbol))
   (let* ((id (-> (-> *MOD-rule-slot-bank* active-slots) slot))
          (punishment (-> (-> *MOD-rule-slot-bank* slot-punishments) slot))
          (goal (-> (-> *MOD-rule-slot-bank* slot-goals) slot))
@@ -4346,12 +4382,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                (font-flags shadow kerning large)
                                0.5)
     (+! row (mod-scale-px 10))
-    (if (eq? id 'rule-qte)
-      (begin
-        (mod-draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
-        (mod-draw-qte-button buf (mod-scale-px 50) row)
-        (+! row (mod-scale-px 15)))
-      (set! row (mod-rule-draw-wrapped! buf id desc 25 10 row 0.35 9)))
+    (when (or (not compact?) (mod-rule-desc-essential? id))
+      (if (eq? id 'rule-qte)
+        (begin
+          (mod-draw-string-xy-scaled desc buf 10 row (font-color white) (font-flags shadow kerning large) 0.35)
+          (mod-draw-qte-button buf (mod-scale-px 50) row)
+          (+! row (mod-scale-px 15)))
+        (set! row (mod-rule-draw-wrapped! buf id desc 25 10 row 0.35 9))))
     (when punishment
       (mod-draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (font-flags shadow kerning large) 0.3)
       (set! row (mod-rule-draw-wrapped! buf #f (mod-punishment-name punishment) 16 (mod-scale-px 80) row 0.3 8)))
@@ -4453,6 +4490,61 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (set! row (mod-rule-draw-labeled-value! buf "DEATH: " (font-color red) (mod-format-time-frame grip-left 1 #f) row))))
     row))
 
+(defun mod-rule-measure-slot ((buf dma-buffer) (slot int) (compact? symbol))
+  (set! *mod-hud-dry-run* #t)
+  (let ((end (mod-rule-draw-slot buf slot 0 compact?))) (set! *mod-hud-dry-run* #f) end))
+
+;; y of the first block
+(define *mod-hud-top* 40)
+
+;; blocks should end here
+(define *mod-hud-bottom* 185)
+
+;; extra space between blocks
+(define *mod-hud-slot-gap* 6)
+
+;; REVERTED notice, just above the first block
+(define *mod-hud-reverted-y* 30)
+
+;; outcome / pending text
+(define *mod-hud-status-x* 10)
+
+;; Height each slot reserved last frame.
+(define *mod-hud-slot-heights* (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5))
+
+(define *mod-hud-full-heights* (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5))
+
+(defun mod-rule-hud-band-count ()
+  (let ((count (mod-rule-target-slot-count)))
+    (dotimes (slot *mod-rule-slot-count*)
+      (when (or (-> (-> *MOD-rule-slot-bank* active-slots) slot) (-> (-> *MOD-rule-slot-bank* pending-slots) slot))
+        (set! count (max count (+ slot 1)))))
+    count))
+
+;; Minimum height of an empty slot.
+(defun mod-rule-hud-empty-height ()
+  (mod-scale-px 22))
+
+(defun mod-rule-hud-compact? ((buf dma-buffer) (band-count int))
+  (let ((total *mod-hud-top*))
+    (dotimes (slot band-count)
+      (when (-> (-> *MOD-rule-slot-bank* active-slots) slot)
+        (set! (-> *mod-hud-full-heights* slot) (mod-rule-measure-slot buf slot #f)))
+      (when (> slot 0)
+        (+! total (mod-scale-px *mod-hud-slot-gap*)))
+      (+! total (max (mod-rule-hud-empty-height) (-> *mod-hud-full-heights* slot))))
+    (> total *mod-hud-bottom*)))
+
+(defun mod-rule-draw-separator ((buf dma-buffer) (y int))
+  (mod-draw-string-xy-scaled "-------------------------------"
+                             buf
+                             *mod-hud-status-x*
+                             y
+                             (font-color gray)
+                             (font-flags shadow kerning large)
+                             0.3)
+  (none))
+
 (defun mod-draw-timed-punishments ((buf dma-buffer))
   (let ((row-count 0))
     (dotimes (slot *mod-timed-punishment-slot-count*)
@@ -4477,40 +4569,29 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (+! row-count 1))))))
   (none))
 
-;; (good job, broken, twisted, pass)
-(defun mod-rule-draw-last-outcome ((buf dma-buffer) (y int))
-  (cond
-    ((eq? (-> *MOD-rule-context-bank* last-outcome) 'success)
-     (mod-draw-string-xy-scaled "GOOD JOB!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
-    ((eq? (-> *MOD-rule-context-bank* last-outcome) 'failed)
-     (mod-draw-string-xy-scaled "RULE BROKEN!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4))
-    ((eq? (-> *MOD-rule-context-bank* last-outcome) 'twisted-success)
-     (mod-draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color green) (font-flags shadow kerning large) 0.4))
-    ((eq? (-> *MOD-rule-context-bank* last-outcome) 'twisted-failed)
-     (mod-draw-string-xy-scaled "TWISTED RULE!" buf 10 y (font-color red) (font-flags shadow kerning large) 0.4))
-    ((eq? (-> *MOD-rule-context-bank* last-outcome) 'skipped)
-     (mod-draw-string-xy-scaled "PASS!" buf 10 y (font-color violet) (font-flags shadow kerning large) 0.4)))
-  (none))
-
-(defun mod-rule-draw-rolling-slot ((buf dma-buffer))
-  (let ((slot 0)
-        (rolling-id #f)
-        (rolling-left 0))
-    (while (and (< slot *mod-rule-slot-count*) (not rolling-id))
-      (let ((pending (-> (-> *MOD-rule-slot-bank* pending-slots) slot)))
-        (when pending
-          (set! rolling-id pending)
-          (set! rolling-left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))))
-      (+! slot 1))
-    (when rolling-id
-      (mod-draw-string-xy-scaled "NEW CONDITION" buf 10 60 (font-color yellow) (font-flags shadow kerning large) 0.4)
-      (mod-draw-string-xy-scaled (mod-format-time-frame rolling-left 1 'auto)
-                                 buf
-                                 110
-                                 57
-                                 (font-color white)
-                                 (font-flags shadow kerning large)
-                                 0.6)))
+;; Last outcome, then the countdown to its next roll.
+(defun mod-rule-draw-empty-slot ((buf dma-buffer) (slot int) (y int))
+  (let* ((outcome (-> (-> *MOD-rule-slot-bank* slot-outcomes) slot))
+         (flags (font-flags shadow kerning large))
+         (msg (cond
+                ((eq? outcome 'success) "GOOD JOB!")
+                ((eq? outcome 'failed) "RULE BROKEN!")
+                ((or (eq? outcome 'twisted-success) (eq? outcome 'twisted-failed)) "TWISTED RULE!")
+                ((eq? outcome 'skipped) "PASS!")
+                (else #f)))
+         (color (cond
+                  ((or (eq? outcome 'success) (eq? outcome 'twisted-success)) (font-color green))
+                  ((eq? outcome 'skipped) (font-color violet))
+                  (else (font-color red)))))
+    (when msg
+      (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
+      (+! y (mod-scale-px 10)))
+    (when (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
+      (let* ((left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
+             (label "NEW CONDITION:")
+             (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
+        (mod-draw-string-xy-scaled label buf *mod-hud-status-x* y (font-color yellow) flags 0.4)
+        (mod-draw-string-xy-scaled (mod-format-time-frame left 1 'auto) buf timer-x (- y 1) (font-color white) flags 0.5))))
   (none))
 
 ;; Draw the whole HUD.
@@ -4544,28 +4625,32 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                       (font-flags shadow kerning large)
                                       0.5)))
        (mod-draw-timed-punishments global-buf)
-       (let ((reverted-y 72)
-             (primary (mod-rule-nth-active-slot 0)))
-         (cond
-           ((>= primary 0)
-            (let ((end-row (mod-rule-draw-slot global-buf primary 40)))
-              (set! reverted-y (+ end-row (mod-scale-px 20)))
-              (let ((secondary (mod-rule-nth-active-slot (+ primary 1))))
-                (cond
-                  ((>= secondary 0)
-                   (mod-rule-draw-last-outcome global-buf (+ end-row (mod-scale-px 8)))
-                   (set! reverted-y (+ (mod-rule-draw-slot global-buf secondary (+ end-row (mod-scale-px 18))) (mod-scale-px 20))))
-                  (else (mod-rule-draw-last-outcome global-buf (+ end-row (mod-scale-px 8))))))))
-           (else (mod-rule-draw-rolling-slot global-buf) (mod-rule-draw-last-outcome global-buf 51)))
+       ;; Blocks stack in slot order.
+       (let* ((band-count (mod-rule-hud-band-count))
+              (compact? (mod-rule-hud-compact? global-buf band-count))
+              (y *mod-hud-top*))
          (when (> (-> *MOD-rule-context-bank* last-reverted-cell-until) (current-time))
            (mod-draw-string-xy-scaled (string-format "REVERTED: ~A"
                                                      (mod-revert-cell-name (the game-task (-> *MOD-rule-context-bank* last-reverted-cell-task))))
                                       global-buf
                                       10
-                                      reverted-y
+                                      *mod-hud-reverted-y*
                                       (font-color red)
                                       (font-flags shadow kerning large)
-                                      0.35)))))
+                                      0.35))
+         (dotimes (slot band-count)
+           (let ((height 0))
+             (if (-> (-> *MOD-rule-slot-bank* active-slots) slot)
+               (begin
+                 (set! height (- (mod-rule-draw-slot global-buf slot y compact?) y))
+                 (set! (-> *mod-hud-slot-heights* slot) height))
+               (begin
+                 (set! height (max (mod-rule-hud-empty-height) (-> *mod-hud-slot-heights* slot)))
+                 (mod-rule-draw-empty-slot global-buf slot y)))
+             (+! y height)
+             (when (< (+ slot 1) band-count)
+               (mod-rule-draw-separator global-buf y)
+               (+! y (mod-scale-px *mod-hud-slot-gap*))))))))
     (else (none)))
   (none))
 
@@ -4673,6 +4758,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
   (mod-rule-clear-recent-rolls)
   (mod-trivia-clear-used)
+  (mod-rule-clear-slot-outcomes!)
   (let ((i 0))
     (while (< i *mod-rule-slot-count*)
       (mod-rule-deactivate-slot i)
@@ -4794,6 +4880,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                      mod-rule-slot-progress-save-value
                      mod-rule-slot-progress-resume-from-save
                      1)
+
+(def-save-index-pair mod-rule-slot-progress2-save-value
+                     mod-rule-slot-progress2-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     2)
 
 (defun mod-math-quiz-state-save-value ()
   (the int
@@ -4926,6 +5018,18 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                      mod-rule-slot-remaining-time-save-value
                      mod-rule-slot-remaining-time-resume-from-save
                      2)
+
+(def-save-index-pair mod-rule-slot3-end-time-save-value
+                     mod-rule-slot3-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     3)
+
+(def-save-index-pair mod-rule-slot4-end-time-save-value
+                     mod-rule-slot4-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     4)
 
 (defun mod-finalize-resume-from-save ()
   (dotimes (slot *mod-rule-slot-count*)

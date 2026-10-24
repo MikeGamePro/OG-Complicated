@@ -65,37 +65,40 @@
    (slot-punishments      (array symbol))
    (slot-goals            (array int32))
    (slot-progress         (array int32))
-   (slot-grace-periods    (array time-frame))))
+   (slot-grace-periods    (array time-frame))
+   (slot-outcomes         (array symbol))))
 
 (define *MOD-rule-slot-bank*
   (new 'static
        'mod-rule-slot-bank
        :active-slots
-       (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
        :pending-slots
-       (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
        :slot-end-times
-       (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)
        :saved-remaining-times
-       (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
        :saved-punishments
-       (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
        :saved-pending
-       (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
        :saved-roll-tenths
-       (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
        :roll-ready-times
-       (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)
        :roll-last-warn-second
-       (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
        :slot-punishments
-       (new 'static 'boxed-array :type symbol :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
        :slot-goals
-       (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
        :slot-progress
-       (new 'static 'boxed-array :type int32 :length 3 :allocated-length 3)
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
        :slot-grace-periods
-       (new 'static 'boxed-array :type time-frame :length 3 :allocated-length 3)))
+       (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)
+       :slot-outcomes
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)))
 
 (deftype mod-countdown-bank (structure)
   ((active?                  symbol)
