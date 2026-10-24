@@ -2957,7 +2957,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-survivor 'complication-vibe-check
        'complication-rotten-eggs 'rule-loyal-customer
       ;;  'rule-orb-hunt 'complication-rotten-eggs
-       'rule-orb-hunt 'complication-hidden-treasure))
+       'rule-orb-hunt 'complication-hidden-treasure
+       'complication-glare 'rule-lurker-pressure))
 
 ;; True if the twist state forbids rolling this id (rules while a twist is pending/marked; twist while
 ;; one is already in progress). Shared by weighted and fallback picking.
