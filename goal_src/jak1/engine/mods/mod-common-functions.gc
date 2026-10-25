@@ -2926,9 +2926,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-sniper 'rule-flop-this
        'rule-lurker-pressure 'rule-no-harm
        'rule-lurker-pressure 'complication-soul-bond
+       'rule-no-harm 'rule-sniper
+       'complication-soul-bond 'rule-sniper
        'rule-hitlist 'rule-no-harm
        'rule-double-kill 'rule-no-harm
        'complication-soul-bond 'complication-disassociate
+       'rule-hitlist 'complication-soul-bond
+       'rule-double-kill 'complication-soul-bond
        'rule-buzzer-pressure 'rule-distancing
        'complication-fuel-shortage 'rule-loyal-customer
        'rule-grounded 'rule-hang-time
@@ -2964,10 +2968,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-for-billy 'rule-sniper
        'rule-for-billy 'rule-buzzer-pressure
        'rule-for-billy 'rule-fuel-pressure
-       'rule-for-billy 'rule-money-pressure))
+       'rule-for-billy 'rule-money-pressure
+       'rule-one-frame 'rule-hang-time
+       'complication-rotten-eggs 'rule-orb-hunt))
 
-;; True if the twist state forbids rolling this id (rules while a twist is pending/marked; twist while
-;; one is already in progress). Shared by weighted and fallback picking.
+;; True if the twist state forbids rolling this id (rules while a twist is pending/marked, twist while one is already in progress).
 (defun mod-rule-twist-blocks? ((id symbol))
   (cond
     ((eq? (mod-rule-type id) 'rule)
