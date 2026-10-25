@@ -1499,7 +1499,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 45)) ;; 45
-    ((eq? id 'complication-rotten-eggs) (seconds 45)) ;; 45
+    ((eq? id 'complication-rotten-eggs) (seconds 30)) ;; 30
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
     ((eq? id 'rule-keep-it-low) (seconds 90)) ;; 90
     ((eq? id 'complication-sizeable) (seconds 60)) ;; 60
@@ -1508,8 +1508,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-critical) (seconds 60)) ;; 60
     ((eq? id 'complication-heating-balloons) (seconds 20)) ;; 20
     ((eq? id 'complication-glare) (seconds 45)) ;; 45
-    ((eq? id 'complication-disassociate) (seconds 50)) ;; 50
-    ((eq? id 'complication-bus-driver) (seconds 30)) ;; 30
+    ((eq? id 'complication-disassociate) (seconds 45)) ;; 45
+    ((eq? id 'complication-bus-driver) (seconds 20)) ;; 20
     ((eq? id 'complication-wings-tied) (seconds 60)) ;; 60
     ((eq? id 'rule-survivor) (seconds 60)) ;; 60
     ((eq? id 'complication-fuel-shortage) (seconds 30)) ;; 30
@@ -1535,7 +1535,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-green-pilled) (mod-apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'rule-button-pusher) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-loyal-customer) (mod-apply-time-limit-multiplier (seconds 60))) ;; 60
-    ((eq? id 'complication-invisible-man) (seconds 50)) ;; 50
+    ((eq? id 'complication-invisible-man) (seconds 45)) ;; 45
     ((eq? id 'rule-cooked) (mod-apply-time-limit-multiplier (seconds 35))) ;; 35
     ((eq? id 'complication-joyride) (seconds 30)) ;; 30
     ((eq? id 'rule-sagging-sails) (mod-apply-time-limit-multiplier (seconds 30))) ;; 30
@@ -1555,7 +1555,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-no-double-jump) (seconds 60)) ;; 60
     ((eq? id 'rule-hang-time) (mod-apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'complication-unbreakable) (seconds 45)) ;; 45
-    ((eq? id 'complication-get-a-grip) (seconds 45)) ;; 45
+    ((eq? id 'complication-get-a-grip) (seconds 40)) ;; 40
     ((eq? id 'complication-fast-reel) (seconds 15)) ;; 15
     ((eq? id 'complication-palate-change) (seconds 30)) ;; 30
     ((eq? id 'complication-jak-be-nimble) (seconds 45)) ;; 45
@@ -1803,7 +1803,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? punishment 'punishment-iframes) (seconds 180))
     ((eq? punishment 'punishment-camera) (seconds 120))
     ((eq? punishment 'punishment-ohko) (seconds 120))
-    ((eq? punishment 'punishment-kick) (seconds 240))
+    ((eq? punishment 'punishment-kick) (seconds 180))
     ((eq? punishment 'punishment-pause) (seconds 180))
     (else 0)))
 
@@ -2017,7 +2017,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (((game-task training-door)) "GEYSER - PRECURSOR DOOR")
     (((game-task training-climb)) "GEYSER - CLIMB THE CLIFF")
     (((game-task training-buzzer)) "GEYSER - SCOUT FLIES")
-    (((game-task village1-mayor-money)) "SANDOVER - MAYOR")
+    (((game-task village1-mayor-money)) "SANDOVER - MAYOR ORBS")
     (((game-task village1-uncle-money)) "SANDOVER - UNCLE")
     (((game-task village1-yakow)) "SANDOVER - YAKOWS")
     (((game-task village1-oracle-money1)) "SANDOVER - ORACLE 1")
@@ -2787,7 +2787,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun sparse-green-eco-level? ((level symbol))
   (or (case level
-        (('village3 'jungleb 'lavatube 'citadel 'finalboss 'sunkenb 'firecanyon) #t)
+        (('village3 'village1 'jungleb 'lavatube 'ogre 'citadel 'finalboss 'sunkenb 'firecanyon) #t)
         (else #f))
       (string= (current-checkpoint-name) "ogre-start")))
 
@@ -2958,7 +2958,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-rotten-eggs 'rule-loyal-customer
       ;;  'rule-orb-hunt 'complication-rotten-eggs
        'rule-orb-hunt 'complication-hidden-treasure
-       'complication-glare 'rule-lurker-pressure))
+       'complication-glare 'rule-lurker-pressure
+       'rule-die 'rule-touch-grass
+       'rule-hang-time 'rule-sniper
+       'rule-money-pressure 'rule-buzzer-pressure
+       'rule-for-billy 'rule-sniper
+       'rule-for-billy 'rule-buzzer-pressure
+       'rule-for-billy 'rule-fuel-pressure
+       'rule-for-billy 'rule-money-pressure))
 
 ;; True if the twist state forbids rolling this id (rules while a twist is pending/marked; twist while
 ;; one is already in progress). Shared by weighted and fallback picking.
@@ -3052,7 +3059,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((eq? id 'complication-glare) 83)
              ((or (mod-target-fishing?) (eq? level-name 'finalboss)) 0)
              (else 84)))
-          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 115))
+          ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 90))
           ((eq? id 'rule-double-kill)
            (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
                    is-minigame
@@ -3071,7 +3078,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (string= checkpoint-name "sunkenb-helix")
                    (eq? level-name 'finalboss))
              0
-             79))
+             60))
           ((eq? id 'rule-sniper)
            (if (or (case level-name
                      (('swamp 'beach 'snow 'robocave 'darkcave) #t)
@@ -3163,7 +3170,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               90)
              (else 0)))
           ;; Special
-          ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 84))
+          ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 70))
           ((eq? id 'complication-vibe-check)
            (cond
              ((or is-minigame (string= checkpoint-name "finalboss-fight")) 0)
@@ -3409,6 +3416,43 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (if (> (mod-rule-active-slot-count) (mod-rule-target-slot-count))
     (mod-rule-deactivate-slot slot)
     (mod-rule-reroll-slot slot apply-buffer))
+  (none))
+
+(defmacro mod-move-slot-field (field)
+  `(set! (-> (-> *MOD-rule-slot-bank* ,field) dst) (-> (-> *MOD-rule-slot-bank* ,field) src)))
+
+;; Move everything in slot src into the empty slot dst.
+(defun mod-rule-move-slot! ((src int) (dst int))
+  (mod-move-slot-field active-slots)
+  (mod-move-slot-field pending-slots)
+  (mod-move-slot-field slot-punishments)
+  (mod-move-slot-field slot-goals)
+  (mod-move-slot-field slot-progress)
+  (mod-move-slot-field slot-end-times)
+  (mod-move-slot-field roll-ready-times)
+  (mod-move-slot-field slot-grace-periods)
+  (mod-move-slot-field slot-outcomes)
+  (mod-move-slot-field roll-last-warn-second)
+  (when (= (-> *MOD-rule-context-bank* twist-marked-slot) src)
+    (set! (-> *MOD-rule-context-bank* twist-marked-slot) dst))
+  (mod-rule-clear-slot src)
+  (set! (-> (-> *MOD-rule-slot-bank* slot-outcomes) src) 'none)
+  (set! (-> (-> *MOD-rule-slot-bank* roll-last-warn-second) src) -1)
+  (when *debug-segment*
+    (format #t "Compacted rule slot ~D -> ~D~%" src dst))
+  (none))
+
+;; Slide occupied slots up toward slot 0 so a leftover condition never sits in a low slot.
+(defun mod-rule-compact-slots! ()
+  (when (>= (mod-rule-active-slot-count) (mod-rule-target-slot-count))
+    (let ((dst 0)
+          (src 0))
+      (while (< src *mod-rule-slot-count*)
+        (when (or (-> (-> *MOD-rule-slot-bank* active-slots) src) (-> (-> *MOD-rule-slot-bank* pending-slots) src))
+          (when (!= src dst)
+            (mod-rule-move-slot! src dst))
+          (+! dst 1))
+        (+! src 1))))
   (none))
 
 (defun mod-rule-counter-add-progress ((id symbol) (amount int))
@@ -4189,6 +4233,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-handle-pass-input)
            (mod-rule-update-shifty)
            (mod-orb-hunt-update)
+           (mod-rule-compact-slots!)
            (mod-rule-fill-to-target!)
            (when (mod-rule-active? 'complication-get-a-grip)
              (when (>= (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)) (mod-apply-time-limit-multiplier (seconds 12)))
@@ -4504,8 +4549,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; extra space between blocks
 (define *mod-hud-slot-gap* 6)
 
-;; REVERTED notice, just above the first block
-(define *mod-hud-reverted-y* 30)
+;; REVERTED notice
+(define *mod-hud-reverted-y* 207)
 
 ;; outcome / pending text
 (define *mod-hud-status-x* 10)
@@ -5159,8 +5204,15 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     :name 'global-countdown)
   (none))
 
+(defun mod-reset-level-visits! ()
+  (dotimes (i (-> *game-info* enter-level-time length))
+    (set! (-> *game-info* enter-level-time i) 0))
+  (set-time! (-> *game-info* enter-level-time (level-task-data-index training)))
+  (none))
+
 ;; Start a new run.
 (defun global-countdown-start ()
+  (mod-reset-level-visits!)
   (let ((active-seed (mod-rng-active-seed)))
     (mod-rng-seed-all! active-seed)
     (set! (-> *MOD-rng-bank* seed-display) active-seed)

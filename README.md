@@ -39,6 +39,7 @@
 | **Fish Assist** | Adds 5 seconds to the countdown timer for each five-pound fish. |
 | **Text Scale** | The size of the mod text. This includes condition names, descriptions, punishments, and timers. |
 | **Pass Cost** | How many credits are required to gain a pass. A credit is rewarded on each rule followed. |
+| **Active Conditions** | The amount of condition slots that will be actively in rotation.
 
 ⚠️ **SPOILER WARNING: Below has names of conditions!**
 

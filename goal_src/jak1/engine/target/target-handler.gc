@@ -46,6 +46,7 @@
            (when (and (> (-> s5-1 index) 0) (>= (-> *level-task-data-remap* length) (-> s5-1 index)))
              (let ((level-index (-> *level-task-data-remap* (+ (-> s5-1 index) -1))))
                (when (zero? (-> *game-info* enter-level-time level-index))
+              ;;  (format #t "UNCHARTED: first entry ~A (task idx ~D), rule active: ~A~%" (-> arg3 param 0) level-index (mod-rule-active? 'rule-uncharted))
                  (mod-rule-counter-add-progress 'rule-uncharted 1)
                  (set-time! (-> *game-info* enter-level-time level-index))))))
          (send-event (ppointer->process (-> *hud-parts* buzzers)) 'sync)
