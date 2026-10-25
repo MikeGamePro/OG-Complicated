@@ -1401,7 +1401,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-crate-break) "BREAK 5 CRATES.")
     ((eq? id 'rule-money-pressure) "COLLECT 20 ORBS.")
     ((eq? id 'rule-fuel-pressure) "COLLECT A POWER CELL.")
-    ((eq? id 'rule-buzzer-pressure) "COLLECT 2 SCOUT FLIES.")
+    ((eq? id 'rule-buzzer-pressure) "COLLECT A SCOUT FLY.")
     ((eq? id 'rule-flop-this) "LURKERS MAY ONLY BE KILLED WITH GROUND POUNDS.")
     ((eq? id 'complication-brittle-bones) "EVERY JUMP HAS A 10% CHANCE TO DAMAGE YOU.")
     ((eq? id 'complication-rotten-eggs) "ORBS KILL YOU.")
@@ -1496,7 +1496,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-sniper) (mod-apply-time-limit-multiplier (seconds 75))) ;; 75
     ((eq? id 'rule-money-pressure) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-fuel-pressure) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
-    ((eq? id 'rule-buzzer-pressure) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
+    ((eq? id 'rule-buzzer-pressure) (mod-apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 45)) ;; 45
     ((eq? id 'complication-rotten-eggs) (seconds 30)) ;; 30
@@ -1521,7 +1521,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-eco-reserve) (seconds 45)) ;; 45
     ((eq? id 'complication-red-stop) (seconds 60)) ;; 60
     ((eq? id 'rule-one-frame) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
-    ((eq? id 'rule-distancing) (seconds 60)) ;; 60
+    ((eq? id 'rule-distancing) (seconds 45)) ;; 45
     ((eq? id 'rule-red-light) (seconds 5)) ;; 5
     ((eq? id 'complication-rgyb) (seconds 30)) ;; 30
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
@@ -1583,7 +1583,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-money-pressure) 'counter)
     ((eq? id 'rule-fuel-pressure) 'event-once)
     ((eq? id 'rule-sniper) 'event-once)
-    ((eq? id 'rule-buzzer-pressure) 'counter)
+    ((eq? id 'rule-buzzer-pressure) 'event-once)
     ((eq? id 'rule-die) 'event-once)
     ((eq? id 'rule-one-frame) 'event-once)
     ((eq? id 'rule-vendetta) 'event-once)
@@ -1612,7 +1612,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-hitlist) 3)
     ((eq? id 'rule-crate-break) 5)
     ((eq? id 'rule-money-pressure) 20)
-    ((eq? id 'rule-buzzer-pressure) 2)
     ((eq? id 'rule-sagging-sails) 3)
     ((eq? id 'rule-hang-time) 3)
     ((eq? id 'rule-keep-rolling) 30)
@@ -3020,7 +3019,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                67)))
           ((eq? id 'complication-critical) (if (or is-minigame (< fuel-left 1) (eq? level-name 'finalboss)) 0 55))
           ((eq? id 'rule-buzzer-pressure)
-           (if (or (< buzzer-left 3)
+           (if (or (< buzzer-left 2)
                    is-minigame
                    is-klaww
                    (eq? level-name 'jungleb)
@@ -3067,7 +3066,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'finalboss)
                    (eq? level-name 'sunkenb))
              0
-             99))
+             75))
           ((eq? id 'rule-no-harm) ;; disabled
            (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb) (eq? level-name 'finalboss)) 0 77))
           ((eq? id 'complication-soul-bond)
@@ -3094,7 +3093,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              83))
           ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 374 0))
-          ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 290))
+          ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 190))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 435 0))
           ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))
           ((eq? id 'complication-eco-reserve)
@@ -3120,7 +3119,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              (if (eq? id 'complication-unbreakable) 43 41)))
           ;; Movement
-          ((eq? id 'complication-no-double-jump) (if on-racer 0 59))
+          ((eq? id 'complication-no-double-jump) (if on-racer 0 (if on-flut 100 50)))
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 50))
           ((eq? id 'complication-jak-be-nimble) (if (mod-target-on-racer-or-flut?) 0 47))
           ((eq? id 'rule-keep-rolling)
@@ -3201,7 +3200,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-timed-punishment-active? 'punishment-edge)
                    (mod-target-on-racer-or-flut?))
              0
-             49))
+             40))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 59))
           ((eq? id 'complication-joyride)
            (if (or (mod-target-on-racer-or-flut?)
@@ -3868,6 +3867,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((slot (mod-rule-find-active-slot id)))
     (when (and (>= slot 0) (-> (-> *MOD-rule-slot-bank* slot-punishments) slot))
       (mod-rule-resolve! slot 'failed (eq? id 'rule-survivor)))) ;; ignore grace period for survivor rule
+  (none))
+
+(define *mod-distancing-checked-frame* -1)
+
+(defun mod-rule-update-distancing ()
+  (when (mod-rule-active? 'rule-distancing)
+    (if (= (the int *closest-buzzer-frame*) *mod-distancing-checked-frame*)
+      (set! *closest-buzzer-dist* 1000000000.0)
+      (begin
+        (set! *mod-distancing-checked-frame* (the int *closest-buzzer-frame*))
+        (if (<= *closest-buzzer-dist* (meters 8)) (mod-rule-fail! 'rule-distancing)))))
   (none))
 
 (defun mod-rule-update-qte ()

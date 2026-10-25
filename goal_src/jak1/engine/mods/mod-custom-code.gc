@@ -59,7 +59,7 @@
     (set! *ocean-off* #t))
   (mod-debug-controls)
   (mod-rule-update-ohko)
-  (if (<= *closest-buzzer-dist* (meters 8)) (mod-rule-fail! 'rule-distancing))
+  (mod-rule-update-distancing)
   (mod-rule-update-speed)
   (none))
 
