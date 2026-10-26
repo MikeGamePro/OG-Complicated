@@ -278,7 +278,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'complication-energy-boost
        'rule-uncharted
        'rule-bonecracker
-       'rule-orb-hunt))
+       'rule-orb-hunt
+       'rule-no-ledge))
 
 (define *mod-rule-id-count* (-> *mod-rule-ids* length))
 
@@ -1382,6 +1383,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-uncharted) "UNCHARTED")
     ((eq? id 'rule-bonecracker) "BONECRACKER")
     ((eq? id 'rule-orb-hunt) "ORB HUNT")
+    ((eq? id 'rule-no-ledge) "NO LEDGE")
     (else "UNKNOWN")))
 
 (defun mod-apply-time-limit-multiplier ((base-time time-frame))
@@ -1483,6 +1485,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-uncharted) "VISIT A LEVEL YOU HAVE NOT BEEN TO YET.")
     ((eq? id 'rule-bonecracker) "KNOCK DOWN A BONE BRIDGE.")
     ((eq? id 'rule-orb-hunt) "COLLECT THE HIDDEN ORB IN THIS LEVEL.")
+    ((eq? id 'rule-no-ledge) "DO NOT GRAB A LEDGE.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -1572,6 +1575,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-uncharted) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-bonecracker) (mod-apply-time-limit-multiplier (seconds 45))) ;; 45
     ((eq? id 'rule-orb-hunt) (mod-apply-time-limit-multiplier (seconds 105))) ;; 105
+    ((eq? id 'rule-no-ledge) (seconds 60)) ;; 60
     (else (seconds 30))))
 
 (defun mod-rule-goal-kind ((id symbol))
@@ -1660,7 +1664,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (eq? id 'rule-keep-rolling)
          (eq? id 'rule-uncharted)
          (eq? id 'rule-bonecracker)
-         (eq? id 'rule-orb-hunt))
+         (eq? id 'rule-orb-hunt)
+         (eq? id 'rule-no-ledge))
      'rule)
     ((or (eq? id 'complication-brittle-bones)
          (eq? id 'complication-rotten-eggs)
@@ -2973,7 +2978,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-for-billy 'rule-fuel-pressure
        'rule-for-billy 'rule-money-pressure
        'rule-one-frame 'rule-hang-time
-       'complication-rotten-eggs 'rule-orb-hunt))
+       'complication-rotten-eggs 'rule-orb-hunt
+       'rule-no-ledge 'complication-get-a-grip))
 
 ;; True if the twist state forbids rolling this id (rules while a twist is pending/marked, twist while one is already in progress).
 (defun mod-rule-twist-blocks? ((id symbol))
@@ -3163,6 +3169,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-bad-ping) (if (mod-timed-punishment-active? 'punishment-delay) 0 36))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 52))
+          ((eq? id 'rule-no-ledge) (if (or on-racer on-flut (eq? level-name 'finalboss) (sole-zoomer-level? level-name) (mod-timed-punishment-active? 'punishment-edge)) 0 50))
           ;; Water
           ((eq? id 'complication-drought)
            (cond

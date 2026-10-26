@@ -773,6 +773,7 @@
   :trans
     (behavior ()
       (mod-rule-trigger-get-a-grip)
+      (mod-rule-fail! 'rule-no-ledge)
       (when (and (time-elapsed? (-> self state-time) (seconds 0.2))
                  ;; og:preserve-this - High FPS Fix
                  (recently-pressed? x)
