@@ -53,8 +53,10 @@
   (mod-rule-update-qte)
   (if *show-input-display* (input-display-on) (input-display-off))
   (if (!= (current-level-name) 'swamp) (mod-rule-fail! 'rule-for-billy))
-  (if (= (-> *target* control ground-pat material) (pat-material ice)) (mod-rule-fail! 'rule-cold-feet))
-  (if (= (-> *target* control ground-pat material) (pat-material grass)) (mod-rule-counter-add-progress 'rule-touch-grass 1))
+  (when *target*
+    (let ((mat (-> *target* control ground-pat material)))
+      (if (= mat (pat-material ice)) (mod-rule-fail! 'rule-cold-feet))
+      (if (= mat (pat-material grass)) (mod-rule-counter-add-progress 'rule-touch-grass 1))))
   (when (mod-rule-active? 'complication-drought)
     (set! *ocean-off* #t))
   (mod-debug-controls)
@@ -117,12 +119,16 @@
   (none))
 
 (defun runs-on-jak-spawn ()
-  (when (mod-rule-active? 'complication-invisible-man)
-    (mod-rule-reapply-slot-visual-effect 'complication-invisible-man))
-  (mod-rule-trigger-get-a-grip)
   ;; Code here runs every time jak spawns (loading a file new game or death)
   ;;uncomment this to use custom music for custom levels - the function is in mod-common-functions.gc
   ;;(process-spawn-function process music-manager-proc)
+  (when (mod-rule-active? 'complication-invisible-man)
+    (mod-rule-reapply-slot-visual-effect 'complication-invisible-man))
+  (mod-rule-trigger-get-a-grip)
+  (if (mod-rule-active? 'complication-invisible-man)
+    (mod-rule-reapply-slot-visual-effect 'complication-invisible-man)
+    (when (-> *MOD-target-mesh-bank* invis-active?)
+      (mod-invisible-man-restore!)))
   (none))
 
 (defun runs-on-jak-death ((death-event symbol))
@@ -137,7 +143,7 @@
 
 (defun runs-on-enemy-death ((enemy process-drawable))
   (mod-rule-fail! 'rule-no-harm)
-  (let* ((enemy-type (the-as symbol (-> enemy type)))
+  (let* ((enemy-type (-> enemy type symbol))
          (was-flop? (mod-enemy-killed-by-flop? enemy))
          (was-red? (mod-enemy-killed-by-red-eco? enemy)))
     (when (and (-> enemy root) *target*)

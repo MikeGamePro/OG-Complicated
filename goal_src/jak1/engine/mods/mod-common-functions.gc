@@ -2204,6 +2204,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (set! idx (+ idx 1)))))))
   (none))
 
+(defun mod-invisible-man-restore! ()
+  (when *target*
+    (mod-target-mesh-invis-set! #f)
+    (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 1.0)
+    (send-event *target* 'sidekick #t)
+    (let ((v1-9 (-> *target* draw shadow-ctrl))) (logclear! (-> v1-9 settings flags) (shadow-flags disable-draw))))
+  (none))
+
 ;; True if an active slot already has this punishment assigned.
 (defun mod-punishment-used-by-active-slot? ((punishment symbol))
   (let ((slot 0)
@@ -2528,11 +2536,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (logclear! (-> *target* mask) (process-mask sleep))
            (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0))
           ((and *target* (eq? id 'complication-joyride) (mod-target-on-flut?)) (send-event *target* 'end-mode))
-          ((and *target* (eq? id 'complication-invisible-man))
-           (mod-target-mesh-invis-set! #f)
-           (set-vector! (-> *target* draw color-mult) 1.0 1.0 1.0 1.0)
-           (send-event *target* 'sidekick #t)
-           (let ((v1-9 (-> *target* draw shadow-ctrl))) (logclear! (-> v1-9 settings flags) (shadow-flags disable-draw))))
+          ((eq? id 'complication-invisible-man) (mod-invisible-man-restore!))
           ((eq? id 'complication-jak-rabbit)
            (set! (-> *TARGET-bank* jump-height-min) (meters 1.01))
            (set! (-> *TARGET-bank* jump-height-max) (meters 3.5))
@@ -2959,7 +2963,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-survivor 'complication-ohko
        'rule-survivor 'complication-vibe-check
        'complication-rotten-eggs 'rule-loyal-customer
-      ;;  'rule-orb-hunt 'complication-rotten-eggs
        'rule-orb-hunt 'complication-hidden-treasure
        'complication-glare 'rule-lurker-pressure
        'rule-die 'rule-touch-grass
@@ -3132,7 +3135,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-quicksand) (if (sand-level? level-name) 146 0))
           ((eq? id 'complication-invert) 36)
           ((eq? id 'complication-cumbersome) (if (or is-minigame (mod-target-on-racer-or-flut?) (< (current-orb-count) 20)) 0 64))
-          ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 45))
+          ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 40))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
              ((or (eq? level-name 'training) (string= checkpoint-name "finalboss-fight")) 0)
@@ -3178,7 +3181,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-vibe-check)
            (cond
              ((or is-minigame (string= checkpoint-name "finalboss-fight")) 0)
-             ((< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0) 55)
+             ((and *target* (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0)) 55)
              (else 24)))
           ((eq? id 'rule-express-delivery)
            (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
@@ -3228,7 +3231,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 387 0))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))
-                   (and (not (or (mod-target-fishing?) (= (-> *target* control ground-pat material) (pat-material grass))))
+                   (and (not (or (mod-target-fishing?) (and *target* (= (-> *target* control ground-pat material) (pat-material grass)))))
                         (grass-level? level-name)))
              87
              0))
@@ -3458,6 +3461,17 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (mod-rule-move-slot! src dst))
           (+! dst 1))
         (+! src 1))))
+  (none))
+
+(define *mod-last-target-slot-count* 1)
+
+;; Drop not-yet-rolled slots (highest first) until active+pending fits the target.
+(defun mod-rule-trim-pending-to-target! ()
+  (let ((slot (- *mod-rule-slot-count* 1)))
+    (while (and (>= slot 0) (> (mod-rule-active-slot-count) (mod-rule-target-slot-count)))
+      (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot) (not (-> (-> *MOD-rule-slot-bank* active-slots) slot)))
+        (mod-rule-clear-slot slot))
+      (-! slot 1)))
   (none))
 
 (defun mod-rule-counter-add-progress ((id symbol) (amount int))
@@ -3938,8 +3952,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (begin
         (set! (-> (the-as fact-info-target (-> *target* fact)) health) 0.0)
         (send-event *target* 'attack #t (new 'static 'attack-info)))
-      (send-event *target* 'attack-invinc #f (static-attack-info ((mode (if (mod-target-on-flut?) 'endlessfall 'melt))))))
-    (none)))
+      (send-event *target* 'attack-invinc #f (static-attack-info ((mode (if (mod-target-on-flut?) 'endlessfall 'melt)))))))
+  (none))
 
 (defun mod-rule-trigger-eco-allergy ()
   (when (mod-rule-active? 'complication-eco-allergy)
@@ -3947,9 +3961,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-trigger-sizeable ()
-  (if (mod-rule-active? 'complication-sizeable)
-    (if (>= (current-orb-count) 2.0) (begin   (set! (-> *game-info* money) (- (current-orb-count) 2.0))   #t) #f)
-    #t))
+  (cond
+    ((not (mod-rule-active? 'complication-sizeable)) #t)
+    ((>= (current-orb-count) 2.0) (set! (-> *game-info* money) (- (current-orb-count) 2.0)) #t)
+    (else #f)))
 
 (defun mod-rule-update-ohko ()
   (when (and *target*
@@ -3959,7 +3974,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 (defun mod-rule-trigger-glare ()
-  (when (mod-rule-active? 'complication-glare)
+  (when (and *target* (mod-rule-active? 'complication-glare))
     (logior! (-> *target* mask) (process-mask sleep))
     (set! (-> *MOD-rule-context-bank* mean-look-clear-time) (+ (current-time) (seconds 3))))
   (none))
@@ -4240,7 +4255,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (when (and (> (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
                       (>= (current-time) (-> *MOD-rule-context-bank* mean-look-clear-time)))
              (set! (-> *MOD-rule-context-bank* mean-look-clear-time) 0)
-             (logclear! (-> *target* mask) (process-mask sleep)))
+             (when *target*
+               (logclear! (-> *target* mask) (process-mask sleep))))
            (mod-update-timed-punishments)
            (mod-update-math-quiz)
            (mod-update-trivia)
@@ -4249,6 +4265,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-handle-pass-input)
            (mod-rule-update-shifty)
            (mod-orb-hunt-update)
+           (let ((target (mod-rule-target-slot-count)))
+             (when (< target *mod-last-target-slot-count*)
+               (mod-rule-trim-pending-to-target!))
+             (set! *mod-last-target-slot-count* target))
            (mod-rule-compact-slots!)
            (mod-rule-fill-to-target!)
            (when (mod-rule-active? 'complication-get-a-grip)
@@ -4536,7 +4556,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (mod-rule-draw-labeled-value! buf
                                             "SPEED: "
                                             (font-color progress-percent)
-                                            (mod-tenths-str (/ (-> *target* control ctrl-xz-vel) (meters 1)))
+                                            (if *target* (mod-tenths-str (/ (-> *target* control ctrl-xz-vel) (meters 1))) "-")
                                             row))
         (if (mod-rule-active? 'complication-bus-driver)
           (mod-draw-string-xy-scaled "/20.0"
@@ -5122,6 +5142,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (('punishment-delay) (input-delay-enable! #t (-> *MOD-tuning-bank* punishment-input-delay)))
           (('punishment-iframes) (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0)))))))
   (set! (-> *MOD-rule-context-bank* last-update-time) (current-time))
+  ;; (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (current-time))
+  ;; (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (current-time))
   (none))
 
 (defun mod-rule-active-slots-resume-from-save ((val int))
