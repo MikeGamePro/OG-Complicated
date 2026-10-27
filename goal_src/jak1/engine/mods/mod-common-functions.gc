@@ -1383,7 +1383,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-uncharted) "UNCHARTED")
     ((eq? id 'rule-bonecracker) "BONECRACKER")
     ((eq? id 'rule-orb-hunt) "ORB HUNT")
-    ((eq? id 'rule-no-ledge) "NO LEDGE")
+    ((eq? id 'rule-no-ledge) "LEDGE LESS")
     (else "UNKNOWN")))
 
 (defun mod-apply-time-limit-multiplier ((base-time time-frame))
@@ -1888,7 +1888,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             (when (and (eq? punishment 'punishment-pause) (>= (current-time) (-> (-> *MOD-punishment-bank* timed-next-ticks) slot)))
               ;; schedule from now (not +=) so a long menu stay can't cause a burst of catch-up rolls
               (set! (-> (-> *MOD-punishment-bank* timed-next-ticks) slot) (+ (current-time) (seconds 1)))
-              (when (= (mod-rand-punish-int-range 0 11) 0)
+              (when (= (mod-rand-punish-int-range 0 12) 0)
                 (when (mod-can-menu-pause?)
                   (activate-progress *dproc* (progress-screen fuel-cell))))))))))
   (none))
@@ -2979,7 +2979,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-for-billy 'rule-money-pressure
        'rule-one-frame 'rule-hang-time
        'complication-rotten-eggs 'rule-orb-hunt
-       'rule-no-ledge 'complication-get-a-grip))
+       'rule-no-ledge 'complication-get-a-grip
+       'rule-no-ledge 'complication-butter-fingers))
 
 ;; True if the twist state forbids rolling this id (rules while a twist is pending/marked, twist while one is already in progress).
 (defun mod-rule-twist-blocks? ((id symbol))

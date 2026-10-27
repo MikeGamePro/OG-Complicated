@@ -1965,7 +1965,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [85] NO LEDGE
+       ;; [85] LEDGE LESS
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
