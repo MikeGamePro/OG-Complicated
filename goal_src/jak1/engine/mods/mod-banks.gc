@@ -310,8 +310,9 @@
 
 (deftype mod-orb-hunt-bank (structure)
   ((orb-handle handle)
-   (spawned?   symbol)))
+   (spawned?   symbol)
+   (level      symbol)))
 
-(define *MOD-orb-hunt-bank* (new 'static 'mod-orb-hunt-bank :spawned? #f))
+(define *MOD-orb-hunt-bank* (new 'static 'mod-orb-hunt-bank :spawned? #f :level #f))
 
 (set! (-> *MOD-orb-hunt-bank* orb-handle) (the-as handle #f))
