@@ -3034,7 +3034,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                64)))
           ((eq? id 'complication-critical) (if (or is-minigame (< fuel-left 1) (eq? level-name 'finalboss)) 0 47))
           ((eq? id 'rule-buzzer-pressure)
-           (if (or (< buzzer-left 2)
+           (if (or (< buzzer-left 3)
                    is-minigame
                    is-klaww
                    (eq? level-name 'jungleb)
