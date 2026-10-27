@@ -3136,7 +3136,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-target-billy-game?))
              0
              80))
-          ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 369 0))
+          ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 250 0))
           ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 190))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 422 0))
           ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))

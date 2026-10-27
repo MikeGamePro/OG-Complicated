@@ -99,7 +99,9 @@
 | **KEEP ROLLING** | ROLL 30 TIMES. |
 | **BONECRACKER** | KNOCK DOWN A BONE BRIDGE. |
 | **UNCHARTED** | VISIT A LEVEL YOU HAVE NOT BEEN TO YET. |
-| **ORB HUNT** | COLLECT THE HIDDEN ORB IN THIS LEVEL. | A large, purple precursor orb will spawn in one of four locations in the current level. Collect it before time runs out. The jungle temple is considered a separate level, as well as the robot room in Spider Cave.
+| **ORB HUNT** | COLLECT THE HIDDEN ORB IN THIS LEVEL. | A large, purple precursor orb will spawn in one of four locations in the current level. Collect it before time runs out.
+| **LEDGE LESS** | DO NOT GRAB A LEDGE. |
+
 
 </details>
 <details>
