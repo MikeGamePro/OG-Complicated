@@ -142,6 +142,7 @@
    (bus-driver-grace-period   time-frame)
    (shifty-next-time          time-frame)
    (palate-change-grace-until time-frame)
+   (red-shockwave-until       time-frame)
    (fisher-missed             int32)
    (fisher-caught             int32)))
 
@@ -165,6 +166,7 @@
        :bus-driver-grace-period (seconds 2)
        :shifty-next-time 0
        :palate-change-grace-until 0
+       :red-shockwave-until 0
        :fisher-missed 0
        :fisher-caught 0))
 

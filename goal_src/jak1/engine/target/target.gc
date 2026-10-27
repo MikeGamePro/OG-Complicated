@@ -41,6 +41,8 @@
 
 (define-extern *last-launch-time* (int))
 
+(define-extern mod-rule-start-red-shockwave! (function none))
+
 ;; DECOMP BEGINS
 
 (defbehavior target-falling-anim target ((arg0 time-frame) (arg1 time-frame))
@@ -1676,6 +1678,7 @@
           (logior! (-> self control status) (cshape-moving-flags onsurf))
           (when (and (= (-> self fact eco-type) (pickup-type eco-red)) (>= (-> self fact eco-level) 1.0))
             (cpad-set-buzz! (-> *cpad-list* cpads 0) 1 255 (seconds 0.5))
+            (mod-rule-start-red-shockwave!)
             (effect-control-method-10 (-> self skel effect) 'group-red-eco-strike-ground (ja-frame-num 0) 0)
             (let ((s5-1 (process-spawn touch-tracker :init touch-tracker-init (-> self control trans) 4096.0 30 :to self)))
               (send-event (ppointer->process s5-1) 'event 'attack 'flop)
