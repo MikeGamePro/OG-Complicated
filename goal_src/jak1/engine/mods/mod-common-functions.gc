@@ -1399,11 +1399,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (('village1) "SANDOVER VILLAGE")
     (('beach) "SENTINEL BEACH")
     (('jungle) "FORBIDDEN JUNGLE")
-    (('jungle) "JUNGLE TEMPLE")
+    (('jungleb) "JUNGLE TEMPLE")
     (('misty) "MISTY ISLAND")
     (('firecanyon) "FIRE CANYON")
     (('village2) "ROCK VILLAGE")
-    (('sunken) "LOST PRECURSOR CITY")
+    (('sunken 'sunkenb) "LOST PRECURSOR CITY")
     (('swamp) "BOGGY SWAMP")
     (('rolling) "PRECUROR BASIN")
     (('ogre) "MOUNTAIN PASS")
@@ -3198,7 +3198,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-bad-ping) (if (mod-timed-punishment-active? 'punishment-delay) 0 36))
           ((eq? id 'complication-loose-pockets)
            (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 52))
-          ((eq? id 'rule-no-ledge) (if (or on-racer on-flut (eq? level-name 'finalboss) (sole-zoomer-level? level-name) (mod-timed-punishment-active? 'punishment-edge)) 0 50))
+          ((eq? id 'rule-no-ledge)
+           (if (or on-racer
+                   on-flut
+                   (eq? level-name 'finalboss)
+                   (sole-zoomer-level? level-name)
+                   (mod-timed-punishment-active? 'punishment-edge))
+             0
+             50))
           ;; Water
           ((eq? id 'complication-drought)
            (cond
