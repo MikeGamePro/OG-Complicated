@@ -176,4 +176,5 @@
   - Followed Rule Increment
   - Number of conditions toggled
   - Number of punishments toggled
+  - Completion percentage
   - Final time
