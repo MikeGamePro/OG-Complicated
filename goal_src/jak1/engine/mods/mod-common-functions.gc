@@ -664,7 +664,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (and (mod-rule-active? 'rule-trivia) (= (-> *MOD-quiz-bank* trivia-current-question) 47)))
 
 (defun mod-orb-weight-multiplier ()
-  (let ((orbs (max 0.0 (min 150.0 (current-orb-count))))) (- 1.0 (* 0.4 (/ orbs 100.0)))))
+  (let ((orbs (max 0.0 (min 200.0 (current-orb-count))))) (- 1.0 (* 0.3 (/ orbs 100.0)))))
 
 (defun mod-refresh-movement-speeds! ((turbo? symbol) (mult float))
   (let* ((walk-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-walk-speed)))
@@ -1514,6 +1514,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
      (if (-> *MOD-orb-hunt-bank* level)
        (string-format "COLLECT THE HIDDEN ORB IN ~S." (mod-level-display-name (-> *MOD-orb-hunt-bank* level)))
        "COLLECT THE HIDDEN ORB IN THIS LEVEL."))
+    ((eq? id 'rule-no-ledge) "DO NOT GRAB A LEDGE.")
     (else "NO DESCRIPTION AVAILABLE.")))
 
 (defun mod-rule-duration ((id symbol))
@@ -3077,6 +3078,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((or (< fuel-left 1)
                   is-minigame
                   (eq? level-name 'ogre)
+                  (eq? level-name 'firecanyon)
                   (eq? level-name 'jungleb)
                   (string= checkpoint-name "lavatube-start")
                   racer-lavatube
@@ -3110,7 +3112,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'finalboss)
                    (eq? level-name 'sunkenb))
              0
-             80))
+             72))
           ((eq? id 'rule-no-harm) ;; disabled
            (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb) (eq? level-name 'finalboss)) 0 74))
           ((eq? id 'complication-soul-bond)
@@ -3252,7 +3254,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (mod-timed-punishment-active? 'punishment-edge)
                    (mod-target-on-racer-or-flut?))
              0
-             39))
+             32))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 65))
           ((eq? id 'complication-joyride)
            (if (or (mod-target-on-racer-or-flut?)
