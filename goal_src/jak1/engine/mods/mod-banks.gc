@@ -126,10 +126,8 @@
 
 (deftype mod-rule-context-bank (structure)
   ((last-update-time          time-frame)
-   (current-slot              int32)
    (last-reverted-cell-task   int32)
    (last-reverted-cell-until  int32)
-   (last-outcome              symbol)
    (last-kill-time            time-frame)
    (mean-look-clear-time      time-frame)
    (qte-target-button         int32)
@@ -150,10 +148,8 @@
   (new 'static
        'mod-rule-context-bank
        :last-update-time 0
-       :current-slot 0
        :last-reverted-cell-task 0
        :last-reverted-cell-until 0
-       :last-outcome 'none
        :last-kill-time 0
        :mean-look-clear-time 0
        :qte-target-button 0

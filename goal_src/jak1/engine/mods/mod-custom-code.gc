@@ -122,8 +122,6 @@
   ;; Code here runs every time jak spawns (loading a file new game or death)
   ;;uncomment this to use custom music for custom levels - the function is in mod-common-functions.gc
   ;;(process-spawn-function process music-manager-proc)
-  (when (mod-rule-active? 'complication-invisible-man)
-    (mod-rule-reapply-slot-visual-effect 'complication-invisible-man))
   (mod-rule-trigger-get-a-grip)
   (if (mod-rule-active? 'complication-invisible-man)
     (mod-rule-reapply-slot-visual-effect 'complication-invisible-man)
