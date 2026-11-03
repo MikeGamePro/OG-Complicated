@@ -2628,6 +2628,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; Stop the countdown process and clear rules after the game is beaten.
 (defun mod-global-countdown-freeze-for-game-beaten ()
   (kill-by-name 'global-countdown *active-pool*)
+  (kill-by-name 'mod-rule-manager *active-pool*)
   (mod-rules-reset-core)
   (set! (-> *MOD-countdown-bank* active?) #f)
   (set! (-> *MOD-countdown-bank* lost?) #f)
@@ -4735,6 +4736,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-global-countdown-reset ()
   (kill-by-name 'global-countdown *active-pool*)
+  (kill-by-name 'mod-rule-manager *active-pool*)
   (mod-rules-reset)
   (set! (-> *MOD-countdown-bank* active?) #f)
   (set! (-> *MOD-countdown-bank* lost?) #f)
