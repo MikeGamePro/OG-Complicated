@@ -8,7 +8,7 @@
 ;;---------------------------
 ;; pc menu extra stuff
 
-(define-extern mod-global-countdown-reset (function none))
+(define-extern mod-run-reset (function none))
 (define-extern mod-timed-punishment-active? (function symbol symbol))
 
 (defconstant PROGRESS_PC_PAGE_HEIGHT 7)
@@ -2974,7 +2974,7 @@
               (set! *quit-to-title* #t)
               (sound-play "start-options")
               (sound-volume-off)
-              (mod-global-countdown-reset)
+              (mod-run-reset)
               (set! (-> *game-info* mode) 'play)
               (initialize! *game-info* 'game (the-as game-save #f) "title-start"))
              (else (sound-play "cursor-options") (set! (-> obj next-display-state) (progress-screen invalid)))))

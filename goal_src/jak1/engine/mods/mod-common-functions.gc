@@ -47,8 +47,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; add your own unique custom functions here!
 
 ;; COMMAND/FUNCTION REFERENCE
-;; Start game: (global-countdown-start)
-;; Stop game: (mod-global-countdown-reset)
+;; Start game: (mod-run-start)
+;; Stop game: (mod-run-reset)
 ;; Force specific rule: (mod-rule-activate-slot 0 'rule-grounded)
 ;; Check if a specific slot is active: (mod-rule-slot-active? 0)
 
@@ -2587,6 +2587,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> *mod-rule-recent-rolls* slot) #f))
   (none))
 
+;; Reset active rules and punishments. Keeps stats and countdown.
 (defun mod-rules-reset-core ()
   (dotimes (slot *mod-rule-slot-count*)
     (mod-rule-deactivate-slot slot))
@@ -2619,14 +2620,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (set! (-> (-> *MOD-punishment-bank* timed-saved-tenths) slot) -1))
   (none))
 
-;; Full reset!
+;; Reset rules and stats. Keeps countdown.
 (defun mod-rules-reset ()
   (mod-rules-reset-core)
   (mod-stats-reset!)
   (none))
 
 ;; Stop the countdown process and clear rules after the game is beaten.
-(defun mod-global-countdown-freeze-for-game-beaten ()
+(defun mod-run-freeze-for-game-beaten ()
   (kill-by-name 'global-countdown *active-pool*)
   (kill-by-name 'mod-rule-manager *active-pool*)
   (mod-rules-reset-core)
@@ -2888,7 +2889,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (else #f))
       (string= (current-checkpoint-name) "ogre-start")))
 
-;; Pairs of conditions that must never be active together
+;; Pairs of conditions that must never be active together.
 (define *mod-rule-conflict-pairs*
   (new 'static
        'boxed-array
@@ -4599,7 +4600,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 ;; Draw the whole HUD.
-(defun mod-global-countdown-draw ()
+(defun mod-run-hud-draw ()
   (cond
     ((-> *MOD-countdown-bank* active?)
      (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf)) (bucket-id debug-no-zbuf))
@@ -4629,7 +4630,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                                       (mod-hud-flags)
                                       0.5)))
        (mod-draw-timed-punishments global-buf)
-       ;; Blocks stack in slot order.
+       ;; Blocks stack in slot order
        (let* ((band-count (mod-rule-hud-band-count))
               (compact? (mod-rule-hud-compact? global-buf band-count))
               (y *mod-hud-top*))
@@ -4730,11 +4731,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (when (<= (-> *MOD-countdown-bank* remaining-time) 0)
              (format #t "COUNTDOWN: lost triggered~%")
              (mod-reset-run-and-restart))))))
-    (mod-global-countdown-draw)
+    (mod-run-hud-draw)
     (suspend))
   (none))
 
-(defun mod-global-countdown-reset ()
+;; Full run reset!
+(defun mod-run-reset ()
   (kill-by-name 'global-countdown *active-pool*)
   (kill-by-name 'mod-rule-manager *active-pool*)
   (mod-rules-reset)
@@ -5138,13 +5140,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 ;; Start a new run.
-(defun global-countdown-start ()
+(defun mod-run-start ()
   (mod-reset-level-visits!)
   (let ((active-seed (mod-rng-active-seed)))
     (mod-rng-seed-all! active-seed)
     (set! (-> *MOD-rng-bank* seed-display) active-seed)
     (format 0 "[mod-rng] seed: ~D~%" active-seed))
-  (mod-global-countdown-reset)
+  (mod-run-reset)
   (set! (-> *MOD-countdown-bank* active?) #t)
   (mod-rules-start)
   (global-countdown-spawn-proc)
@@ -5157,13 +5159,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-countdown-bank* saved-remaining-time) saved-time)
   (none))
 
-(defun global-countdown-finalize-resume-from-save ()
+(defun mod-run-finalize-resume-from-save ()
   (let ((saved-time (-> *MOD-countdown-bank* saved-remaining-time)))
     (set! (-> *MOD-countdown-bank* saved-remaining-time) -1)
     (if (-> *MOD-rule-context-bank* game-beaten?)
       ;; This save file already beat the game.
       (when (or (-> *MOD-countdown-bank* active?) (-> *MOD-countdown-bank* lost?))
-        (mod-global-countdown-freeze-for-game-beaten))
+        (mod-run-freeze-for-game-beaten))
       (cond
         ((> saved-time 0)
          (set! (-> *MOD-countdown-bank* remaining-time) saved-time)
@@ -5177,7 +5179,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (else
          ;; No countdown was saved in this file.
          (when (or (-> *MOD-countdown-bank* active?) (-> *MOD-countdown-bank* lost?))
-           (mod-global-countdown-reset))))))
+           (mod-run-reset))))))
   (none))
 
 (defun global-countup-save-value ()

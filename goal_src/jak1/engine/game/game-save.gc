@@ -30,7 +30,7 @@
 
 (define-extern global-countdown-resume-from-save (function int none))
 
-(define-extern global-countdown-finalize-resume-from-save (function none))
+(define-extern mod-run-finalize-resume-from-save (function none))
 
 (define-extern global-countup-save-value (function int))
 
@@ -1163,7 +1163,7 @@
                     (&+ (the-as pointer data) (logand -16 (+ (* (the-as int (-> data elt-size)) (-> data elt-count)) 31)))))))
   (mod-finalize-resume-from-save)
   (global-countup-finalize-resume-from-save)
-  (global-countdown-finalize-resume-from-save)
+  (mod-run-finalize-resume-from-save)
   ;; update entity stuff in levels that are active
   (dotimes (s4-1 (-> *level* length))
     (let ((a1-68 (-> *level* level s4-1))) (if (= (-> a1-68 status) 'active) (copy-perms-to-level! this a1-68))))
