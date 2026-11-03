@@ -2532,10 +2532,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (none))
 
 ;; Grace period after activation during which a failure is ignored.
-(defun mod-rule-grace-duration ((id symbol))
+(defun mod-rule-grace-period ((id symbol))
   (cond
     ((eq? id 'rule-side-to-side) (seconds 2))
     ((eq? id 'rule-qte) (seconds 0.7))
+    ((eq? id 'rule-red-light) (seconds 1.5))
     (else (seconds 1.25))))
 
 ;; Activate a condition in a slot. Useful!
@@ -2561,7 +2562,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (mod-rule-twist-check-and-mark! slot id))
       (set! (-> (-> *MOD-rule-slot-bank* slot-punishments) slot) #f))
     (set! (-> (-> *MOD-rule-slot-bank* slot-end-times) slot) (+ (current-time) (mod-rule-duration id)))
-    (set! (-> (-> *MOD-rule-slot-bank* slot-grace-periods) slot) (+ (current-time) (mod-rule-grace-duration id)))
+    (set! (-> (-> *MOD-rule-slot-bank* slot-grace-periods) slot) (+ (current-time) (mod-rule-grace-period id)))
     (mod-rule-on-activate id))
   (none))
 
@@ -4673,7 +4674,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                              title-x
                              title-row
                              (font-color green)
-                             (font-flags shadow kerning large)
+                             (mod-hud-flags)
                              0.8)
       (+! title-row (mod-scale-px 15))
       (draw-string-xy-scaled "A COMPLICATED MOD WITH RULES."
@@ -4681,10 +4682,10 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                              title-x
                              title-row
                              (font-color white)
-                             (font-flags shadow kerning large)
+                             (mod-hud-flags)
                              0.4)
       (+! title-row (mod-scale-px 10))
-      (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (font-flags shadow kerning large) 1.0)))
+      (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (mod-hud-flags) 1.0)))
   (none))
 
 ;; Countdown loop: advance timers and draw the HUD every frame.
