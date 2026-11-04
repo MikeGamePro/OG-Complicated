@@ -169,7 +169,7 @@
 
 ## Final Score
 - The final score is just something fun I added after OutrageousJosh gave me the idea. You can see it during the credits after a completed run.
-- Here is everything that changes the score. The harder it makes the run, the more it increases the score. ⬆️⬇️ indicates whether increasing or decreasing improves the score:
+- Here is everything that changes the score. ⬆️⬇️ indicates whether increasing or decreasing improves the score:
   - Countdown Start Time ⬇️
   - Time Limit Multiplier ⬇️
   - Collectable Increments ⬇️
