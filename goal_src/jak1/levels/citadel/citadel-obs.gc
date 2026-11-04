@@ -256,7 +256,9 @@
 (deftype citb-disc (process-drawable)
   ((root      collide-shape-moving :override)
    (sync      sync-info :inline)
-   (rot-scale float))
+   (rot-scale float)
+   (rot-angle float)
+   (last-phase float))
   (:methods
    (init! (_type_) none)
    (citb-disc-method-21 (_type_) none))
@@ -276,12 +278,21 @@
         ;; (when (> (-> self root riders num-riders) 0)
         ;;   (format #t "riding pizza")
         ;;   )
-        (quaternion-axis-angle! (-> self root quat)
-                                0.0
-                                1.0
-                                0.0
-                                (* (if (mod-rule-active? 'complication-overclock) 3.0 1.0)
-                                   (* 65536.0 (get-current-phase (-> self sync)) (-> self rot-scale))))
+        (let ((phase (get-current-phase (-> self sync))))
+          (let ((phase-delta (- phase (-> self last-phase))))
+            (cond
+              ((> phase-delta 0.5) (-! phase-delta 1.0))
+              ((< phase-delta -0.5) (+! phase-delta 1.0)))
+            (set! (-> self last-phase) phase)
+            (+! (-> self rot-angle)
+                (* 65536.0
+                   phase-delta
+                   (-> self rot-scale)
+                   (if (mod-rule-active? 'complication-overclock) 3.0 1.0)))
+            (cond
+              ((> (-> self rot-angle) 65536.0) (-! (-> self rot-angle) 65536.0))
+              ((< (-> self rot-angle) -65536.0) (+! (-> self rot-angle) 65536.0)))
+            (quaternion-axis-angle! (-> self root quat) 0.0 1.0 0.0 (-> self rot-angle))))
         (suspend)))
   :post rider-post)
 
@@ -319,6 +330,9 @@
     (else
      (set! (-> this rot-scale) -1.0)
      (let ((v1-8 (abs (the-as int (-> this sync period))))) (set! (-> this sync period) (the-as uint v1-8)))))
+  (set! (-> this last-phase) (get-current-phase (-> this sync)))
+  (set! (-> this rot-angle)
+        (* 65536.0 (-> this last-phase) (-> this rot-scale)))
   (citb-disc-method-21 this)
   (set! (-> this sound) (new 'process 'ambient-sound (static-sound-spec "rotate-plat" :fo-max 20) (-> this root trans)))
   (logior! (-> this skel status) (janim-status inited))
