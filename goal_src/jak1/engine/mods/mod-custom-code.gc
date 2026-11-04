@@ -55,8 +55,9 @@
   (if (!= (current-level-name) 'swamp) (mod-rule-fail! 'rule-for-billy))
   (when *target*
     (let ((mat (-> *target* control ground-pat material)))
-      (if (= mat (pat-material ice)) (mod-rule-fail! 'rule-cold-feet))
-      (if (= mat (pat-material grass)) (mod-rule-counter-add-progress 'rule-touch-grass 1))))
+      (when (not (mod-target-airborne?))
+        (if (= mat (pat-material ice)) (mod-rule-fail! 'rule-cold-feet))
+        (if (= mat (pat-material grass)) (mod-rule-counter-add-progress 'rule-touch-grass 1)))))
   (when (mod-rule-active? 'complication-drought)
     (set! *ocean-off* #t))
   (mod-debug-controls)

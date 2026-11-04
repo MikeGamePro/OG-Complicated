@@ -3148,12 +3148,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((or (eq? level-name 'rolling) (eq? level-name 'training)) 41)
              (else 87)))
           ((eq? id 'rule-landlubber)
-           (cond
-             ((water-level? level-name) 95)
-             ((or (eq? level-name 'misty)
-                  (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave)))
-              86)
-             (else 0)))
+           (if (and *target* (logtest? (-> *target* control status) (cshape-moving-flags on-water)))
+             0
+             (cond
+               ((water-level? level-name) 95)
+               ((or (eq? level-name 'misty)
+                    (and (not (task-closed? (game-task cave-dark-crystals) (task-status need-resolution))) (eq? level-name 'darkcave)))
+                86)
+               (else 0))))
           ;; Special
           ((eq? id 'rule-hang-time) (if (or is-minigame (not (hang-time-level? level-name))) 0 71))
           ((eq? id 'complication-vibe-check)
@@ -3208,7 +3210,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                     (>= (-> *MOD-rule-context-bank* fisher-caught) 20))
              1613
              0))
-          ((eq? id 'rule-cold-feet) (if (eq? level-name 'snow) 387 0))
+          ((eq? id 'rule-cold-feet)
+           (if (and *target* (= (-> *target* control ground-pat material) (pat-material ice))) 0 (if (eq? level-name 'snow) 387 0)))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))
                    (and (not (or (mod-target-fishing?) (and *target* (= (-> *target* control ground-pat material) (pat-material grass)))))
@@ -3274,9 +3277,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                    (eq? level-name 'lavatube)
                    (eq? level-name 'citadel)
                    is-minigame
-                  ;;  (and (string= checkpoint-name "citadel-elevator")
-                  ;;       (task-closed? (game-task citadel-sage-green) (task-status need-resolution)))
-                        )
+                   ;;  (and (string= checkpoint-name "citadel-elevator")
+                   ;;       (task-closed? (game-task citadel-sage-green) (task-status need-resolution)))
+                   )
              0
              39))
           ((eq? id 'complication-brittle-bones)
@@ -4197,6 +4200,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((global-countdown-paused?)
            (when (> elapsed 0)
              (mod-shift-all-timers! elapsed))
+           (when (or (movie?) (and *target* (logtest? (-> *target* state-flags) (state-flags grabbed))))
+             (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (current-time)))
            (mod-math-quiz-handle-input)
            (mod-trivia-handle-input)
            (mod-rule-handle-pass-input))
@@ -4674,13 +4679,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf)) (bucket-id debug-no-zbuf))
     (let ((title-row 30)
           (title-x 10))
-      (draw-string-xy-scaled "A COMPLICATED MOD"
-                             global-buf
-                             title-x
-                             title-row
-                             (font-color green)
-                             (mod-hud-flags)
-                             0.8)
+      (draw-string-xy-scaled "A COMPLICATED MOD" global-buf title-x title-row (font-color green) (mod-hud-flags) 0.8)
       (+! title-row (mod-scale-px 15))
       (draw-string-xy-scaled "A COMPLICATED MOD WITH RULES."
                              global-buf
