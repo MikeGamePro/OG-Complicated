@@ -2742,7 +2742,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun sparse-lurker-level? ((level symbol))
   (case level
-    (('training 'village1 'jungleb 'firecanyon 'village2 'rolling 'ogre 'village3 'lavatube) #t)
+    (('training 'village1 'jungleb 'firecanyon 'village2 'rolling 'ogre 'village3 'lavatube 'citadel 'finalboss) #t)
     (else #f)))
 
 (defun sparse-hitlist-level? ((level symbol))
@@ -3034,13 +3034,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ;; Enemies
           ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
            (cond
-             ((or (eq? level-name 'finalboss) (sparse-lurker-level? level-name)) 0)
+             ((sparse-lurker-level? level-name) 0)
              ((eq? id 'complication-glare) 72)
              (is-minigame 0)
              (else 69)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 94))
           ((eq? id 'rule-double-kill)
-           (if (or (and (not (eq? level-name 'citadel)) (sparse-lurker-level? level-name))
+           (if (or (sparse-lurker-level? level-name)
                    is-minigame
                    is-klaww
                    (eq? level-name 'finalboss)
@@ -3048,14 +3048,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              72))
           ((eq? id 'rule-no-harm) ;; disabled
-           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb) (eq? level-name 'finalboss)) 0 74))
+           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb)) 0 74))
           ((eq? id 'complication-soul-bond)
            (if (or (sparse-lurker-level? level-name)
                    is-minigame
                    is-klaww
                    (eq? level-name 'jungleb)
-                   (string= checkpoint-name "sunkenb-helix")
-                   (eq? level-name 'finalboss))
+                   (string= checkpoint-name "sunkenb-helix"))
              0
              60))
           ((eq? id 'rule-sniper)
@@ -3161,6 +3160,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'complication-vibe-check)
            (cond
              ((or is-minigame (string= checkpoint-name "finalboss-fight")) 0)
+             ((eq? level-name 'citadel) 10)
              ((and *target* (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0)) 55)
              (else 24)))
           ((eq? id 'rule-express-delivery)
