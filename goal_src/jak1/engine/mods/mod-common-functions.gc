@@ -1539,7 +1539,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'complication-butter-fingers) (seconds 60)) ;; 60
     ((eq? id 'rule-for-billy) (mod-apply-time-limit-multiplier (seconds 130))) ;; 130
     ((eq? id 'rule-cold-feet) (seconds 60)) ;; 60
-    ((eq? id 'complication-overclock) (seconds 60)) ;; 60
+    ((eq? id 'complication-overclock) (seconds 45)) ;; 45
     ((eq? id 'rule-speed) (mod-apply-time-limit-multiplier (seconds 60))) ;; 60
     ((eq? id 'rule-math-quiz) (mod-apply-time-limit-multiplier (seconds 20))) ;; 20
     ((eq? id 'rule-trivia) (mod-apply-time-limit-multiplier (seconds 15))) ;; 15
@@ -2943,7 +2943,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
        'rule-one-frame 'rule-hang-time
        'complication-rotten-eggs 'rule-orb-hunt
        'rule-no-ledge 'complication-get-a-grip
-       'rule-no-ledge 'complication-butter-fingers))
+       'rule-no-ledge 'complication-butter-fingers
+       'rule-grounded 'complication-get-a-grip))
 
 ;; True if the twist state forbids rolling this id (rules while a twist is pending/marked, twist while one is already in progress).
 (defun mod-rule-twist-blocks? ((id symbol))
@@ -3088,7 +3089,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (and (not (task-closed? (game-task jungle-plant) (task-status need-resolution))) (eq? level-name 'jungleb)) 307 0))
           ;; Crates
           ((eq? id 'rule-crate-break)
-           (if (or is-klaww is-minigame (string= checkpoint-name "sunkenb-helix") (sparse-crate-level? level-name)) 0 65))
+           (if (or (eq? level-name 'ogre) is-minigame (string= checkpoint-name "sunkenb-helix") (sparse-crate-level? level-name)) 0 65))
           ((eq? id 'rule-hands-on)
            (case level-name
              (('darkcave 'jungleb 'firecanyon 'finalboss 'village3 'ogre 'rolling 'lavatube) 0)
@@ -3271,9 +3272,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (if (or (eq? level-name 'training)
                    (eq? level-name 'finalboss)
                    (eq? level-name 'lavatube)
+                   (eq? level-name 'citadel)
                    is-minigame
-                   (and (string= checkpoint-name "citadel-elevator")
-                        (task-closed? (game-task citadel-sage-green) (task-status need-resolution))))
+                  ;;  (and (string= checkpoint-name "citadel-elevator")
+                  ;;       (task-closed? (game-task citadel-sage-green) (task-status need-resolution)))
+                        )
              0
              39))
           ((eq? id 'complication-brittle-bones)

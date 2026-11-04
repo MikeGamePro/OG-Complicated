@@ -280,7 +280,7 @@
                                 0.0
                                 1.0
                                 0.0
-                                (* (if (mod-rule-active? 'complication-overclock) 4.0 1.0)
+                                (* (if (mod-rule-active? 'complication-overclock) 3.0 1.0)
                                    (* 65536.0 (get-current-phase (-> self sync)) (-> self rot-scale))))
         (suspend)))
   :post rider-post)
