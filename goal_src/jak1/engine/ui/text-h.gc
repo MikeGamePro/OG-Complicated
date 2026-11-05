@@ -933,7 +933,15 @@
   (complicated-opts-compliance-increment #x171b)
   (complicated-opts-credits-per-pass #x171c)
   (complicated-opts-target-slot-count #x171f)
-  ;; continue at #x1720 !!
+  ;; challenge and saved settings menus
+  (complicated-opts-challenge-presets-title #x1720)
+  (complicated-opts-bug-catcher-preset #x1721)
+  (complicated-opts-compliant-preset #x1722)
+  (complicated-opts-inverted-mirror-preset #x1723)
+  (complicated-opts-saved-settings-title #x1724)
+  (complicated-opts-save-current-settings #x1725)
+  (complicated-opts-load-saved-settings #x1726)
+  ;; continue at #x1727 !!
   (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change
   (pad-triangle #x2000)

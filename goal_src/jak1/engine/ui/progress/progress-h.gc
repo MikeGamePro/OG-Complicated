@@ -139,6 +139,8 @@
      (condition-toggle-options)
      (difficulty-preset-options)
      (punishment-toggle-options)
+     (challenge-preset-options)
+     (saved-settings-options)
      ;; the last one!
      (max))
    (defenum game-option-type
