@@ -734,7 +734,7 @@
             :name (text-id complicated-opts-countdown-start)
             :scale #t
             :param1 5.0
-            :param2 300.0
+            :param2 600.0
             :slider-step-size 5.0
             :on-change
             (lambda ((val object))
@@ -803,9 +803,9 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-fly-increment)
             :scale #t
-            :param1 -30.0
-            :param2 30.0
-            :slider-step-size 0.5
+            :param1 -60.0
+            :param2 60.0
+            :slider-step-size 1.0
             :on-change
             (lambda ((val object))
               (fly-increment-changed! (the-as float val))
