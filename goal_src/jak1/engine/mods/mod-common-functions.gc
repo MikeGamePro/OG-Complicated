@@ -4244,7 +4244,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (mod-rule-handle-slot-expiry slot)))
            (dotimes (slot *mod-rule-slot-count*)
              (let ((pending-id (-> (-> *MOD-rule-slot-bank* pending-slots) slot)))
-               (when pending-id
+               (when (and pending-id (> (mod-enabled-condition-count) 0))
                  (let* ((rolling-left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
                         (whole-second (the int (/ rolling-left (seconds 1)))))
                    (if (> whole-second 2)
@@ -4599,7 +4599,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when msg
       (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
       (+! y (mod-scale-px 10)))
-    (when (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
+    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
+               (> (mod-enabled-condition-count) 0))
       (let* ((left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
              (label "NEW CONDITION:")
              (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
@@ -4672,7 +4673,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when (mod-rule-active? 'complication-income-tax)
       (set! seconds-to-add (* seconds-to-add 0.5)))
     (set! (-> *MOD-countdown-bank* remaining-time)
-          (+ (-> *MOD-countdown-bank* remaining-time) (the int (* seconds-to-add (the float TICKS_PER_SECOND))))))
+          (+ (-> *MOD-countdown-bank* remaining-time)
+             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001))
+                         (the float TICKS_PER_SECOND))))))
   (none))
 
 (defun draw-complicated-mod-title ()

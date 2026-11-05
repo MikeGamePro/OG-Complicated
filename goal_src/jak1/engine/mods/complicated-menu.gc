@@ -698,7 +698,7 @@
   (none))
 
 (defun orb-increment-changed! ((new-val float))
-  (set! (-> *complicated-settings* orb-increment) (+ (snap-to-step new-val 0.1) 0.001))
+  (set! (-> *complicated-settings* orb-increment) (snap-to-step new-val 0.1))
   (none))
 
 (defun fly-increment-changed! ((new-val float))
@@ -768,7 +768,7 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-cell-increment)
             :scale #t
-            :param1 0.0
+            :param1 -30.0
             :param2 120.0
             :slider-step-size 1.0
             :on-change
@@ -785,7 +785,7 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-orb-increment)
             :scale #t
-            :param1 0.0
+            :param1 -10.0
             :param2 10.0
             :slider-step-size 0.1
             :slider-show-decimal? #t
@@ -803,7 +803,7 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-fly-increment)
             :scale #t
-            :param1 0.0
+            :param1 -30.0
             :param2 30.0
             :slider-step-size 0.5
             :on-change
