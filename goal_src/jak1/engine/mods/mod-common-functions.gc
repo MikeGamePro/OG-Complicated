@@ -69,6 +69,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern countdown-start-seconds-value (function float))
 
+(define-extern new-condition-delay-seconds (function float))
+
 (define-extern compliance-increment-value (function float))
 
 (define-extern pass-credits-required-value (function int))
@@ -1887,7 +1889,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*) id)
     (set! (-> (-> *MOD-rule-slot-bank* pending-slots) slot) id)
     (set! (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot)
-          (+ (current-time) (if apply-buffer (-> *MOD-tuning-bank* roll-buffer-time) 0))))
+          (+ (current-time) (if apply-buffer (seconds (new-condition-delay-seconds)) 0))))
   (none))
 
 ;; Schedule rolls into free slots until the target count is reached.
@@ -2189,7 +2191,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     used))
 
 (defun mod-punishment-rollable? ((punishment symbol))
-  (and (not (mod-timed-punishment-active? punishment)) (not (mod-punishment-used-by-active-slot? punishment))))
+  ;; reset and time loss have no lingering state, so several slots may hold them at once
+  (and (not (mod-timed-punishment-active? punishment))
+       (or (eq? punishment 'punishment-reset)
+           (eq? punishment 'punishment-countdown)
+           (not (mod-punishment-used-by-active-slot? punishment)))))
 
 (defmacro consider-punishment (sym weight &rest conds)
   `(when (and ,@conds (punishment-toggle-enabled? ',sym) (mod-punishment-rollable? ',sym))
@@ -3040,13 +3046,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 69)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 94))
           ((eq? id 'rule-double-kill)
-           (if (or (sparse-lurker-level? level-name)
-                   is-minigame
-                   is-klaww
-                   (eq? level-name 'finalboss)
-                   (eq? level-name 'sunkenb))
-             0
-             72))
+           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 72))
           ((eq? id 'rule-no-harm) ;; disabled
            (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb)) 0 74))
           ((eq? id 'complication-soul-bond)
@@ -3296,47 +3296,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              (else 0)))
           (else 35))))))
 
-;; Eligibility for the fallback roll.
-(defun mod-rule-fallback-candidate? ((candidate symbol))
-  (and candidate
-       (or (not (eq? candidate 'rule-bonecracker)) (not (mod-all-bone-bridges-down?)))
-       (or (not (eq? candidate 'rule-uncharted)) (mod-rule-uncharted-can-roll? (the symbol (current-level-name))))
-       (or (not (eq? candidate 'rule-orb-hunt)) (> (mod-orb-hunt-spot-count (the symbol (current-level-name))) 0))
-       (mod-condition-enabled? candidate)
-       (not (mod-rule-active? candidate))
-       (not (mod-rule-pending? candidate))
-       (not (mod-rule-conflicts-with-active? candidate))
-       (not (mod-rule-twist-blocks? candidate))))
-
-;; Used when weights are all 0: uniformly pick one eligible enabled condition, or #f if none.
-(defun mod-rule-pick-fallback-id ()
-  (let ((idx 0)
-        (count 0))
-    (while (< idx *mod-rule-id-count*)
-      (when (mod-rule-fallback-candidate? (mod-rule-id-from-index idx))
-        (+! count 1))
-      (+! idx 1))
-    (when *debug-segment*
-      (format #t "Fallback roll: ~D enabled+eligible candidates~%" count))
-    (if (> count 0)
-      (let ((pick (mod-rand-int-range 0 count))
-            (idx 0)
-            (remaining 0)
-            (chosen #f))
-        (set! remaining pick)
-        (while (and (< idx *mod-rule-id-count*) (not chosen))
-          (let ((candidate (mod-rule-id-from-index idx)))
-            (when (mod-rule-fallback-candidate? candidate)
-              (if (= remaining 0) (set! chosen candidate) (-! remaining 1))))
-          (+! idx 1))
-        (when *debug-segment*
-          (format #t "Fallback roll chose: ~S~%" chosen))
-        chosen)
-      (begin
-        (when *debug-segment*
-          (format #t "Fallback roll: no enabled candidates, returning #f~%"))
-        #f))))
-
 ;; priority per rule index, filled once per roll
 (define *mod-rule-weight-scratch* (new 'global 'boxed-array int32 *mod-rule-id-count*))
 
@@ -3344,11 +3303,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((priority (-> *mod-rule-weight-scratch* idx)))
     (if (or (<= priority 0) ignore-recency?) priority (* priority (mod-rule-recent-roll-factor (mod-rule-id-from-index idx))))))
 
-;; Weighted random roll. If all are 0, retries ignoring recency; if still 0 uses the fallback.
+;; Weighted random roll. If recency leaves no candidates, retry using the base priorities.
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
         (total 0)
-        (use-fallback #f)
+        (ignore-recency? #f)
         (chosen #f))
     (while (< idx *mod-rule-id-count*)
       (let ((candidate (mod-rule-id-from-index idx))
@@ -3362,43 +3321,48 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (while (< idx *mod-rule-id-count*)
       (+! total (mod-rule-candidate-weight idx #f))
       (+! idx 1))
-    ;; fallback: only candidates that were rolled recently are eligible, so ignore recency so something is rolled.
+    ;; Retry without the recency penalty before concluding there are no eligible candidates.
     (when (= total 0)
-      (set! use-fallback #t)
+      (set! ignore-recency? #t)
       (set! idx 0)
       (while (< idx *mod-rule-id-count*)
         (+! total (mod-rule-candidate-weight idx #t))
         (+! idx 1))
       (when (and *debug-segment* (> total 0))
-        (format #t "Weighted Roll Debug: only recently-rolled candidates eligible, ignoring recency~%")))
+        (format #t "Weighted Roll Debug: retrying without recency penalties~%")))
     (when (and *debug-segment* (> total 0))
-      (format #t "--- Weighted Roll Debug (Total: ~D) ---~%" total)
+      (format #t "--- Weighted Roll Debug (Total: ~D, Ignore Recency: ~A) ---~%" total ignore-recency?)
       (let ((debug-idx 0))
         (while (< debug-idx *mod-rule-id-count*)
           (let ((candidate (mod-rule-id-from-index debug-idx)))
             (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
-              (let* ((weight (mod-rule-candidate-weight debug-idx use-fallback))
+              (let* ((weight (mod-rule-candidate-weight debug-idx ignore-recency?))
                      (percent (* 100.0 (/ (the float weight) (the float total)))))
                 (format #t
                         "  ~S: Weight=~D (Prio: ~D, Rec: ~D) | ~2,1f%~%"
                         candidate
                         weight
                         (-> *mod-rule-weight-scratch* debug-idx)
-                        (if use-fallback 1 (mod-rule-recent-roll-factor candidate))
+                        (if ignore-recency? 1 (mod-rule-recent-roll-factor candidate))
                         percent))))
           (+! debug-idx 1))))
-    (if (> total 0)
+    (cond
+      ((> total 0)
       (let ((roll (mod-rand-int-range 0 total)))
         (set! idx 0)
         (while (and (< idx *mod-rule-id-count*) (not chosen))
-          (let ((weight (mod-rule-candidate-weight idx use-fallback)))
+          (let ((weight (mod-rule-candidate-weight idx ignore-recency?)))
             (when (> weight 0)
               (if (< roll weight) (set! chosen (mod-rule-id-from-index idx)) (set! roll (- roll weight)))))
           (+! idx 1))
         (when *debug-segment*
           (format #t "Weighted roll chose ~S~%" chosen))
-        chosen)
-      (mod-rule-pick-fallback-id))))
+        chosen))
+      (else
+       (when *debug-segment*
+        ;;  (format #t "Weighted roll: no enabled, context-eligible candidates~%")
+         )
+       #f))))
 
 (defun mod-rule-reroll-slot ((slot int) (apply-buffer symbol))
   (mod-rule-deactivate-slot slot)
@@ -4599,8 +4563,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when msg
       (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
       (+! y (mod-scale-px 10)))
-    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
-               (> (mod-enabled-condition-count) 0))
+    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot) (> (mod-enabled-condition-count) 0))
       (let* ((left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
              (label "NEW CONDITION:")
              (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
@@ -4674,8 +4637,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
       (set! seconds-to-add (* seconds-to-add 0.5)))
     (set! (-> *MOD-countdown-bank* remaining-time)
           (+ (-> *MOD-countdown-bank* remaining-time)
-             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001))
-                         (the float TICKS_PER_SECOND))))))
+             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001)) (the float TICKS_PER_SECOND))))))
   (none))
 
 (defun draw-complicated-mod-title ()

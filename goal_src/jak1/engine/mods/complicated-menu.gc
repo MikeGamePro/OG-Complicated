@@ -6,7 +6,7 @@
 ;; dgos: ENGINE, GAME
 
 (bundles "ENGINE.CGO" "GAME.CGO")
-(define *complicated-settings-current-version* 3)
+(define *complicated-settings-current-version* 4)
 
 (define *complicated-settings-version* *complicated-settings-current-version*)
 
@@ -133,6 +133,7 @@
    (orb-increment float)
    (fly-increment float)
    (countdown-start-seconds float)
+   (new-condition-delay-seconds float)
    (time-limit-multiplier float)
    (text-scale float)
    (compliance-increment float)
@@ -259,6 +260,7 @@
   (set! (-> obj orb-increment) 1.0)
   (set! (-> obj fly-increment) 10.0)
   (set! (-> obj countdown-start-seconds) 30.0)
+  (set! (-> obj new-condition-delay-seconds) 5.0)
   (set! (-> obj time-limit-multiplier) 1.2)
   (set! (-> obj text-scale) 0.9)
   (set! (-> obj compliance-increment) 0.0)
@@ -351,6 +353,8 @@
       (set! (-> obj punishment-toggle-camera?) #t))
     (when (< loaded-version 3)
       (if (eq? *complicated-difficulty-preset* 'custom) (set! *complicated-difficulty-preset* 'medium)))
+    (when (< loaded-version 4)
+      (set! (-> obj new-condition-delay-seconds) 5.0))
     (when (< loaded-version *complicated-settings-current-version*)
       (set! *complicated-settings-version* *complicated-settings-current-version*)
       (unless (write-to-file obj filename)
@@ -486,6 +490,7 @@
                                           (("orb-increment") (set! (-> obj orb-increment) (file-stream-read-float file)))
                                           (("fly-increment") (set! (-> obj fly-increment) (file-stream-read-float file)))
                                           (("countdown-start-seconds") (set! (-> obj countdown-start-seconds) (file-stream-read-float file)))
+                                          (("new-condition-delay-seconds") (set! (-> obj new-condition-delay-seconds) (file-stream-read-float file)))
                                           (("time-limit-multiplier") (set! (-> obj time-limit-multiplier) (file-stream-read-float file)))
                                           (("text-scale") (set! (-> obj text-scale) (file-stream-read-float file)))
                                           (("compliance-increment") (set! (-> obj compliance-increment) (file-stream-read-float file)))
@@ -628,6 +633,7 @@
     (format file "  (orb-increment ~f)~%" (snap-to-step (-> obj orb-increment) 0.1))
     (format file "  (fly-increment ~f)~%" (the float (the int (-> obj fly-increment))))
     (format file "  (time-limit-multiplier ~f)~%" (snap-to-step (-> obj time-limit-multiplier) 0.1))
+    (format file "  (new-condition-delay-seconds ~f)~%" (the float (the int (-> obj new-condition-delay-seconds))))
     (format file "  (text-scale ~f)~%" (snap-to-step (-> obj text-scale) 0.1))
     (format file "  (compliance-increment ~f)~%" (-> obj compliance-increment))
     (format file "  (pass-credits-required ~f)~%" (the float (the int (+ (-> obj pass-credits-required) 0.5))))
@@ -687,37 +693,117 @@
 
 (defun-extern condition-toggle-set-all! symbol none)
 
+(defun-extern punishment-toggle-set-all! symbol none)
+
+(defun-extern save-complicated-settings-preset-if-missing! none)
+
 (defun apply-challenge-preset! ((preset symbol))
   (when *complicated-settings*
+    (save-complicated-settings-preset-if-missing!)
     (cond
       ((eq? preset 'bug-catcher)
        (set! (-> *complicated-settings* cell-increment) 0.0)
        (set! (-> *complicated-settings* orb-increment) 0.0)
-       (set! (-> *complicated-settings* fly-increment) 45.0)
+       (set! (-> *complicated-settings* fly-increment) 40.0)
        (set! (-> *complicated-settings* compliance-increment) 0.0)
        (set! (-> *complicated-settings* countdown-start-seconds) 30.0))
-      ((eq? preset 'compliant)
-       (set! (-> *complicated-settings* punishment-toggle-fall-damage?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-trip?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-edge?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-money?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-warp?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-revert-cell?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-extra-rule?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-crash?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-delay?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-blind?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-iframes?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-camera?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-ohko?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-reset?) #t)
-       (set! (-> *complicated-settings* punishment-toggle-countdown?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-kick?) #f)
-       (set! (-> *complicated-settings* punishment-toggle-pause?) #f))
-      ((eq? preset 'inverted-mirror)
+      ((eq? preset 'compliant) (punishment-toggle-set-all! #f) (set! (-> *complicated-settings* punishment-toggle-reset?) #t))
+      ((eq? preset 'rules-only)
        (condition-toggle-set-all! #f)
+       (set! (-> *complicated-settings* rule-grounded?) #t)
+       (set! (-> *complicated-settings* rule-die?) #t)
+       (set! (-> *complicated-settings* rule-lurker-pressure?) #t)
+       (set! (-> *complicated-settings* rule-hitlist?) #t)
+       (set! (-> *complicated-settings* rule-crate-break?) #t)
+       (set! (-> *complicated-settings* rule-keep-it-low?) #t)
+       (set! (-> *complicated-settings* rule-money-pressure?) #t)
+       (set! (-> *complicated-settings* rule-fuel-pressure?) #t)
+       (set! (-> *complicated-settings* rule-flop-this?) #t)
+       (set! (-> *complicated-settings* rule-buzzer-pressure?) #t)
+       (set! (-> *complicated-settings* rule-survivor?) #t)
+       (set! (-> *complicated-settings* rule-management?) #t)
+       (set! (-> *complicated-settings* rule-vendetta?) #t)
+       (set! (-> *complicated-settings* rule-hands-on?) #t)
+       (set! (-> *complicated-settings* rule-one-frame?) #t)
+       (set! (-> *complicated-settings* rule-distancing?) #t)
+       (set! (-> *complicated-settings* rule-red-light?) #t)
+       (set! (-> *complicated-settings* rule-for-billy?) #t)
+       (set! (-> *complicated-settings* rule-sniper?) #t)
+       (set! (-> *complicated-settings* rule-cold-feet?) #t)
+       (set! (-> *complicated-settings* rule-speed?) #t)
+       (set! (-> *complicated-settings* rule-math-quiz?) #t)
+       (set! (-> *complicated-settings* rule-trivia?) #t)
+       (set! (-> *complicated-settings* rule-green-pilled?) #t)
+       (set! (-> *complicated-settings* rule-button-pusher?) #t)
+       (set! (-> *complicated-settings* rule-cooked?) #t)
+       (set! (-> *complicated-settings* rule-sagging-sails?) #t)
+       (set! (-> *complicated-settings* rule-side-to-side?) #t)
+       (set! (-> *complicated-settings* rule-landlubber?) #t)
+       (set! (-> *complicated-settings* rule-loyal-customer?) #t)
+       (set! (-> *complicated-settings* rule-double-kill?) #t)
+       (set! (-> *complicated-settings* rule-express-delivery?) #t)
+       (set! (-> *complicated-settings* rule-qte?) #t)
+       (set! (-> *complicated-settings* rule-touch-grass?) #t)
+       (set! (-> *complicated-settings* rule-hang-time?) #t)
+       (set! (-> *complicated-settings* rule-no-harm?) #t)
+       (set! (-> *complicated-settings* rule-supercharged?) #t)
+       (set! (-> *complicated-settings* rule-keep-rolling?) #t)
+       (set! (-> *complicated-settings* rule-uncharted?) #t)
+       (set! (-> *complicated-settings* rule-bonecracker?) #t)
+       (set! (-> *complicated-settings* rule-orb-hunt?) #t)
+       (set! (-> *complicated-settings* rule-no-ledge?) #t)
+       (set! (-> *complicated-settings* complication-twisted?) #t))
+      ((eq? preset 'complications-only)
+       (condition-toggle-set-all! #f)
+       (set! (-> *complicated-settings* complication-brittle-bones?) #t)
+       (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+       (set! (-> *complicated-settings* complication-eco-allergy?) #t)
+       (set! (-> *complicated-settings* complication-sizeable?) #t)
+       (set! (-> *complicated-settings* complication-ohko?) #t)
+       (set! (-> *complicated-settings* complication-glare?) #t)
+       (set! (-> *complicated-settings* complication-heating-balloons?) #t)
+       (set! (-> *complicated-settings* complication-disassociate?) #t)
+       (set! (-> *complicated-settings* complication-bus-driver?) #t)
+       (set! (-> *complicated-settings* complication-wings-tied?) #t)
+       (set! (-> *complicated-settings* complication-fuel-shortage?) #t)
+       (set! (-> *complicated-settings* complication-drought?) #t)
+       (set! (-> *complicated-settings* complication-jak-rabbit?) #t)
+       (set! (-> *complicated-settings* complication-hidden-treasure?) #t)
+       (set! (-> *complicated-settings* complication-eco-reserve?) #t)
+       (set! (-> *complicated-settings* complication-red-stop?) #t)
+       (set! (-> *complicated-settings* complication-rgyb?) #t)
+       (set! (-> *complicated-settings* complication-butter-fingers?) #t)
+       (set! (-> *complicated-settings* complication-overclock?) #t)
+       (set! (-> *complicated-settings* complication-bad-ping?) #t)
+       (set! (-> *complicated-settings* complication-invisible-man?) #t)
+       (set! (-> *complicated-settings* complication-joyride?) #t)
+       (set! (-> *complicated-settings* complication-critical?) #t)
+       (set! (-> *complicated-settings* complication-cumbersome?) #t)
+       (set! (-> *complicated-settings* complication-double-aphids?) #t)
        (set! (-> *complicated-settings* complication-invert?) #t)
-       (set! (-> *complicated-settings* complication-mirror?) #t)))
+       (set! (-> *complicated-settings* complication-loose-pockets?) #t)
+       (set! (-> *complicated-settings* complication-vibe-check?) #t)
+       (set! (-> *complicated-settings* complication-income-tax?) #t)
+       (set! (-> *complicated-settings* complication-mirror?) #t)
+       (set! (-> *complicated-settings* complication-no-double-jump?) #t)
+       (set! (-> *complicated-settings* complication-unbreakable?) #t)
+       (set! (-> *complicated-settings* complication-get-a-grip?) #t)
+       (set! (-> *complicated-settings* complication-fast-reel?) #t)
+       (set! (-> *complicated-settings* complication-palate-change?) #t)
+       (set! (-> *complicated-settings* complication-jak-be-nimble?) #t)
+       (set! (-> *complicated-settings* complication-soul-bond?) #t)
+       (set! (-> *complicated-settings* complication-shifty?) #t)
+       (set! (-> *complicated-settings* complication-interference?) #t)
+       (set! (-> *complicated-settings* complication-quicksand?) #t)
+       (set! (-> *complicated-settings* complication-lights-out?) #t)
+       (set! (-> *complicated-settings* complication-half-price?) #t)
+       (set! (-> *complicated-settings* complication-energy-boost?) #t))
+      ((eq? preset 'silent-but-deadly)
+       (condition-toggle-set-all! #f)
+       (set! (-> *complicated-settings* complication-hidden-treasure?) #t)
+       (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+       (set! (-> *complicated-settings* target-slot-count) 2.0)
+       (set! (-> *complicated-settings* new-condition-delay-seconds) 0.0)))
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -728,19 +814,29 @@
       (format #t "Warning: failed to save the custom Complicated settings preset to ~A~%" *pc-temp-string-1*)))
   (none))
 
+(defun save-complicated-settings-preset-if-missing! ()
+  (when *complicated-settings*
+    (format (clear *pc-temp-string-1*) "~S/saved-complicated-settings.gc" *pc-settings-folder*)
+    (unless (pc-filepath-exists? *pc-temp-string-1*)
+      (save-complicated-settings-preset!)))
+  (none))
+
 (defun load-complicated-settings-preset! ()
   (when *complicated-settings*
+    ;; make sure the main file matches memory, so we can restore if the preset can't be read
+    (commit-to-file *complicated-settings*)
     (format (clear *pc-temp-string-1*) "~S/saved-complicated-settings.gc" *pc-settings-folder*)
     (cond
       ((not (pc-filepath-exists? *pc-temp-string-1*))
        (format #t "No saved Complicated settings preset found at ~A~%" *pc-temp-string-1*))
       ((not (read-from-file *complicated-settings* *pc-temp-string-1*))
-       (format #t "Warning: failed to load the custom Complicated settings preset from ~A~%" *pc-temp-string-1*))
+       (format #t "Warning: failed to load the custom Complicated settings preset from ~A~%" *pc-temp-string-1*)
+       (load-from-file *complicated-settings*))
       (else
        (format (clear *pc-temp-string-1*) "~S/complicated-settings.gc" *pc-settings-folder*)
        (unless (write-to-file *complicated-settings* *pc-temp-string-1*)
-         (format #t "Warning: failed to save the loaded Complicated settings to ~A~%" *pc-temp-string-1*))))
-  (none)))
+         (format #t "Warning: failed to save the loaded Complicated settings to ~A~%" *pc-temp-string-1*)))))
+  (none))
 
 (defun klaww-assist-changed! ((new-val symbol))
   (set! (-> *complicated-settings* klaww-assist?) new-val)
@@ -764,6 +860,10 @@
 
 (defun countdown-start-seconds-changed! ((new-val float))
   (set! (-> *complicated-settings* countdown-start-seconds) new-val)
+  (none))
+
+(defun new-condition-delay-seconds-changed! ((new-val float))
+  (set! (-> *complicated-settings* new-condition-delay-seconds) new-val)
   (none))
 
 (defun compliance-increment-changed! ((new-val float))
@@ -889,7 +989,24 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [6] BACK
+       ;; [6] NEW CONDITION DELAY
+       (new 'static
+            'game-option
+            :option-type (game-option-type slider)
+            :name (text-id complicated-opts-new-condition-delay)
+            :scale #t
+            :param1 0.0
+            :param2 30.0
+            :slider-step-size 1.0
+            :on-change
+            (lambda ((val object))
+              (new-condition-delay-seconds-changed! (the-as float val))
+              (none))
+            :on-confirm
+            (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [7] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -981,17 +1098,37 @@
             (lambda ()
               (apply-challenge-preset! 'compliant)
               (none)))
-       ;; [2] INVERTED + MIRROR
+       ;; [2] RULES ONLY
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
-            :name (text-id complicated-opts-inverted-mirror-preset)
+            :name (text-id complicated-opts-rules-only-preset)
             :scale #t
             :on-confirm
             (lambda ()
-              (apply-challenge-preset! 'inverted-mirror)
+              (apply-challenge-preset! 'rules-only)
               (none)))
-       ;; [3] BACK
+       ;; [3] COMPLICATIONS ONLY
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-complications-only-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-challenge-preset! 'complications-only)
+              (none)))
+       ;; [4] SILENT BUT DEADLY
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-silent-but-deadly-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-challenge-preset! 'silent-but-deadly)
+              (none)))
+       ;; [--] BACK
        (new 'static
             'game-option
             :option-type (game-option-type button)
@@ -1214,6 +1351,28 @@
             :scale #t
             :on-confirm
             (lambda ()
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [--] TOGGLE ALL ON
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-cond-toggle-all-on)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (punishment-toggle-set-all! #t)
+              (commit-to-file *complicated-settings*)
+              (none)))
+       ;; [--] TOGGLE ALL OFF
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-cond-toggle-all-off)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (punishment-toggle-set-all! #f)
               (commit-to-file *complicated-settings*)
               (none)))
        ;; [--] BACK
@@ -2153,6 +2312,12 @@
       (set! (-> (the-as (pointer symbol) (-> *condition-toggle-options* i value-to-modify)) 0) val)))
   (none))
 
+(defun punishment-toggle-set-all! ((val symbol))
+  (dotimes (i (-> *punishment-toggle-options* length))
+    (when (= (-> *punishment-toggle-options* i option-type) (game-option-type on-off))
+      (set! (-> (the-as (pointer symbol) (-> *punishment-toggle-options* i value-to-modify)) 0) val)))
+  (none))
+
 ;; ---- Main Complicated Options Submenu --------------------------------------
 (define *complicated-options*
   (new 'static
@@ -2194,14 +2359,7 @@
             :name (text-id complicated-opts-challenge-presets-title)
             :scale #t
             :param3 (game-option-menu challenge-preset-options))
-       ;; [5] SAVED SETTINGS SUBMENU
-       (new 'static
-            'game-option
-            :option-type (game-option-type menu)
-            :name (text-id complicated-opts-saved-settings-title)
-            :scale #t
-            :param3 (game-option-menu saved-settings-options))
-       ;; [6] SPEEDRUN TIMER toggle
+       ;; [5] SPEEDRUN TIMER toggle
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -2215,7 +2373,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [7] FISH ASSIST
+       ;; [6] FISH ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -2229,7 +2387,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [8] KLAWW ASSIST
+       ;; [7] KLAWW ASSIST
        (new 'static
             'game-option
             :option-type (game-option-type on-off)
@@ -2243,7 +2401,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [9] TEXT SCALE
+       ;; [8] TEXT SCALE
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -2261,7 +2419,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [10] CREDITS PER PASS
+       ;; [9] CREDITS PER PASS
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -2278,7 +2436,7 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
-       ;; [11] ACTIVE CONDITIONS
+       ;; [10] ACTIVE CONDITIONS
        (new 'static
             'game-option
             :option-type (game-option-type slider)
@@ -2295,6 +2453,13 @@
             (lambda ()
               (commit-to-file *complicated-settings*)
               (none)))
+       ;; [11] SAVED SETTINGS SUBMENU
+       (new 'static
+            'game-option
+            :option-type (game-option-type menu)
+            :name (text-id complicated-opts-saved-settings-title)
+            :scale #t
+            :param3 (game-option-menu saved-settings-options))
        ;; [--] RESTORE DEFAULTS
        (new 'static
             'game-option
@@ -2388,12 +2553,12 @@
   (set! (-> *game-options-complicated* 7 value-to-modify) (&-> *progress-carousell* int-backup))
   (set! (-> *game-options-complicated* 8 value-to-modify) (&-> *progress-carousell* int-backup))
   ;; Complicated options mappings
-  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
-  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* fish-assist?))
-  (set! (-> *complicated-options* 8 value-to-modify) (&-> *complicated-settings* klaww-assist?))
-  (set! (-> *complicated-options* 9 value-to-modify) (&-> *complicated-settings* text-scale))
-  (set! (-> *complicated-options* 10 value-to-modify) (&-> *complicated-settings* pass-credits-required))
-  (set! (-> *complicated-options* 11 value-to-modify) (&-> *complicated-settings* target-slot-count))
+  (set! (-> *complicated-options* 5 value-to-modify) (&-> *complicated-settings* show-countup-timer?))
+  (set! (-> *complicated-options* 6 value-to-modify) (&-> *complicated-settings* fish-assist?))
+  (set! (-> *complicated-options* 7 value-to-modify) (&-> *complicated-settings* klaww-assist?))
+  (set! (-> *complicated-options* 8 value-to-modify) (&-> *complicated-settings* text-scale))
+  (set! (-> *complicated-options* 9 value-to-modify) (&-> *complicated-settings* pass-credits-required))
+  (set! (-> *complicated-options* 10 value-to-modify) (&-> *complicated-settings* target-slot-count))
   ;; Punishment toggle mappings
   (set! (-> *punishment-toggle-options* 0 value-to-modify) (&-> *complicated-settings* punishment-toggle-fall-damage?))
   (set! (-> *punishment-toggle-options* 1 value-to-modify) (&-> *complicated-settings* punishment-toggle-trip?))
@@ -2506,6 +2671,7 @@
   (set! (-> *comp-timer-options* 3 value-to-modify) (&-> *complicated-settings* orb-increment))
   (set! (-> *comp-timer-options* 4 value-to-modify) (&-> *complicated-settings* fly-increment))
   (set! (-> *comp-timer-options* 5 value-to-modify) (&-> *complicated-settings* compliance-increment))
+  (set! (-> *comp-timer-options* 6 value-to-modify) (&-> *complicated-settings* new-condition-delay-seconds))
   (none))
 
 ;; add new options here (getter)
@@ -2558,6 +2724,9 @@
 
 (defun countdown-start-seconds-value ()
   (if *complicated-settings* (the float (the int (-> *complicated-settings* countdown-start-seconds))) 30.0))
+
+(defun new-condition-delay-seconds ()
+  (if *complicated-settings* (the float (the int (-> *complicated-settings* new-condition-delay-seconds))) 5.0))
 
 (defun compliance-increment-value ()
   (if *complicated-settings* (-> *complicated-settings* compliance-increment) 0.0))

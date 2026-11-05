@@ -925,7 +925,7 @@
   (complicated-opts-medium-preset #x1714)
   (complicated-opts-esoteric-preset #x1715)
   (complicated-opts-unfathomable-preset #x1716)
-  ;; timer submenu (paired with complicated-opts-show-timer above at 0x161c)
+  ;; timer submenu
   (complicated-opts-time-limit-multiplier #x1717)
   (complicated-opts-text-scale #x1718)
   (press-to-trade-money-cheap #x1719)
@@ -933,15 +933,23 @@
   (complicated-opts-compliance-increment #x171b)
   (complicated-opts-credits-per-pass #x171c)
   (complicated-opts-target-slot-count #x171f)
-  ;; challenge and saved settings menus
-  (complicated-opts-challenge-presets-title #x1720)
-  (complicated-opts-bug-catcher-preset #x1721)
-  (complicated-opts-compliant-preset #x1722)
-  (complicated-opts-inverted-mirror-preset #x1723)
-  (complicated-opts-saved-settings-title #x1724)
-  (complicated-opts-save-current-settings #x1725)
-  (complicated-opts-load-saved-settings #x1726)
-  ;; continue at #x1727 !!
+  ;; saved settings and additional timer options
+  (complicated-opts-saved-settings-title #x1720)
+  (complicated-opts-save-current-settings #x1721)
+  (complicated-opts-load-saved-settings #x1722)
+  (complicated-opts-new-condition-delay #x1723)
+  ;; challenge preset menu
+  (complicated-opts-challenge-presets-title #x1724)
+  (complicated-opts-bug-catcher-preset #x1725)
+  (complicated-opts-bug-catcher-description #x1726)
+  (complicated-opts-compliant-preset #x1727)
+  (complicated-opts-compliant-description #x1728)
+  (complicated-opts-rules-only-preset #x1729)
+  (complicated-opts-rules-only-description #x172a)
+  (complicated-opts-complications-only-preset #x172b)
+  (complicated-opts-complications-only-description #x172c)
+  (complicated-opts-silent-but-deadly-preset #x172d)
+  (complicated-opts-silent-but-deadly-description #x172e)
   (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change
   (pad-triangle #x2000)
