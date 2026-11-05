@@ -950,6 +950,8 @@
   (complicated-opts-complications-only-description #x172c)
   (complicated-opts-silent-but-deadly-preset #x172d)
   (complicated-opts-silent-but-deadly-description #x172e)
+  (complicated-opts-bad-money-preset #x172f)
+  (complicated-opts-bad-money-description #x1730)
   (complicated-opts-restore-defaults #x1999)
   ;; mod text mod-base-change
   (pad-triangle #x2000)

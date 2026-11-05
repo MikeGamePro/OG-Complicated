@@ -704,7 +704,7 @@
       ((eq? preset 'bug-catcher)
        (set! (-> *complicated-settings* cell-increment) 0.0)
        (set! (-> *complicated-settings* orb-increment) 0.0)
-       (set! (-> *complicated-settings* fly-increment) 40.0)
+       (set! (-> *complicated-settings* fly-increment) 30.0)
        (set! (-> *complicated-settings* compliance-increment) 0.0)
        (set! (-> *complicated-settings* countdown-start-seconds) 30.0))
       ((eq? preset 'compliant) (punishment-toggle-set-all! #f) (set! (-> *complicated-settings* punishment-toggle-reset?) #t))
@@ -803,7 +803,18 @@
        (set! (-> *complicated-settings* complication-hidden-treasure?) #t)
        (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
        (set! (-> *complicated-settings* target-slot-count) 2.0)
-       (set! (-> *complicated-settings* new-condition-delay-seconds) 0.0)))
+       (set! (-> *complicated-settings* new-condition-delay-seconds) 0.0)
+       (set! (-> *complicated-settings* cell-increment) 30.0)
+       (set! (-> *complicated-settings* orb-increment) 5.0)
+       (set! (-> *complicated-settings* fly-increment) 12.0)
+       (set! (-> *complicated-settings* compliance-increment) 0.0)
+       (set! (-> *complicated-settings* countdown-start-seconds) 30.0))
+      ((eq? preset 'bad-money)
+       (set! (-> *complicated-settings* cell-increment) 30.0)
+       (set! (-> *complicated-settings* orb-increment) -30.0)
+       (set! (-> *complicated-settings* fly-increment) 10.0)
+       (set! (-> *complicated-settings* compliance-increment) 0.0)
+       (set! (-> *complicated-settings* countdown-start-seconds) 30.0)))
     (commit-to-file *complicated-settings*))
   (none))
 
@@ -1127,6 +1138,16 @@
             :on-confirm
             (lambda ()
               (apply-challenge-preset! 'silent-but-deadly)
+              (none)))
+       ;; [5] MINUS ORBS
+       (new 'static
+            'game-option
+            :option-type (game-option-type confirmation)
+            :name (text-id complicated-opts-bad-money-preset)
+            :scale #t
+            :on-confirm
+            (lambda ()
+              (apply-challenge-preset! 'bad-money)
               (none)))
        ;; [--] BACK
        (new 'static
@@ -2442,7 +2463,7 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-target-slot-count)
             :scale #t
-            :param1 1.0
+            :param1 0.0
             :param2 5.0
             :slider-step-size 1.0
             :on-change
@@ -2735,7 +2756,7 @@
   (if *complicated-settings* (max 5 (min 100 (the int (+ (-> *complicated-settings* pass-credits-required) 0.5)))) 10))
 
 (defun target-slot-count-value ()
-  (if *complicated-settings* (max 1 (min 5 (the int (+ (-> *complicated-settings* target-slot-count) 0.5)))) 1))
+  (if *complicated-settings* (max 0 (min 5 (the int (+ (-> *complicated-settings* target-slot-count) 0.5)))) 1))
 
 (defun mod-condition-enabled? ((id symbol))
   (the symbol

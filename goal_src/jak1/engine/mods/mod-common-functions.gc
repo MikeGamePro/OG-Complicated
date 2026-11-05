@@ -169,7 +169,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-timed-punishment-slot-count* 8)
 
 (defun mod-rule-target-slot-count ()
-  (max 1 (min *mod-rule-slot-count* (target-slot-count-value))))
+  (max 0 (min *mod-rule-slot-count* (target-slot-count-value))))
 
 ;; Append new penalties only.
 (define *mod-punishment-ids*
@@ -1114,23 +1114,33 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
          (time-factor (/ *mod-score-time-scale* (+ *mod-score-time-scale* final-time-seconds)))
          (raw-mult (fmax 0.01 (time-limit-multiplier)))
          (max-score 100000.0)
-         (mult-weight 0.0175)
+         (mult-weight 0.0185)
          (time-weight 0.2)
          (score-weight 0.8)
          (conditions-weight 0.055)
          (punishments-weight 0.012)
+         (target-slot-weight 0.075)
+         (condition-delay-weight 0.03)
          (completion-baseline 69.0)
-         (completion-weight 0.05)
+         (completion-weight 0.14)
          (completion (calculate-completion (the-as progress #f)))
          (completion-factor (+ 1.0 (* completion-weight (- (/ completion completion-baseline) 1.0))))
          (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
          (effective-conditions-mult (+ 1.0 (* (- 1.0 (mod-enabled-condition-fraction)) conditions-weight)))
          (effective-punishments-mult (+ 1.0 (* (- 1.0 (mod-punishment-toggle-enabled-fraction)) punishments-weight)))
+         (target-slot-count (target-slot-count-value))
+         (target-slot-delta (/ (the float (- 1 target-slot-count)) (the float *mod-rule-slot-count*)))
+         (delay-delta (/ (- (new-condition-delay-seconds) 5.0) 30.0))
+         (effective-target-slots-mult (if (= target-slot-count 0) (+ 1.0 conditions-weight) (+ 1.0 (* target-slot-delta target-slot-weight))))
+         (effective-delay-mult (+ 1.0 (* delay-delta condition-delay-weight)))
          (score 0.0))
     (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
     (let ((base-score (* max-score (+ (* time-weight time-factor) (* score-weight (- 1.0 inc-norm))))))
       (set! score
-            (* completion-factor (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult))))
+            (* completion-factor
+               (/ (/ (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult)
+                     effective-target-slots-mult)
+                  effective-delay-mult))))
     (format #t
             "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f completion ~f completion-factor ~f "
             inc-total
@@ -1140,10 +1150,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             completion
             completion-factor)
     (format #t
-            "eff-mult ~f eff-cond-mult ~f eff-punish-mult ~f score ~f~%"
+            "eff-mult ~f eff-cond-mult ~f eff-punish-mult ~f eff-slots-mult ~f eff-delay-mult ~f score ~f~%"
             effective-mult
             effective-conditions-mult
             effective-punishments-mult
+            effective-target-slots-mult
+            effective-delay-mult
             score)
     score))
 
@@ -1886,7 +1898,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 ;; Mark a slot as pending a new roll.
 (defun mod-rule-schedule-slot ((slot int) (id symbol) (apply-buffer symbol))
-  (when (and (>= slot 0) (< slot *mod-rule-slot-count*) id)
+  (when (and (> (mod-rule-target-slot-count) 0) (>= slot 0) (< slot *mod-rule-slot-count*) id)
     (set! (-> (-> *MOD-rule-slot-bank* pending-slots) slot) id)
     (set! (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot)
           (+ (current-time) (if apply-buffer (seconds (new-condition-delay-seconds)) 0))))
@@ -3348,19 +3360,19 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (+! debug-idx 1))))
     (cond
       ((> total 0)
-      (let ((roll (mod-rand-int-range 0 total)))
-        (set! idx 0)
-        (while (and (< idx *mod-rule-id-count*) (not chosen))
-          (let ((weight (mod-rule-candidate-weight idx ignore-recency?)))
-            (when (> weight 0)
-              (if (< roll weight) (set! chosen (mod-rule-id-from-index idx)) (set! roll (- roll weight)))))
-          (+! idx 1))
-        (when *debug-segment*
-          (format #t "Weighted roll chose ~S~%" chosen))
-        chosen))
+       (let ((roll (mod-rand-int-range 0 total)))
+         (set! idx 0)
+         (while (and (< idx *mod-rule-id-count*) (not chosen))
+           (let ((weight (mod-rule-candidate-weight idx ignore-recency?)))
+             (when (> weight 0)
+               (if (< roll weight) (set! chosen (mod-rule-id-from-index idx)) (set! roll (- roll weight)))))
+           (+! idx 1))
+         (when *debug-segment*
+           (format #t "Weighted roll chose ~S~%" chosen))
+         chosen))
       (else
        (when *debug-segment*
-        ;;  (format #t "Weighted roll: no enabled, context-eligible candidates~%")
+         ;;  (format #t "Weighted roll: no enabled, context-eligible candidates~%")
          )
        #f))))
 
@@ -3721,12 +3733,13 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
             ;; this rule was discarded by the twist before it could be followed or broken, so it no longer counts as rolled
             (set! (-> *MOD-stats-bank* rules-rolled) (max 0 (- (-> *MOD-stats-bank* rules-rolled) 1)))
             (mod-rule-forget-roll! id)
-            (let ((chosen (mod-rule-pick-weighted-id)))
-              (if chosen
-                (begin
-                  (mod-rule-activate-slot slot chosen)
-                  (mod-rule-record-roll! chosen))
-                (mod-rule-schedule-slot slot 'mod-rule-pending-roll #t))))))
+            (when (> (mod-rule-target-slot-count) 0)
+              (let ((chosen (mod-rule-pick-weighted-id)))
+                (if chosen
+                  (begin
+                    (mod-rule-activate-slot slot chosen)
+                    (mod-rule-record-roll! chosen))
+                  (mod-rule-schedule-slot slot 'mod-rule-pending-roll #t)))))))
       (+! slot 1)))
   (none))
 
@@ -4563,7 +4576,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when msg
       (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
       (+! y (mod-scale-px 10)))
-    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot) (> (mod-enabled-condition-count) 0))
+    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
+               (> (mod-enabled-condition-count) 0)
+               (> (mod-rule-target-slot-count) 0))
       (let* ((left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
              (label "NEW CONDITION:")
              (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
