@@ -800,6 +800,9 @@
        (condition-toggle-set-all! #f)
        (set! (-> *complicated-settings* complication-hidden-treasure?) #t)
        (set! (-> *complicated-settings* complication-rotten-eggs?) #t)
+       (set! (-> *complicated-settings* rule-money-pressure?) #f)
+       (set! (-> *complicated-settings* complication-half-price?) #f)
+       (set! (-> *complicated-settings* rule-orb-hunt?) #f)
        (set! (-> *complicated-settings* target-slot-count) 2.0)
        (set! (-> *complicated-settings* new-condition-delay-seconds) 0.0)
        (set! (-> *complicated-settings* cell-increment) 30.0)
@@ -808,8 +811,11 @@
        (set! (-> *complicated-settings* compliance-increment) 0.0)
        (set! (-> *complicated-settings* countdown-start-seconds) 30.0))
       ((eq? preset 'bad-money)
+       (set! (-> *complicated-settings* rule-money-pressure?) #f)
+       (set! (-> *complicated-settings* rule-orb-hunt?) #f)
+       (set! (-> *complicated-settings* complication-half-price?) #f)
        (set! (-> *complicated-settings* cell-increment) 30.0)
-       (set! (-> *complicated-settings* orb-increment) -30.0)
+       (set! (-> *complicated-settings* orb-increment) -10.0)
        (set! (-> *complicated-settings* fly-increment) 10.0)
        (set! (-> *complicated-settings* compliance-increment) 0.0)
        (set! (-> *complicated-settings* countdown-start-seconds) 30.0)))
@@ -951,7 +957,7 @@
             :option-type (game-option-type slider)
             :name (text-id complicated-opts-orb-increment)
             :scale #t
-            :param1 -30.0
+            :param1 -10.0
             :param2 10.0
             :slider-step-size 0.1
             :slider-show-decimal? #t
