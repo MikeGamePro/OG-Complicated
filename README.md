@@ -58,10 +58,10 @@
 
 | Preset | Description | Changes | More Info
 | :--- | :--- | :--- | :--- |
-| **Fly Catcher** | Only flies add time. | Increment Values | Each scout fly adds 40 seconds. Orbs and cells add nothing.
+| **Fly Catcher** | Only flies add time. | Increment Values | Each scout fly adds 30 seconds. Orbs and cells add nothing.
 | **Compliant** | The only punishment resets the run. | Punishment Toggles | Every punishment is toggled off except Reset Run. Quick Time Event will still roll the Time Loss punishment.
-| **Rules, Rules, Rules** | Only rules. All the rules. | Condition Toggles | All rules are toggled on and all complications are toggled off.
-| **Convoluted** | Only complications. All the complications. | Condition Toggles | All complications are toggled on and all rules are toggled off.
+| **Rules, Rules, Rules** | Only rules. All the rules. | Condition Toggles | All rules are toggled on and all complications (except Twisted) are toggled off.
+| **Convoluted** | Only complications. All the complications. | Condition Toggles | All complications (except Twisted) are toggled on and all rules are toggled off.
 | **Silent But Deadly** | Orbs are invisible. And they kill you. | Increment Values, New Condition Delay, Condition Toggles | Orbs: +5 / Flies: +12 / Cells: +30. The only conditions toggled on are Hidden Treasure and Rotten Eggs. There is no time between conditions.
 | **Bad Money** | Orbs subtract 10 seconds. | Increment Values, Condition Toggles | Orbs: -10 / Flies: +10 / Cells: +30. Toggles off Cash Grab, Orb Hunt, and Limited Time Offer.
 
