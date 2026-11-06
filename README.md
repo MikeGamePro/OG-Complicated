@@ -34,12 +34,14 @@
 | **Followed Rule Increment** | The amount of time, in seconds, that will be added to the timer for successfully following a rule. |
 | **Condition Toggles** | Manually choose which conditions can or cannot be rolled. |
 | **Punishment Toggles** | Manually choose which punishments can or cannot be rolled. |
+| **New Condition Delay** | The amount of time between conditions. When one ends, this is how long until the next one is rolled. |
 | **Speedrun Timer** | Shows an in-game timer above the global countdown timer, to track your current run's duration. |
 | **Klaww Assist** | Adds 30 seconds to the countdown timer after each Klaww phase. |
 | **Fish Assist** | Adds 5 seconds to the countdown timer for each five-pound fish. |
 | **Text Scale** | The size of the mod text. This includes condition names, descriptions, punishments, and timers. |
 | **Pass Cost** | How many credits are required to gain a pass. A credit is rewarded on each rule followed. |
-| **Active Conditions** | The amount of condition slots that will be actively in rotation.
+| **Active Conditions** | The amount of condition slots that will be actively in rotation. |
+| **Saved Settings** | A snapshot of your settings that you can load or save over. This is useful for switching back after applying challenge presets. |
 
 ⚠️ **SPOILER WARNING: Below has names of conditions!**
 
@@ -51,6 +53,17 @@
 | **Complicated** | 30s | 1.2x | 30.0 | 1.0 | 10.0 | 10 | Spin to Win, Hang Time
 | **Esoteric** | 30s | 1.0x | 20.0 | 1.0 | 8.0 | 12 | None
 | **Unfathomable** | 5s | 0.8x | 20.0 | 1.0 | 5.0 | 15 | None
+
+### Challenge Presets
+
+| Preset | Description | Changes | More Info
+| :--- | :--- | :--- | :--- |
+| **Fly Catcher** | Only flies add time. | Increment Values | Each scout fly adds 40 seconds. Orbs and cells add nothing.
+| **Compliant** | The only punishment resets the run. | Punishment Toggles | Every punishment is toggled off except Reset Run. Quick Time Event will still roll the Time Loss punishment.
+| **Rules, Rules, Rules** | Only rules. All the rules. | Condition Toggles | All rules are toggled on and all complications are toggled off.
+| **Convoluted** | Only complications. All the complications. | Condition Toggles | All complications are toggled on and all rules are toggled off.
+| **Silent But Deadly** | Orbs are invisible. And they kill you. | Increment Values, New Condition Delay, Condition Toggles | Orbs: +5 / Flies: +12 / Cells: +30. The only conditions toggled on are Hidden Treasure and Rotten Eggs. There is no time between conditions.
+| **Bad Money** | Orbs subtract 10 seconds. | Increment Values, Condition Toggles | Orbs: -10 / Flies: +10 / Cells: +30. Toggles off Cash Grab, Orb Hunt, and Limited Time Offer.
 
 ## Condition Index
 
@@ -176,5 +189,7 @@
   - Followed Rule Increment ⬇️
   - Number of conditions toggled ⬆️
   - Number of punishments toggled ⬆️
+  - Active Conditions ⬆️
+  - New Condition Delay ⬇️
   - Completion percentage ⬆️
   - Final time ⬇️
