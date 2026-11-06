@@ -97,6 +97,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (define-extern target-slot-count-value (function int))
 
+(define-extern mod-rule-roll-possible? (function symbol))
+
 (defmacro def-save-field-pair (save-name resume-name place)
   `(begin
     (defun ,save-name ()
@@ -167,6 +169,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 (define *mod-unique-enemy-killed-types* (new 'global 'boxed-array symbol 3))
 
 (define *mod-timed-punishment-slot-count* 8)
+
+;; Until this time, assume no condition is eligible to roll.
+(define *mod-rule-idle-recheck-time* 0)
 
 (defun mod-rule-target-slot-count ()
   (max 0 (min *mod-rule-slot-count* (target-slot-count-value))))
@@ -1896,20 +1901,24 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (set! (-> (-> *MOD-rule-slot-bank* slot-progress) slot) 0)))))))
   (none))
 
-;; Mark a slot as pending a new roll.
+;; Mark a slot as pending a new roll. A pending roll is only scheduled when something can roll.
 (defun mod-rule-schedule-slot ((slot int) (id symbol) (apply-buffer symbol))
-  (when (and (> (mod-rule-target-slot-count) 0) (>= slot 0) (< slot *mod-rule-slot-count*) id)
+  (when (and (> (mod-rule-target-slot-count) 0)
+             (>= slot 0)
+             (< slot *mod-rule-slot-count*)
+             id
+             (or (not (eq? id 'mod-rule-pending-roll)) (mod-rule-roll-possible?)))
     (set! (-> (-> *MOD-rule-slot-bank* pending-slots) slot) id)
     (set! (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot)
-          (+ (current-time) (if apply-buffer (seconds (new-condition-delay-seconds)) 0))))
+          (+ (current-time) (if apply-buffer (the time-frame (* (the float TICKS_PER_SECOND) (new-condition-delay-seconds))) 0))))
   (none))
 
 ;; Schedule rolls into free slots until the target count is reached.
 (defun mod-rule-fill-to-target! ()
-  (let ((free (mod-rule-first-free-slot)))
-    (while (and (>= free 0) (< (mod-rule-active-slot-count) (mod-rule-target-slot-count)))
-      (mod-rule-schedule-slot free 'mod-rule-pending-roll #t)
-      (set! free (mod-rule-first-free-slot))))
+  (dotimes (i *mod-rule-slot-count*)
+    (let ((free (mod-rule-first-free-slot)))
+      (when (and (>= free 0) (< (mod-rule-active-slot-count) (mod-rule-target-slot-count)))
+        (mod-rule-schedule-slot free 'mod-rule-pending-roll #t))))
   (none))
 
 ;; ID of the first active slot.
@@ -2140,7 +2149,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
               (+! level-idx 1)))
           (set! (-> *game-info* fuel) (max 0.0 (- (-> *game-info* fuel) 1.0)))
           (set! (-> *MOD-rule-context-bank* last-reverted-cell-task) (the int chosen-task))
-          (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) (+ (current-time) (seconds 5)))))))
+          (set! (-> *MOD-rule-context-bank* last-reverted-cell-until) (+ (current-time) (seconds 10)))))))
   (none))
 
 (defun mod-target-on-racer? ()
@@ -2233,7 +2242,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                          (not (or (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss) (eq? (current-level-name) 'lavatube))))
     (consider-punishment punishment-warp 8 (!= (-> (level-get-target-inside *level*) name) 'training))
     (consider-punishment punishment-revert-cell
-                         8
+                         7
                          (mod-can-revert-collected-cell?)
                          (not (and (or (eq? (current-level-name) 'lavatube) (eq? (current-level-name) 'citadel) (eq? (current-level-name) 'finalboss))
                                    (< (current-cell-count) 90))))
@@ -2620,6 +2629,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (set! (-> *MOD-rule-context-bank* twist-marked-slot) -1)
   (set! (-> *MOD-rule-context-bank* palate-change-grace-until) 0)
   (set! (-> *MOD-rule-context-bank* red-shockwave-until) 0)
+  (set! *mod-rule-idle-recheck-time* 0)
   (mod-rule-clear-slot-outcomes!)
   (set! (-> *MOD-rule-context-bank* qte-target-button) 0)
   (set! (-> *MOD-rule-context-bank* hang-time-air-start) 0)
@@ -3315,6 +3325,31 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((priority (-> *mod-rule-weight-scratch* idx)))
     (if (or (<= priority 0) ignore-recency?) priority (* priority (mod-rule-recent-roll-factor (mod-rule-id-from-index idx))))))
 
+;; Roll priority of a candidate. 0 if it is already active, pending, disabled, or blocked in context.
+(defun mod-rule-candidate-priority ((candidate symbol))
+  (if (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
+    (max 0 (mod-rule-roll-priority candidate))
+    0))
+
+(defun mod-rule-any-eligible? ()
+  (let ((idx 0)
+        (found #f))
+    (while (and (< idx *mod-rule-id-count*) (not found))
+      (when (> (mod-rule-candidate-priority (mod-rule-id-from-index idx)) 0)
+        (set! found #t))
+      (+! idx 1))
+    found))
+
+;; True if some condition can roll right now. While nothing can, the answer is reused for 1 second.
+(defun mod-rule-roll-possible? ()
+  (let ((now (current-time)))
+    (cond
+      ;; no target (respawn, save resume): can't judge the level yet, so don't hold a roll back
+      ((not *target*) #t)
+      ((and (> *mod-rule-idle-recheck-time* now) (<= *mod-rule-idle-recheck-time* (+ now (seconds 2)))) #f)
+      ((mod-rule-any-eligible?) (set! *mod-rule-idle-recheck-time* 0) #t)
+      (else (set! *mod-rule-idle-recheck-time* (the int (+ now (seconds 1)))) #f))))
+
 ;; Weighted random roll. If recency leaves no candidates, retry using the base priorities.
 (defun mod-rule-pick-weighted-id ()
   (let ((idx 0)
@@ -3322,11 +3357,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
         (ignore-recency? #f)
         (chosen #f))
     (while (< idx *mod-rule-id-count*)
-      (let ((candidate (mod-rule-id-from-index idx))
-            (priority 0))
-        (when (and candidate (not (mod-rule-active? candidate)) (not (mod-rule-pending? candidate)))
-          (set! priority (max 0 (mod-rule-roll-priority candidate))))
-        (set! (-> *mod-rule-weight-scratch* idx) priority))
+      (set! (-> *mod-rule-weight-scratch* idx) (mod-rule-candidate-priority (mod-rule-id-from-index idx)))
       (+! idx 1))
     ;; total weight (weighted by recency)
     (set! idx 0)
@@ -4532,7 +4563,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (> total *mod-hud-bottom*)))
 
 (defun mod-rule-draw-separator ((buf dma-buffer) (y int))
-  (mod-draw-string-xy-scaled "-------------------------------"
+  (mod-draw-string-xy-scaled "--------------------"
                              buf
                              *mod-hud-status-x*
                              y
@@ -4640,8 +4671,11 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                  (set! height (max (mod-rule-hud-empty-height) (-> *mod-hud-slot-heights* slot)))
                  (mod-rule-draw-empty-slot global-buf slot y)))
              (+! y height)
+             (when (and (< (+ slot 1) band-count)
+                        (or (-> (-> *MOD-rule-slot-bank* active-slots) (+ slot 1))
+                            (-> (-> *MOD-rule-slot-bank* pending-slots) (+ slot 1))))
+               (mod-rule-draw-separator global-buf y))
              (when (< (+ slot 1) band-count)
-               (mod-rule-draw-separator global-buf y)
                (+! y (mod-scale-px *mod-hud-slot-gap*))))))))
     (else (none)))
   (none))
