@@ -172,7 +172,7 @@
 ## Passes
 - A pass lets you completely resolve any active condition. Any rule this is used on will not be considered broken or followed.
 - Each pass will require an amount of credits. A credit is rewarded on each rule followed, and the amount needed can be changed in the options menu.
-- Using a pass on TWISTED will *not* mark the future rule as twisted.
+- Using a pass on Twisted will *not* mark the future rule as twisted.
 - To use a pass, press L2+R2.
 
 ## Seeds

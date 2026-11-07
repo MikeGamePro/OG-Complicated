@@ -124,6 +124,7 @@
   :trans
     (behavior ()
       (when (-> self got-hit)
+        (notify-enemy-death self)
         (close-specific-task! (game-task plunger-lurker-hit) (task-status need-hint))
         (process-entity-status! self (entity-perm-status complete) #t)
         (level-hint-spawn (text-id ogre-plunger-lurker-resolution) "sksp0321" (the-as entity #f) *entity-pool* (game-task none))

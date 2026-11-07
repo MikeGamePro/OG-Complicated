@@ -115,6 +115,7 @@
         (('can-spawn?) (return (the-as object #f)) v0-0)))
   :code
     (behavior ()
+      (notify-enemy-death self)
       (cleanup-for-death self)
       (logclear! (-> self mask) (process-mask actor-pause))
       (when (-> self notify-actor)
