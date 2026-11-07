@@ -1530,7 +1530,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     ((eq? id 'rule-buzzer-pressure) (mod-apply-time-limit-multiplier (seconds 30))) ;; 30
     ((eq? id 'rule-flop-this) (seconds 60)) ;; 60
     ((eq? id 'complication-brittle-bones) (seconds 45)) ;; 45
-    ((eq? id 'complication-rotten-eggs) (seconds 30)) ;; 30
+    ((eq? id 'complication-rotten-eggs) (seconds 20)) ;; 20
     ((eq? id 'complication-eco-allergy) (seconds 45)) ;; 45
     ((eq? id 'rule-keep-it-low) (seconds 90)) ;; 90
     ((eq? id 'complication-sizeable) (seconds 60)) ;; 60
@@ -3038,6 +3038,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           ((eq? id 'rule-fuel-pressure)
            (cond
              ((or (< fuel-left 1)
+                  (and (eq? level-name 'rolling) (< fuel-left 3))
+                  (and (eq? level-name 'swamp) (< fuel-left 3))
+                  (and (eq? level-name 'village1) (< fuel-left 3))
+                  (and (eq? level-name 'village2) (< fuel-left 3))
+                  (and (eq? level-name 'village3) (< fuel-left 4))
+                  (and (eq? level-name 'jungle) (< fuel-left 4))
                   is-minigame
                   (eq? level-name 'ogre)
                   (eq? level-name 'firecanyon)
@@ -3046,7 +3052,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                   racer-lavatube
                   (eq? level-name 'finalboss))
               0)
-             ((or (eq? level-name 'village1) (eq? level-name 'village2) (eq? level-name 'village3)) 20)
              (else 53)))
           ((eq? id 'rule-money-pressure)
            (if (or (<= money-left 50) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'jungleb) deep-lavatube) 0 45))
@@ -3094,7 +3099,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              80))
           ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 250 0))
-          ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) is-minigame) 0 190))
+          ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) on-racer is-minigame) 0 190))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 422 0))
           ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))
           ((eq? id 'complication-eco-reserve)
@@ -3186,11 +3191,12 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              ((and *target* (< (-> (the-as fact-info-target (-> *target* fact)) health) 2.0)) 55)
              (else 24)))
           ((eq? id 'rule-express-delivery)
-           (if (or (and (not (task-closed? (game-task misty-muse) (task-status need-resolution)))
-                        (task-closed? (game-task misty-muse) (task-status need-introduction)))
-                   (eq? level-name 'misty))
-             135
-             0))
+           (cond
+             ((task-closed? (game-task misty-muse) (task-status need-resolution)) 0)
+             ((eq? level-name 'misty) 135)
+             ((task-closed? (game-task misty-muse) (task-status need-introduction))
+              200)
+             (else 0)))
           ((eq? id 'rule-side-to-side) (if is-klaww 640 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 37))
           ((eq? id 'complication-income-tax) (if (eq? level-name 'finalboss) 0 29))
@@ -4252,7 +4258,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (mod-rule-handle-slot-expiry slot)))
            (dotimes (slot *mod-rule-slot-count*)
              (let ((pending-id (-> (-> *MOD-rule-slot-bank* pending-slots) slot)))
-               (when (and pending-id (> (mod-enabled-condition-count) 0))
+               (when (and (eq? pending-id 'mod-rule-pending-roll)
+                          (> (mod-rule-target-slot-count) 0)
+                          (mod-rule-roll-possible?))
                  (let* ((rolling-left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
                         (whole-second (the int (/ rolling-left (seconds 1)))))
                    (if (> whole-second 2)
@@ -4607,9 +4615,9 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (when msg
       (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
       (+! y (mod-scale-px 10)))
-    (when (and (-> (-> *MOD-rule-slot-bank* pending-slots) slot)
-               (> (mod-enabled-condition-count) 0)
-               (> (mod-rule-target-slot-count) 0))
+    (when (and (eq? (-> (-> *MOD-rule-slot-bank* pending-slots) slot) 'mod-rule-pending-roll)
+               (> (mod-rule-target-slot-count) 0)
+               (mod-rule-roll-possible?))
       (let* ((left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
              (label "NEW CONDITION:")
              (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
