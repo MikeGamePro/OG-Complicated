@@ -140,7 +140,8 @@
    (palate-change-grace-until time-frame)
    (red-shockwave-until       time-frame)
    (fisher-missed             int32)
-   (fisher-caught             int32)))
+   (fisher-caught             int32)
+   (roll-possible?            symbol)))
 
 (define *MOD-rule-context-bank*
   (new 'static
@@ -162,7 +163,8 @@
        :palate-change-grace-until 0
        :red-shockwave-until 0
        :fisher-missed 0
-       :fisher-caught 0))
+       :fisher-caught 0
+       :roll-possible? #f))
 
 (deftype mod-rng-bank (structure)
   ((content-state uint)
