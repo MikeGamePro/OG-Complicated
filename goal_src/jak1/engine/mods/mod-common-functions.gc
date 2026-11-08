@@ -3103,7 +3103,8 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
              0
              80))
           ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 250 0))
-          ((eq? id 'rule-vendetta) (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) on-racer is-minigame) 0 190))
+          ((eq? id 'rule-vendetta)
+           (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) on-racer is-minigame) 0 190))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 422 0))
           ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))
           ((eq? id 'complication-eco-reserve)
@@ -3198,8 +3199,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (cond
              ((task-closed? (game-task misty-muse) (task-status need-resolution)) 0)
              ((eq? level-name 'misty) 135)
-             ((task-closed? (game-task misty-muse) (task-status need-introduction))
-              200)
+             ((task-closed? (game-task misty-muse) (task-status need-introduction)) 200)
              (else 0)))
           ((eq? id 'rule-side-to-side) (if is-klaww 640 0))
           ((eq? id 'complication-mirror) (if is-klaww 0 37))
@@ -3991,7 +3991,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 
 (defun mod-rule-trigger-soul-bond ()
   (when (mod-rule-active? 'complication-soul-bond)
-    (send-event *target* 'attack-invinc #f (static-attack-info ((mode (if (mod-target-on-flut?) 'endlessfall 'melt))))))
+    (mod-kill-target! (if (mod-target-on-flut?) 'endlessfall 'melt)))
   (none))
 
 (defun mod-rule-trigger-hitlist ((enemy-type symbol))
@@ -4239,8 +4239,14 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
            (mod-rule-update-shifty)
            (mod-orb-hunt-update)
            (let ((target (mod-rule-target-slot-count)))
-             (when (< target *mod-last-target-slot-count*)
-               (mod-rule-trim-pending-to-target!))
+             (when (!= target *mod-last-target-slot-count*)
+               (let ((slot (min target *mod-last-target-slot-count*))
+                     (end (max target *mod-last-target-slot-count*)))
+                 (while (< slot end)
+                   (mod-rule-set-slot-outcome! slot 'none)
+                   (+! slot 1)))
+               (when (< target *mod-last-target-slot-count*)
+                 (mod-rule-trim-pending-to-target!)))
              (set! *mod-last-target-slot-count* target))
            (mod-rule-compact-slots!)
            (mod-rule-fill-to-target!)
@@ -4262,9 +4268,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                (mod-rule-handle-slot-expiry slot)))
            (dotimes (slot *mod-rule-slot-count*)
              (let ((pending-id (-> (-> *MOD-rule-slot-bank* pending-slots) slot)))
-               (when (and (eq? pending-id 'mod-rule-pending-roll)
-                          (> (mod-rule-target-slot-count) 0)
-                          (mod-rule-roll-possible?))
+               (when (and (eq? pending-id 'mod-rule-pending-roll) (> (mod-rule-target-slot-count) 0) (mod-rule-roll-possible?))
                  (let* ((rolling-left (max 0 (- (-> (-> *MOD-rule-slot-bank* roll-ready-times) slot) (current-time))))
                         (whole-second (the int (/ rolling-left (seconds 1)))))
                    (if (> whole-second 2)
@@ -4344,7 +4348,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (unless *mod-hud-dry-run*
     (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier)))))
 
-;; scales a row-spacing/indent pixel offset by the same multiplier as the HUD text
+;; Scales a row-spacing/indent pixel offset by the same multiplier as the HUD text.
 (defun mod-scale-px ((n int))
   (the int (* (the float n) (text-scale-multiplier))))
 
@@ -4416,8 +4420,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (mod-draw-string-xy-scaled value buf (mod-scale-px 66) value-y (font-color white) (mod-hud-flags) 0.4)
     (+ value-y (mod-scale-px 8))))
 
-;; Draw one slot's HUD block: name, description, punishment, progress, timer,
-;; pass hint, plus extras for some rules (distance, last kill, etc). Returns the next row y.
 (defun mod-rule-desc-essential? ((id symbol))
   (or (eq? id 'rule-qte) (eq? id 'complication-twisted)))
 
@@ -4575,13 +4577,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
     (> total *mod-hud-bottom*)))
 
 (defun mod-rule-draw-separator ((buf dma-buffer) (y int))
-  (mod-draw-string-xy-scaled "--------------------"
-                             buf
-                             *mod-hud-status-x*
-                             y
-                             (font-color gray)
-                             (mod-hud-flags)
-                             0.3)
+  (mod-draw-string-xy-scaled "--------------------" buf *mod-hud-status-x* y (font-color gray) (mod-hud-flags) 0.3)
   (none))
 
 (defun mod-draw-timed-punishments ((buf dma-buffer))
@@ -4684,8 +4680,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
                  (mod-rule-draw-empty-slot global-buf slot y)))
              (+! y height)
              (when (and (< (+ slot 1) band-count)
-                        (or (-> (-> *MOD-rule-slot-bank* active-slots) (+ slot 1))
-                            (-> (-> *MOD-rule-slot-bank* pending-slots) (+ slot 1))))
+                        (or (-> (-> *MOD-rule-slot-bank* active-slots) (+ slot 1)) (-> (-> *MOD-rule-slot-bank* pending-slots) (+ slot 1))))
                (mod-rule-draw-separator global-buf y))
              (when (< (+ slot 1) band-count)
                (+! y (mod-scale-px *mod-hud-slot-gap*))))))))
