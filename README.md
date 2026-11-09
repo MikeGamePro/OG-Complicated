@@ -58,7 +58,7 @@
 
 | Preset | Description | Changes | More Info
 | :--- | :--- | :--- | :--- |
-| **Fly Catcher** | Only flies add time. | Increment Values | Each scout fly adds 30 seconds. Orbs and cells add nothing.
+| **Fly Catcher** | Only flies add time. | Increment Values, Condition Toggles | Each scout fly adds 30 seconds. Orbs and cells add nothing. Toggles off Social Distancing.
 | **Compliant** | The only punishment resets the run. | Punishment Toggles | Every punishment is toggled off except Reset Run. Quick Time Event will still roll the Time Loss punishment.
 | **Rules, Rules, Rules** | Only rules. All the rules. | Condition Toggles | All rules are toggled on and all complications (except Twisted) are toggled off.
 | **Convoluted** | Only complications. All the complications. | Condition Toggles | All complications (except Twisted) are toggled on and all rules are toggled off.
