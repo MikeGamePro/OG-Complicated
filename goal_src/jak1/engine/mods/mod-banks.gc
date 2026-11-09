@@ -34,7 +34,12 @@
    (timed-end-times    (array time-frame))
    (timed-next-ticks   (array time-frame))
    (timed-saved-ids    (array symbol))
-   (timed-saved-tenths (array int32))))
+   (timed-saved-tenths (array int32))
+   ;; applied-punishment queue shown on the right of the HUD (length = *mod-punishment-result-queue-capacity*)
+   (result-ids         (array symbol))
+   (result-tasks       (array int32))
+   (result-until       time-frame)
+   (result-count       int32)))
 
 (define *MOD-punishment-bank*
   (new 'static
@@ -48,7 +53,13 @@
        :timed-saved-ids
        (new 'static 'boxed-array :type symbol :length 8 :allocated-length 8)
        :timed-saved-tenths
-       (new 'static 'boxed-array :type int32 :length 8 :allocated-length 8)))
+       (new 'static 'boxed-array :type int32 :length 8 :allocated-length 8)
+       :result-ids
+       (new 'static 'boxed-array :type symbol :length 8 :allocated-length 8)
+       :result-tasks
+       (new 'static 'boxed-array :type int32 :length 8 :allocated-length 8)
+       :result-until 0
+       :result-count 0))
 
 (deftype mod-rule-slot-bank (structure)
   ((active-slots          (array symbol))
@@ -64,10 +75,7 @@
    (slot-goals            (array int32))
    (slot-progress         (array int32))
    (slot-grace-periods    (array time-frame))
-   (slot-outcomes         (array symbol))
-   (slot-punishment-results (array symbol))
-   (slot-punishment-tasks   (array int32))
-   (slot-punishment-untils  (array time-frame))))
+   (slot-outcomes         (array symbol))))
 
 (define *MOD-rule-slot-bank*
   (new 'static
@@ -99,13 +107,7 @@
        :slot-grace-periods
        (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)
        :slot-outcomes
-       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
-       :slot-punishment-results
-       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
-       :slot-punishment-tasks
-       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
-       :slot-punishment-untils
-       (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)))
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)))
 
 (deftype mod-countdown-bank (structure)
   ((active?                  symbol)
