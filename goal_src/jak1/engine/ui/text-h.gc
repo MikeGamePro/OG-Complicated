@@ -940,8 +940,8 @@
   (complicated-opts-new-condition-delay #x1723)
   ;; challenge preset menu
   (complicated-opts-challenge-presets-title #x1724)
-  (complicated-opts-bug-catcher-preset #x1725)
-  (complicated-opts-bug-catcher-description #x1726)
+  (complicated-opts-fly-catcher-preset #x1725)
+  (complicated-opts-fly-catcher-description #x1726)
   (complicated-opts-compliant-preset #x1727)
   (complicated-opts-compliant-description #x1728)
   (complicated-opts-rules-only-preset #x1729)

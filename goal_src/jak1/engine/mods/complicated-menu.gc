@@ -699,12 +699,13 @@
   (when *complicated-settings*
     (save-complicated-settings-preset-if-missing!)
     (cond
-      ((eq? preset 'bug-catcher)
+      ((eq? preset 'fly-catcher)
        (set! (-> *complicated-settings* cell-increment) 0.0)
        (set! (-> *complicated-settings* orb-increment) 0.0)
        (set! (-> *complicated-settings* fly-increment) 30.0)
        (set! (-> *complicated-settings* compliance-increment) 0.0)
-       (set! (-> *complicated-settings* countdown-start-seconds) 30.0))
+       (set! (-> *complicated-settings* countdown-start-seconds) 30.0)
+       (set! (-> *complicated-settings* rule-distancing?) #f))
       ((eq? preset 'compliant) (punishment-toggle-set-all! #f) (set! (-> *complicated-settings* punishment-toggle-reset?) #t))
       ((eq? preset 'rules-only)
        (condition-toggle-set-all! #f)
@@ -1090,15 +1091,15 @@
        'boxed-array
        :type
        game-option
-       ;; [0] BUG CATCHER
+       ;; [0] FLY CATCHER
        (new 'static
             'game-option
             :option-type (game-option-type confirmation)
-            :name (text-id complicated-opts-bug-catcher-preset)
+            :name (text-id complicated-opts-fly-catcher-preset)
             :scale #t
             :on-confirm
             (lambda ()
-              (apply-challenge-preset! 'bug-catcher)
+              (apply-challenge-preset! 'fly-catcher)
               (none)))
        ;; [1] COMPLIANT
        (new 'static

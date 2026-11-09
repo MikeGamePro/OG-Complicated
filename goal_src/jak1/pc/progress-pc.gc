@@ -3422,7 +3422,7 @@
                              (not (-> obj in-transition)))
                     (let* ((description-font (new 'stack 'font-context *font-default-matrix* 0 0 0.0 (font-color default) (font-flags shadow kerning middle middle-vert large)))
                            (description-id (case index
-                                             ((0) (text-id complicated-opts-bug-catcher-description))
+                                             ((0) (text-id complicated-opts-fly-catcher-description))
                                              ((1) (text-id complicated-opts-compliant-description))
                                              ((2) (text-id complicated-opts-rules-only-description))
                                              ((3) (text-id complicated-opts-complications-only-description))

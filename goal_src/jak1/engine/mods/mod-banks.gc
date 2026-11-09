@@ -158,7 +158,7 @@
        :twist-marked-slot -1
        :get-a-grip-last-grab 0
        :bus-driver-activate-time 0
-       :bus-driver-grace-period (seconds 2)
+       :bus-driver-grace-period (seconds 2.5)
        :shifty-next-time 0
        :palate-change-grace-until 0
        :red-shockwave-until 0
