@@ -64,7 +64,10 @@
    (slot-goals            (array int32))
    (slot-progress         (array int32))
    (slot-grace-periods    (array time-frame))
-   (slot-outcomes         (array symbol))))
+   (slot-outcomes         (array symbol))
+   (slot-punishment-results (array symbol))
+   (slot-punishment-tasks   (array int32))
+   (slot-punishment-untils  (array time-frame))))
 
 (define *MOD-rule-slot-bank*
   (new 'static
@@ -96,7 +99,13 @@
        :slot-grace-periods
        (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)
        :slot-outcomes
-       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)))
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
+       :slot-punishment-results
+       (new 'static 'boxed-array :type symbol :length 5 :allocated-length 5)
+       :slot-punishment-tasks
+       (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5)
+       :slot-punishment-untils
+       (new 'static 'boxed-array :type time-frame :length 5 :allocated-length 5)))
 
 (deftype mod-countdown-bank (structure)
   ((active?                  symbol)
@@ -124,8 +133,6 @@
 
 (deftype mod-rule-context-bank (structure)
   ((last-update-time          time-frame)
-   (last-reverted-cell-task   int32)
-   (last-reverted-cell-until  int32)
    (last-kill-time            time-frame)
    (mean-look-clear-time      time-frame)
    (qte-target-button         int32)
@@ -147,8 +154,6 @@
   (new 'static
        'mod-rule-context-bank
        :last-update-time 0
-       :last-reverted-cell-task 0
-       :last-reverted-cell-until 0
        :last-kill-time 0
        :mean-look-clear-time 0
        :qte-target-button 0
