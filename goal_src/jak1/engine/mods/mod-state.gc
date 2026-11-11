@@ -1,0 +1,780 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; Run lifecycle and save-state helpers
+
+(defun mod-run-reset ()
+  (kill-by-name 'global-countdown *active-pool*)
+  (kill-by-name 'mod-rule-manager *active-pool*)
+  (mod-rules-reset)
+  (set! (-> *MOD-countdown-bank* active?) #f)
+  (set! (-> *MOD-countdown-bank* lost?) #f)
+  (set! (-> *MOD-countdown-bank* remaining-time)
+        (the int (* (countdown-start-seconds-value) (the float TICKS_PER_SECOND)))) ;; global countdown start
+  (set! (-> *MOD-countdown-bank* countup-timer) 0)
+  (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
+  (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time))
+  (set! (-> *MOD-rule-context-bank* last-update-time) (current-time))
+  (none))
+
+(defun mod-rng-reset-state! ()
+  (set! (-> *MOD-rng-bank* content-state) (the uint 1))
+  (set! (-> *MOD-rng-bank* punish-state) (the uint 1))
+  (set! (-> *MOD-rng-bank* seed-display) (the uint 0))
+  (none))
+
+(defun mod-rule-context-reset! ()
+  (mod-rules-reset-core)
+  (none))
+
+(defun mod-rule-index-from-id ((id symbol))
+  (mod-symbol-index *mod-rule-ids* id))
+
+(defun mod-punishment-index-from-id ((id symbol))
+  (mod-symbol-index *mod-punishment-ids* id))
+
+(defun mod-slot-punishments-save-value ()
+  (mod-pack-symbols (-> *MOD-rule-slot-bank* slot-punishments) *mod-punishment-ids* *mod-rule-slot-count*))
+
+(defun mod-slot-punishments-resume-from-save ((val int))
+  (dotimes (slot *mod-rule-slot-count*)
+    (set! (mod-slot-ref saved-punishments slot) (mod-unpack-symbol (the uint val) slot *mod-punishment-ids*)))
+  (none))
+
+(defun mod-rule-pending-slots-save-value ()
+  (let ((result (the uint 0))
+        (slot 0))
+    (while (< slot *mod-rule-slot-count*)
+      (let* ((pending (mod-slot-ref pending-slots slot))
+             (idx (if pending (mod-rule-index-from-id pending) -1))
+             (byte-val (cond
+                         ((not pending) (the uint #xff))
+                         ((eq? pending 'mod-rule-pending-roll) (the uint #xfe))
+                         ((>= idx 0) (the uint idx))
+                         (else (the uint #xff)))))
+        (set! result (logior result (shl byte-val (* slot 8)))))
+      (+! slot 1))
+    (the int result)))
+
+(defun mod-rule-pending-slots-resume-from-save ((val int))
+  (let ((bits (the uint val))
+        (slot 0))
+    (while (< slot *mod-rule-slot-count*)
+      (let ((idx (the int (logand (shr bits (* slot 8)) (the uint #xff)))))
+        (set! (mod-slot-ref saved-pending slot)
+              (cond
+                ((= idx #xfe) 'mod-rule-pending-roll)
+                ((= idx #xff) #f)
+                (else (mod-rule-id-from-index idx)))))
+      (+! slot 1)))
+  (none))
+
+(defun mod-rule-pending-times-save-value ()
+  (let ((result (the uint 0))
+        (slot 0))
+    (while (< slot *mod-rule-slot-count*)
+      (let ((remaining (if (mod-slot-ref pending-slots slot) (max 0 (- (mod-slot-ref roll-ready-times slot) (current-time))) 0)))
+        (set! result
+              (logior result
+                      (shl (the uint (min #x3ff (/ (+ remaining (+ MOD_TICKS_PER_TENTH -1)) MOD_TICKS_PER_TENTH))) (* slot 10)))))
+      (+! slot 1))
+    (the int result)))
+
+(defun mod-rule-pending-times-resume-from-save ((val int))
+  (let ((bits (the uint val))
+        (slot 0))
+    (while (< slot *mod-rule-slot-count*)
+      (set! (mod-slot-ref saved-roll-tenths slot) (the int (logand (shr bits (* slot 10)) (the uint #x3ff))))
+      (+! slot 1)))
+  (none))
+
+(defun mod-rule-slot-progress-save-value ((group int))
+  (let ((result (the uint 0))
+        (start (* group 2))
+        (offset 0))
+    (while (< offset 2)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-rule-slot-count*)
+          (set! result (logior result (shl (the uint (min #xffff (max 0 (mod-slot-ref slot-progress slot)))) (* offset 16)))))
+        (+! offset 1)))
+    (the int result)))
+
+(defun mod-rule-slot-progress-resume-from-save ((group int) (val int))
+  (let ((bits (the uint val))
+        (start (* group 2))
+        (offset 0))
+    (while (< offset 2)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-rule-slot-count*)
+          (set! (mod-slot-ref slot-progress slot) (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
+        (+! offset 1))))
+  (none))
+
+(defmacro def-save-index-pair (save-name resume-name base-save-fn base-resume-fn index)
+  `(begin
+    (defun ,save-name ()
+      (,base-save-fn ,index))
+    (defun ,resume-name ((val int))
+      (,base-resume-fn ,index val))))
+
+(def-save-index-pair mod-rule-slot-progress0-save-value
+                     mod-rule-slot-progress0-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     0)
+
+(def-save-index-pair mod-rule-slot-progress1-save-value
+                     mod-rule-slot-progress1-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     1)
+
+(def-save-index-pair mod-rule-slot-progress2-save-value
+                     mod-rule-slot-progress2-resume-from-save
+                     mod-rule-slot-progress-save-value
+                     mod-rule-slot-progress-resume-from-save
+                     2)
+
+(defun mod-math-quiz-state-save-value ()
+  (the int
+       (logior (the uint (-> *MOD-quiz-bank* math-val1))
+               (shl (the uint (-> *MOD-quiz-bank* math-val2)) 8)
+               (shl (the uint (-> *MOD-quiz-bank* math-op)) 16))))
+
+(defun mod-math-quiz-state-resume-from-save ((val int))
+  (let ((bits (the uint val)))
+    (set! (-> *MOD-quiz-bank* math-val1) (the int (logand bits (the uint #xff))))
+    (set! (-> *MOD-quiz-bank* math-val2) (the int (logand (shr bits 8) (the uint #xff))))
+    (set! (-> *MOD-quiz-bank* math-op) (the int (logand (shr bits 16) (the uint #x3))))
+    (mod-math-quiz-compute-answer!))
+  (none))
+
+(def-save-field-pair mod-math-quiz-guess-save-value
+                     mod-math-quiz-guess-resume-from-save
+                     (-> *MOD-quiz-bank* math-current-guess))
+
+(defun mod-trivia-state-save-value ()
+  (the int
+       (logior (the uint (-> *MOD-quiz-bank* trivia-current-question))
+               (shl (the uint (+ (-> *MOD-quiz-bank* trivia-current-guess) 1)) 8)
+               (shl (the uint (-> (-> *MOD-quiz-bank* trivia-shuffle-map) 0)) 11)
+               (shl (the uint (-> (-> *MOD-quiz-bank* trivia-shuffle-map) 1)) 13)
+               (shl (the uint (-> (-> *MOD-quiz-bank* trivia-shuffle-map) 2)) 15)
+               (shl (the uint (-> (-> *MOD-quiz-bank* trivia-shuffle-map) 3)) 17)
+               (shl (the uint (-> *MOD-quiz-bank* trivia-dynamic-seed)) 19))))
+
+(defun mod-trivia-state-resume-from-save ((val int))
+  (let ((bits (the uint val)))
+    (set! (-> *MOD-quiz-bank* trivia-current-question) (the int (logand bits (the uint #xff))))
+    (set! (-> *MOD-quiz-bank* trivia-current-guess) (- (the int (logand (shr bits 8) (the uint #x7))) 1))
+    (dotimes (i 4)
+      (set! (-> (-> *MOD-quiz-bank* trivia-shuffle-map) i) (the int (logand (shr bits (+ 11 (* i 2))) (the uint #x3)))))
+    (set! (-> *MOD-quiz-bank* trivia-dynamic-seed) (the int (logand (shr bits 19) (the uint #xfff))))
+    (set! (-> *MOD-quiz-bank* trivia-last-tracked-question) (-> *MOD-quiz-bank* trivia-current-question)))
+  (none))
+
+(def-save-field-pair mod-rule-qte-state-save-value
+                     mod-rule-qte-state-resume-from-save
+                     (-> *MOD-rule-context-bank* qte-target-button))
+
+(defun mod-timed-punishments-save-value ()
+  (mod-pack-symbols (-> *MOD-punishment-bank* timed-punishments) *mod-punishment-ids* *mod-timed-punishment-slot-count*))
+
+(defun mod-timed-punishment-times-save-value ((group int))
+  (let ((result (the uint 0))
+        (start (* group 4))
+        (offset 0))
+    (while (< offset 4)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-timed-punishment-slot-count*)
+          (let ((remaining (if (-> (-> *MOD-punishment-bank* timed-punishments) slot)
+                             (max 0 (- (-> (-> *MOD-punishment-bank* timed-end-times) slot) (current-time)))
+                             0)))
+            (set! result
+                  (logior result
+                          (shl (the uint (min #xffff (/ (+ remaining (+ MOD_TICKS_PER_TENTH -1)) MOD_TICKS_PER_TENTH))) (* offset 16)))))))
+      (+! offset 1))
+    (the int result)))
+
+(defun mod-timed-punishments-resume-from-save ((val int))
+  (let* ((bits (the uint val))
+         (legacy? (zero? (shr bits 32)))
+         (empty-val (if legacy? #xf #xff))
+         (slot 0))
+    (while (< slot *mod-timed-punishment-slot-count*)
+      (let ((idx (if legacy? (the int (logand (shr bits (* slot 4)) (the uint #xf))) (the int (logand (shr bits (* slot 8)) (the uint #xff))))))
+        (set! (-> (-> *MOD-punishment-bank* timed-saved-ids) slot) (if (= idx empty-val) #f (mod-punishment-id-from-index idx))))
+      (+! slot 1)))
+  (none))
+
+(defun mod-timed-punishment-times-resume-from-save ((group int) (val int))
+  (let ((bits (the uint val))
+        (start (* group 4))
+        (offset 0))
+    (while (< offset 4)
+      (let ((slot (+ start offset)))
+        (when (< slot *mod-timed-punishment-slot-count*)
+          (set! (-> (-> *MOD-punishment-bank* timed-saved-tenths) slot)
+                (the int (logand (shr bits (* offset 16)) (the uint #xffff)))))
+        (+! offset 1))))
+  (none))
+
+(def-save-index-pair mod-rule-timed-punishment-times0-save-value
+                     mod-rule-timed-punishment-times0-resume-from-save
+                     mod-timed-punishment-times-save-value
+                     mod-timed-punishment-times-resume-from-save
+                     0)
+
+(def-save-index-pair mod-rule-timed-punishment-times1-save-value
+                     mod-rule-timed-punishment-times1-resume-from-save
+                     mod-timed-punishment-times-save-value
+                     mod-timed-punishment-times-resume-from-save
+                     1)
+
+(defun mod-rule-active-slots-save-value ()
+  (mod-pack-symbols (-> *MOD-rule-slot-bank* active-slots) *mod-rule-ids* *mod-rule-slot-count*))
+
+(defun mod-rule-slot-remaining-time-save-value ((slot int))
+  (if (mod-slot-ref active-slots slot) (the int (max 0 (- (mod-slot-ref slot-end-times slot) (current-time)))) 0))
+
+(defun mod-rule-slot-remaining-time-resume-from-save ((slot int) (val int))
+  (set! (mod-slot-ref saved-remaining-times slot) (max 0 val))
+  (none))
+
+(def-save-index-pair mod-rule-slot0-end-time-save-value
+                     mod-rule-slot0-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     0)
+
+(def-save-index-pair mod-rule-slot1-end-time-save-value
+                     mod-rule-slot1-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     1)
+
+(def-save-index-pair mod-rule-slot2-end-time-save-value
+                     mod-rule-slot2-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     2)
+
+(def-save-index-pair mod-rule-slot3-end-time-save-value
+                     mod-rule-slot3-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     3)
+
+(def-save-index-pair mod-rule-slot4-end-time-save-value
+                     mod-rule-slot4-end-time-resume-from-save
+                     mod-rule-slot-remaining-time-save-value
+                     mod-rule-slot-remaining-time-resume-from-save
+                     4)
+
+(defun mod-finalize-resume-from-save ()
+  (dotimes (slot *mod-rule-slot-count*)
+    (let ((remaining (mod-slot-ref saved-remaining-times slot)))
+      (when (mod-slot-ref active-slots slot)
+        (set! (mod-slot-ref slot-end-times slot) (+ (current-time) (if (>= remaining 0) remaining 0)))
+        (set! (mod-slot-ref slot-goals slot) (mod-rule-counter-goal (mod-slot-ref active-slots slot)))
+        (set! (mod-slot-ref slot-punishments slot) (mod-slot-ref saved-punishments slot)))))
+  (dotimes (slot *mod-rule-slot-count*)
+    (let ((pending (mod-slot-ref saved-pending slot))
+          (tenths (mod-slot-ref saved-roll-tenths slot)))
+      (when pending
+        (set! (mod-slot-ref pending-slots slot) pending)
+        (set! (mod-slot-ref roll-ready-times slot) (+ (current-time) (* (max 0 tenths) MOD_TICKS_PER_TENTH)))
+        (set! (mod-slot-ref roll-last-warn-second slot) -1))))
+  (mod-clear-all-timed-punishments)
+  (dotimes (slot *mod-timed-punishment-slot-count*)
+    (let ((punishment (-> (-> *MOD-punishment-bank* timed-saved-ids) slot))
+          (tenths (-> (-> *MOD-punishment-bank* timed-saved-tenths) slot)))
+      (when (and punishment (> tenths 0))
+        (set! (-> (-> *MOD-punishment-bank* timed-punishments) slot) punishment)
+        (set! (-> (-> *MOD-punishment-bank* timed-end-times) slot) (+ (current-time) (* tenths MOD_TICKS_PER_TENTH)))
+        (set! (-> (-> *MOD-punishment-bank* timed-next-ticks) slot) (+ (current-time) (seconds 1)))
+        (case punishment
+          (('punishment-blind) (set-blackout-frames (* tenths MOD_TICKS_PER_TENTH)))
+          (('punishment-fall-damage) (mod-set-punished-fall-damage!))
+          (('punishment-delay) (input-delay-enable! #t (-> *MOD-tuning-bank* punishment-input-delay)))
+          (('punishment-iframes) (set! (-> *TARGET-bank* hit-invulnerable-timeout) (seconds 0)))))))
+  (set! (-> *MOD-rule-context-bank* last-update-time) (current-time))
+  ;; (set! (-> *MOD-rule-context-bank* bus-driver-activate-time) (current-time))
+  ;; (set! (-> *MOD-rule-context-bank* get-a-grip-last-grab) (current-time))
+  (none))
+
+(defun mod-rule-active-slots-resume-from-save ((val int))
+  (dotimes (i *mod-rule-slot-count*)
+    (mod-rule-deactivate-slot i))
+  (dotimes (i *mod-rule-slot-count*)
+    (let ((id (mod-unpack-symbol (the uint val) i *mod-rule-ids*)))
+      (set! (mod-slot-ref active-slots i) id)
+      (when id
+        (mod-rule-reapply-slot-visual-effect id))))
+  (none))
+
+(def-save-field-pair mod-rule-twist-marked-slot-save-value
+                     mod-rule-twist-marked-slot-resume-from-save
+                     (-> *MOD-rule-context-bank* twist-marked-slot))
+
+(defun mod-rng-content-state-save-value ()
+  (the int (-> *MOD-rng-bank* content-state)))
+
+(defun mod-rng-content-state-resume-from-save ((val int))
+  (set! (-> *MOD-rng-bank* content-state) (the uint val))
+  (none))
+
+(defun mod-rng-punish-state-save-value ()
+  (the int (-> *MOD-rng-bank* punish-state)))
+
+(defun mod-rng-punish-state-resume-from-save ((val int))
+  (set! (-> *MOD-rng-bank* punish-state) (the uint val))
+  (none))
+
+(defun mod-rng-seed-display-save-value ()
+  (the int (-> *MOD-rng-bank* seed-display)))
+
+(defun mod-rng-seed-display-resume-from-save ((val int))
+  (format 0 "LOADING SEED: ~D~%" val)
+  (set! (-> *MOD-rng-bank* seed-display) (the uint val))
+  (none))
+
+(defun mod-rule-recent-rolls-save-value ()
+  (mod-pack-symbols *mod-rule-recent-rolls* *mod-rule-ids* 8))
+
+(defun mod-rule-recent-rolls-resume-from-save ((val int))
+  (dotimes (i 8)
+    (set! (-> *mod-rule-recent-rolls* i) (mod-unpack-symbol (the uint val) i *mod-rule-ids*)))
+  (none))
+
+(def-save-field-pair mod-rule-twist-pending-count-save-value
+                     mod-rule-twist-pending-count-resume-from-save
+                     (-> *MOD-rule-context-bank* twist-pending-count))
+
+(defun mod-trivia-used-word-save-value ((word int))
+  (let ((result (the uint 0))
+        (start (* word 64))
+        (end (min (length *mod-trivia-questions-used*) (+ (* word 64) 64)))
+        (i 0))
+    (set! i start)
+    (while (< i end)
+      (when (-> *mod-trivia-questions-used* i)
+        (set! result (logior result (shl (the uint 1) (- i start)))))
+      (+! i 1))
+    (the int result)))
+
+(defun mod-trivia-used-word-resume-from-save ((word int) (val int))
+  (let ((bits (the uint val))
+        (start (* word 64))
+        (end (min (length *mod-trivia-questions-used*) (+ (* word 64) 64)))
+        (i 0))
+    (set! i start)
+    (while (< i end)
+      (set! (-> *mod-trivia-questions-used* i) (= (logand (shr bits (- i start)) (the uint 1)) (the uint 1)))
+      (+! i 1)))
+  (none))
+
+(def-save-index-pair mod-trivia-used-word0-save-value
+                     mod-trivia-used-word0-resume-from-save
+                     mod-trivia-used-word-save-value
+                     mod-trivia-used-word-resume-from-save
+                     0)
+
+(def-save-index-pair mod-trivia-used-word1-save-value
+                     mod-trivia-used-word1-resume-from-save
+                     mod-trivia-used-word-save-value
+                     mod-trivia-used-word-resume-from-save
+                     1)
+
+(defun global-countdown-spawn-proc ()
+  (kill-by-name 'global-countdown *active-pool*)
+  (process-spawn-function process
+    mod-global-countdown-proc
+    :name 'global-countdown)
+  (none))
+
+(defun mod-reset-level-visits! ()
+  (dotimes (i (-> *game-info* enter-level-time length))
+    (set! (-> *game-info* enter-level-time i) 0))
+  (set-time! (-> *game-info* enter-level-time (level-task-data-index training)))
+  (none))
+
+;; Start a new run.
+(defun mod-run-start ()
+  (mod-reset-level-visits!)
+  (let ((active-seed (mod-rng-active-seed)))
+    (mod-rng-seed-all! active-seed)
+    (set! (-> *MOD-rng-bank* seed-display) active-seed)
+    (format 0 "[mod-rng] seed: ~D~%" active-seed))
+  (mod-run-reset)
+  (set! (-> *MOD-countdown-bank* active?) #t)
+  (mod-rules-start)
+  (global-countdown-spawn-proc)
+  (none))
+
+(defun global-countdown-save-value ()
+  (if (-> *MOD-countdown-bank* active?) (the int (-> *MOD-countdown-bank* remaining-time)) 0))
+
+(defun global-countdown-resume-from-save ((saved-time int))
+  (set! (-> *MOD-countdown-bank* saved-remaining-time) saved-time)
+  (none))
+
+(defun mod-run-finalize-resume-from-save ()
+  (let ((saved-time (-> *MOD-countdown-bank* saved-remaining-time)))
+    (set! (-> *MOD-countdown-bank* saved-remaining-time) -1)
+    (if (-> *MOD-rule-context-bank* game-beaten?)
+      ;; This save file already beat the game.
+      (when (or (-> *MOD-countdown-bank* active?) (-> *MOD-countdown-bank* lost?))
+        (mod-run-freeze-for-game-beaten))
+      (cond
+        ((> saved-time 0)
+         (set! (-> *MOD-countdown-bank* remaining-time) saved-time)
+         (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
+         (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time))
+         (set! (-> *MOD-rule-context-bank* last-update-time) (current-time))
+         (set! (-> *MOD-countdown-bank* active?) #t)
+         (set! (-> *MOD-countdown-bank* lost?) #f)
+         (mod-rules-resume)
+         (global-countdown-spawn-proc))
+        (else
+         ;; No countdown was saved in this file.
+         (when (or (-> *MOD-countdown-bank* active?) (-> *MOD-countdown-bank* lost?))
+           (mod-run-reset))))))
+  (none))
+
+(defun global-countup-save-value ()
+  (if (-> *MOD-countdown-bank* active?) (the int (-> *MOD-countdown-bank* countup-timer)) 0))
+
+(defun global-countup-resume-from-save ((saved-time int))
+  (set! (-> *MOD-countdown-bank* countup-saved-time) saved-time)
+  (none))
+
+(defun global-countup-finalize-resume-from-save ()
+  (when (and (not (-> *MOD-rule-context-bank* game-beaten?)) (> (-> *MOD-countdown-bank* countup-saved-time) 0))
+    (set! (-> *MOD-countdown-bank* countup-timer) (-> *MOD-countdown-bank* countup-saved-time)))
+  (set! (-> *MOD-countdown-bank* countup-saved-time) -1)
+  (none))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Define Approved Custom Functions/Macros to call in all mods
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; These are included with the mod base and you are welcome to use them in your mods!
+
+;;This function moves an actor to the given coordinates
+;;example: (move-actor "farmer-3" 3.0 74.0 -120.0)
+(defun move-actor ((actor-name string) (x float) (y float) (z float))
+  (when (entity-by-name actor-name)
+    (let* ((entity-actor (entity-by-name actor-name))
+           (actor (-> entity-actor extra process)))
+      (when actor
+        (case (-> actor type)
+          ((fuel-cell)
+           (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> (the fuel-cell actor) base) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> (the fuel-cell actor) root trans) (meters x) (meters y) (meters z) 1.0)
+           (when (name= (-> (the fuel-cell actor) state name) 'wait)
+             ;; only move collision when idle (messes up glowing in cutscene)
+             (set! (-> (the fuel-cell actor) root root-prim world-sphere x) (meters x))
+             (set! (-> (the fuel-cell actor) root root-prim world-sphere y) (meters y))
+             (set! (-> (the fuel-cell actor) root root-prim world-sphere z) (meters z))))
+          ((orb-cache-top)
+           ;; don't move while its activated (let it go up/down)
+           (when (not (name= (-> (the orb-cache-top actor) state name) 'orb-cache-top-activate))
+             (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the orb-cache-top actor) basetrans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the orb-cache-top actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             (set! (-> (the orb-cache-top actor) root root-prim world-sphere x) (meters x))
+             (set! (-> (the orb-cache-top actor) root root-prim world-sphere y) (meters y))
+             (set! (-> (the orb-cache-top actor) root root-prim world-sphere z) (meters z))
+             (set-vector! (-> (the orb-cache-top actor) draw origin) (meters x) (meters y) (meters z) 1.0)
+             (let ((radius (-> (the process-drawable actor) draw radius))
+                   (bounds (res-lump-data entity-actor 'visvol (inline-array vector))))
+               (set-vector! (-> bounds 0) (- (meters x) radius) (meters y) (- (meters z) radius) 1.0)
+               (set-vector! (-> bounds 1) (+ (meters x) radius) (meters y) (+ (meters z) radius) 1.0))))
+          ((money)
+           ;; don't move orbs if being blue-eco-sucked
+           (when (not (logtest? (-> (the money actor) flags) (collectable-flags suck)))
+             (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the money actor) base) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the money actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             (set! (-> (the money actor) root root-prim world-sphere x) (meters x))
+             (set! (-> (the money actor) root root-prim world-sphere y) (meters y))
+             (set! (-> (the money actor) root root-prim world-sphere z) (meters z))))
+          ((crate crate-buzzer)
+           ;; only move crates if they're not jumping
+           (when (= (-> (the crate actor) smush amp) 0.0)
+             (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             (set-vector! (-> (the crate actor) base) (meters x) (meters y) (meters z) 1.0)
+             ;; (set-vector! (-> (the crate actor) root trans) (meters x) (meters y) (meters z) 1.0)
+             ;; (set! (-> (the crate actor) root root-prim world-sphere x) (meters x))
+             ;; (set! (-> (the crate actor) root root-prim world-sphere y) (meters y))
+             ;; (set! (-> (the crate actor) root root-prim world-sphere z) (meters z))
+             ))
+          ((darkvine)
+           (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0))
+          (else
+           (format 0 "unexpected actor type ~S ~S ~S~%" actor-name (-> entity-actor type) (-> actor type))
+           (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+           (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0))))))
+  (none))
+
+(defun process-by-aid ((arg0 uint))
+  "Get the process for the entity with the given aid. If there is no entity or process, #f."
+  (let ((v1-0 (entity-by-aid arg0))) (if v1-0 (-> v1-0 extra process))))
+
+(defun spawn-actor-by-name ((name string))
+  ;; Takes in the string of name of a actor, and spawns a new process based on the entity.
+  (let* ((entity-actor (the entity-actor (entity-by-name name)))
+         (type (-> entity-actor etype))
+         (e-info (entity-info-lookup type)))
+    (when (entity-by-name name)
+      (init-entity (get-process *default-dead-pool* type (if e-info (-> e-info heap-size) #x4000)) entity-actor)
+      (sound-play "buzzer-pickup"))
+    (if (not (entity-by-name name)) (sound-play "oof")))
+  (none))
+
+;;Draws a debug sphere on the actor, takes in a string actor name and a radius for the sphere in meters
+(defun draw-debug-sphere-on-actor ((actorName string) (radius float))
+  (when *debug-segment*
+    (when (process-by-ename actorName)
+      (add-debug-sphere #t
+                        (bucket-id debug)
+                        (-> (the-as process-drawable (process-by-ename actorName)) root trans)
+                        (meters radius)
+                        (static-rgba 0 #xff 0 #x40))))
+  (none))
+
+;;This function moves a given actor to jaks current position, then prints a (move-actors) call in gk.exe
+(defun move-to-jak ((arg0 string))
+  (format #t
+          "move-actor code:  (move-actor ~a ~m ~m ~m)~%"
+          arg0
+          (-> (target-pos 0) x)
+          (-> (target-pos 0) y)
+          (-> (target-pos 0) z))
+  (when (process-by-ename arg0)
+    (set-vector! (-> (-> (the process-drawable (process-by-ename arg0)) root) trans)
+                 (-> (target-pos 0) x)
+                 (-> (target-pos 0) y)
+                 (-> (target-pos 0) z)
+                 1.0)
+    (if (type-type? (-> (process-by-ename arg0) type) crate)
+      (begin
+        (set! (-> (the crate (process-by-ename arg0)) base y) (-> (target-pos 0) y)))
+      (none))
+    (if (type-type? (-> (process-by-ename arg0) type) money)
+      (begin
+        (set! (-> (the money (process-by-ename arg0)) base y) (-> (target-pos 0) y)))
+      (none))
+    (if (type-type? (-> (process-by-ename arg0) type) fuel-cell)
+      (begin
+        (set! (-> (the fuel-cell (process-by-ename arg0)) base y) (-> (target-pos 0) y)))
+      (none))))
+
+;; quick macro for setting vector xyz in meters, leaving w alone
+(defmacro set-vector-meters! (dst x y z)
+  `(set-vector! ,dst (meters ,x) (meters ,y) (meters ,z) (-> ,dst w)))
+
+;; quick macro for constructing static vector with w=1
+(defmacro static-vector-meters (x y z)
+  `(new 'static 'vector :x (meters ,x) :y (meters ,y) :z (meters ,z) :w 1.0))
+
+;; prints vector xyz in meters
+(defmacro print-vector-meters (vec &key (dst #t))
+  `(format ,dst "~m ~m ~m~%" (-> ,vec x) (-> ,vec y) (-> ,vec z)))
+
+;; takes a path-control and xyz values to offsets every node in the path by
+(defmacro shift-path! (path x y z)
+  `(let ((voff (static-vector-meters ,x ,y ,z)))
+    (dotimes (idx (-> ,path num-cverts))
+      (vector+! (-> ,path cverts idx) (-> ,path cverts idx) voff))))
+
+;; prints all the nodes in a path in meters
+(defmacro path-print-meters (path)
+  `(dotimes (idx (-> ,path num-cverts))
+    (print-vector-meters (-> ,path cverts idx))))
+
+;; prints the position (root trans) of a process-drawable
+(defmacro pd-pos-m (procname)
+  `(let* ((obj (the process-drawable (process-by-ename ,procname)))
+         (vec (-> obj root trans)))
+    (format 0 "~m ~m ~m~%" (-> vec x) (-> vec y) (-> vec z))
+    (none)))
+
+;;This function moves an actor based on jaks position + an offset
+(defun move-to-behind-jak ((arg0 string) (arg1 meters) (arg2 meters))
+  (when (process-by-ename arg0)
+    (set-vector! (-> (-> (the process-drawable (process-by-ename arg0)) root) trans)
+                 (- (-> (target-pos 0) x) (meters arg1))
+                 (+ (-> (target-pos 0) y) (meters arg2))
+                 (- (-> (target-pos 0) z) (meters arg1))
+                 1.0)
+    (if (type-type? (-> (process-by-ename arg0) type) money)
+      (begin
+        (set! (-> (the money (process-by-ename arg0)) base y) (-> (target-pos 0) y)))
+      (none))
+    (if (type-type? (-> (process-by-ename arg0) type) fuel-cell)
+      (begin
+        (set! (-> (the fuel-cell (process-by-ename arg0)) base y) (-> (target-pos 0) y)))
+      (none))))
+
+;;This turns on play hints
+(defun turnonplayhints ()
+  (set! (-> *setting-control* default play-hints) #t))
+
+;;This turns off playhints
+(defun turnoffplayhints ()
+  (set! (-> *setting-control* default play-hints) #f))
+
+;;This turns on collision render when called
+(defun turnonCollisionmode ()
+  (set! *collision-renderer* #t)
+  (logclear! *vu1-enable-user-menu* (vu1-renderer-mask tfrag trans-tfrag tie tie-near)))
+
+;;This turns off collision render when called
+(defun turnoffCollisionmode ()
+  (set! *collision-renderer* #f)
+  (logior! *vu1-enable-user-menu* (vu1-renderer-mask tfrag trans-tfrag tie tie-near)))
+
+;;This makes it thunder in the current level
+(defun thunderTime ()
+  (set! (-> (level-get-target-inside *level*) mood-func) update-mood-village2)
+  (set! (-> (level-get-target-inside *level*) mood) *village2-mood*))
+
+;;This makes the current level dark when called
+(defun DarkesetGlitchTime ()
+  (set! (-> (level-get-target-inside *level*) mood-func) update-mood-finalboss)
+  (set! (-> (level-get-target-inside *level*) mood) *finalboss-mood*))
+
+;;This needs fixed
+(defun rainyTime ()
+  (set! (-> (level-get-target-inside *level*) mood-func) update-mood-swamp)
+  (set! (-> (level-get-target-inside *level*) mood) *swamp-mood*))
+
+;;This needs fixed
+(defun snowingTime ()
+  (set! (-> (level-get-target-inside *level*) mood-func) update-mood-snow)
+  (set! (-> (level-get-target-inside *level*) mood) *snow-mood*))
+
+;;This makes the current levels weather the same as village1
+(defun defaultWeatherTime ()
+  (set! (-> (level-get-target-inside *level*) mood-func) update-mood-village1)
+  (set! (-> (level-get-target-inside *level*) mood) *village1-mood*))
+
+;;This moves jak to a provided coordinate example call
+;;(tp-jak 0.0 12.0 32.32)
+(defun tp-jak ((arg0 float) (arg1 float) (arg2 float))
+  (set! (-> (target-pos 0) x) (meters arg0))
+  (set! (-> (target-pos 0) y) (meters arg1))
+  (set! (-> (target-pos 0) z) (meters arg2)))
+
+;;This returns true or false depending on if jak is within a provided distance from an actor
+(defun close? ((actor-ename string) (dist float))
+  (and (process-by-ename actor-ename)
+       (<= (vector-vector-distance (target-pos 0) (-> (the process-drawable (process-by-ename actor-ename)) root trans)) dist)))
+
+;; This returns true or false if jak is within a bubble defined by coordinates and width
+(defun in-bubble? ((x float) (y float) (z float) (w float))
+  (<= (vector-vector-distance (target-pos 0) (set-vector! (new-stack-vector0) x y z 1.0)) (/ w 2.0)))
+
+(defun music-manager ()
+  (stop-main-music)
+  (case (-> (level-get-target-inside *level*) name)
+    (('test-zone)
+     ;;  (if (> (knuth-rand-int-range 0 15) (+ 8 5))
+     ;;   (play-main-music "SND/music-test-zone.mp3" (the int (-> *setting-control* default music-volume)))
+     ;;   (play-main-music "SND/music-test-zone-track2.mp3" (the int (-> *setting-control* default music-volume))))
+     )
+    ;;Add more cases here for each level
+    (else
+     (play-main-music "" (the int (-> *setting-control* default music-volume)))
+     ;;(stop-main-music) This function is broken but playing a invalid sound does the same thing
+     ))
+  (none))
+
+(defbehavior music-manager-proc process ()
+  (music-manager)
+  (none))
+
+(define *pc-temp-vector* (new 'static 'vector :x 1.0 :y 1.0 :z 1.0))
+
+(defun get-joint-pos-by-name ((actor process-drawable) (name string))
+  (when actor
+    (dotimes (i (-> actor node-list length))
+      (when (string= (-> actor node-list data i joint name) name)
+        (return (the-as vector (vector<-cspace! *pc-temp-vector* (-> actor node-list data i))))
+        (the-as vector (new-stack-vector0))))
+    (the-as vector (new-stack-vector0))))
+
+(defun print-joint-names ((actor process-drawable))
+  (format #t (string-format "Actor: ~S has these ~D Joints:~%" (-> actor name) (-> actor node-list length)))
+  (dotimes (i (-> actor node-list length))
+    (format #t (string-format "~D. ~S~%" i (-> actor node-list data i joint name))))
+  (none))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Jak Color functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun draw-xyz ((jak target) (x float) (y float) (z float))
+  (set! (-> jak draw color-mult x) x)
+  (set! (-> jak draw color-mult y) y)
+  (set! (-> jak draw color-mult z) z))
+
+(defun draw-normal ((jak target))
+  (draw-xyz jak 1.0 1.0 1.0))
+
+(defun draw-white ((jak target))
+  (draw-xyz jak 10.0 10.0 10.0))
+
+(defun draw-black ((jak target))
+  (draw-xyz jak 0.0 0.0 0.0))
+
+(defun draw-red ((jak target))
+  (draw-xyz jak 3.0 0.0 0.0))
+
+(defun draw-green ((jak target))
+  (draw-xyz jak 0.0 3.0 0.0))
+
+(defun draw-blue ((jak target))
+  (draw-xyz jak 0.0 0.0 3.0))
+
+(defun draw-yellow ((jak target))
+  (draw-xyz jak 3.0 3.0 0.0))
+
+(defun draw-pink ((jak target))
+  (draw-xyz jak 3.0 0.0 3.0))
+
+(defun draw-light-blue ((jak target))
+  (draw-xyz jak 0.0 3.0 3.0))
+
+;; Helper functions for spawning orbs (used by orb placer in debug mode)
+
+(defun spawn-money ((vec vector) (amount float) (bob? symbol))
+  (let ((fax (new 'static 'fact-info)))
+    (set! (-> fax pickup-type) (pickup-type money))
+    (set! (-> fax pickup-amount) amount)
+    (set! (-> fax pickup-spawn-amount) amount)
+    (set! (-> fax fade-time) (the-as time-frame 0))
+    (let ((pp (birth-pickup-at-point vec (pickup-type money) amount #t *active-pool* fax)))
+      (if (not pp)
+        (the-as handle #f)
+        (let ((proc (the money (ppointer->process pp))))
+          (when bob?
+            (set! (-> proc bob-amount) 1024.0))
+          (format 0 "spawned ~A~%" proc)
+          (process->handle proc))))))
+
+(defun spawn-money-meters ((x float) (y float) (z float) (amount float) (bob? symbol))
+  (let ((vec (new 'stack-no-clear 'vector))) (set-vector-meters! vec x y z) (spawn-money vec amount bob?)))

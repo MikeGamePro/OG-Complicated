@@ -1,0 +1,1004 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; Gameplay helpers and mini-games
+
+(define *mod-trivia-questions*
+  (new 'static
+       'boxed-array
+       :type
+       string
+       "WHICH LEVEL HAS NO YELLOW ECO VENT?"
+       "WHAT COLOR IS THE FISHERMAN\c12S BANDANA?"
+       "HOW MANY MOTHER SPIDERS ARE IN SPIDER CAVE?"
+       "WHAT IS PRECURSOR BASIN\c12S INTERNAL NAME?"
+       "HOW MANY SCOUT FLIES ARE THERE IN TOTAL?"
+       "WHAT IS THE WORLD\c12S LARGEST OCEAN?"
+       "WHAT IS THE LARGEST BONE IN THE HUMAN BODY?"
+       "WHAT IS THE SMALLEST PRIME NUMBER?"
+       "WHAT IS THE CAPITAL OF IRELAND?"
+       "WHICH CONTINENT HAS THE MOST COUNTRIES?"
+       "WHAT PLANET IS CLOSEST TO THE SUN?"
+       "WHICH BLOOD TYPE IS THE UNIVERSAL DONOR?"
+       "WHICH VITAMIN IS PRODUCED BY SUNLIGHT?"
+       "HOW MANY DEGREES ARE IN A CIRCLE?"
+       "HOW MANY POINTS IS A TOUCHDOWN WORTH?"
+       "WHO DEVELOPED THE THEORY OF RELATIVITY?"
+       "WHAT IS THE CURRENCY OF JAPAN?"
+       "WHAT IS THE BOILING POINT OF WATER IN CELSIUS?"
+       "IN POKEMON, FAIRY IS WEAK TO WHAT TYPE?"
+       "WHAT IS THE SQUARE ROOT OF 196?"
+       "WHAT ERA DID THE DINOSAURS LIVE IN?"
+       "WHAT IS THE MAIN INGREDIENT IN SAUERKRAUT?"
+       "WHAT IS THE MAIN INGREDIENT IN GUACAMOLE?"
+       "WHAT YEAR DID THE FIRST SUPER MARIO BROS. RELEASE?"
+       "WHAT IS THE MAIN CURRENCY IN ANIMAL CROSSING?"
+       "WHO PAINTED THE MONA LISA?"
+       "HOW MANY INCHES ARE IN A FOOT?"
+       "WHAT TYPE IS THE POKEMON PSYDUCK?"
+       "WHAT IS THE NAME OF THE BOY LEFT HOME ALONE?"
+       "WHAT IS THE BEST-SELLING VIDEO GAME OF ALL TIME?"
+       "WHICH LEVEL HAS NO BLUE ECO VENT?"
+       "WHICH OF THESE IS A LEAP YEAR?"
+       "WHAT IS A GROUP OF CROWS CALLED?"
+       "WHICH OF THESE IS SPELLED INCORRECTLY?"
+       "WHAT CENTURY DID THE DODO BIRD BECOME EXTINCT?"
+       "WHAT YEAR DID THE FIRST IPHONE RELEASE?"
+       "WHAT DO KNOTS MEASURE?"
+       "WHAT COLOR IS THE CROSS ON FINLAND\c12S FLAG?"
+       "WHICH U.S. STATE IS WEST OF MISSISSIPPI?"
+       "ACROPHOBIA IS THE FEAR OF WHAT?"
+       "HOW MANY RULES HAVE YOU BROKEN THIS RUN?"
+       "WHAT SUIT IS THE CARD ON THE GAMBLER\c12S HAT?"
+       "WHICH OF THESE SHAPES HAS THE MOST SIDES?"
+       "WHAT COLOR IS NOT FOUND ON A RUBIK\c12S CUBE?"
+       "WHO SCULPTED DAVID?"
+       "WHAT IS THE CAPITAL OF CANADA?"
+       "WHO DIRECTED THE SHINING?"
+       "HOW MANY ORBS HAVE YOU COLLECTED THIS RUN?"))
+
+(define *mod-trivia-choices*
+  (new 'static
+       'boxed-array
+       :type
+       string
+       "LOST PRECURSOR CITY"
+       "SNOWY MOUNTAIN"
+       "SPIDER CAVE"
+       "CITADEL"
+       "RED"
+       "BLUE"
+       "ORANGE"
+       "GREEN"
+       "7"
+       "8"
+       "9"
+       "10"
+       "ROLLING"
+       "RACER"
+       "HILLS"
+       "BASIN"
+       "96"
+       "104"
+       "112"
+       "114"
+       "PACIFIC"
+       "ATLANTIC"
+       "INDIAN"
+       "ARCTIC"
+       "FEMUR"
+       "TIBIA"
+       "HUMERUS"
+       "PELVIS"
+       "1"
+       "2"
+       "3"
+       "4"
+       "DUBLIN"
+       "BELFAST"
+       "CORK"
+       "GALWAY"
+       "AFRICA"
+       "ASIA"
+       "EUROPE"
+       "SOUTH AMERICA"
+       "MERCURY"
+       "VENUS"
+       "EARTH"
+       "MARS"
+       "O-"
+       "A+"
+       "B-"
+       "AB+"
+       "A"
+       "B"
+       "C"
+       "D"
+       "45"
+       "90"
+       "180"
+       "360"
+       "3"
+       "5"
+       "6"
+       "8"
+       "ALBERT EINSTEIN"
+       "ISAAC NEWTON"
+       "GALILEO GALILEI"
+       "NIKOLA TESLA"
+       "YEN"
+       "PESO"
+       "EURO"
+       "WON"
+       "90"
+       "100"
+       "110"
+       "120"
+       "STEEL"
+       "FIRE"
+       "DARK"
+       "PSYCHIC"
+       "11"
+       "12"
+       "13"
+       "14"
+       "MESOZOIC"
+       "PALEOZOIC"
+       "CENOZOIC"
+       "PRECAMBRIAN"
+       "CABBAGE"
+       "LETTUCE"
+       "KALE"
+       "SPINACH"
+       "AVOCADO"
+       "TOMATO"
+       "ONION"
+       "ZUCCHINI"
+       "1980"
+       "1983"
+       "1985"
+       "1987"
+       "BELLS"
+       "STARS"
+       "COINS"
+       "RUPEES"
+       "LEONARDO DA VINCI"
+       "MICHELANGELO"
+       "VINCENT VAN GOGH"
+       "PABLO PICASSO"
+       "10"
+       "12"
+       "14"
+       "16"
+       "WATER"
+       "PSYCHIC"
+       "NORMAL"
+       "FLYING"
+       "KEVIN"
+       "ANDY"
+       "RICHIE"
+       "CHARLIE"
+       "MINECRAFT"
+       "TETRIS"
+       "GTA V"
+       "SKYRIM"
+       "SNOWY MOUNTAIN"
+       "BOGGY SWAMP"
+       "FORBIDDEN JUNGLE"
+       "LOST PRECURSOR CITY"
+       "2020"
+       "2046"
+       "2100"
+       "2200"
+       "MURDER"
+       "PARLIAMENT"
+       "FLOCK"
+       "SCHOOL"
+       "ACCOMODATE"
+       "RECEIVE"
+       "PRIVILEGE"
+       "SEPARATE"
+       "17TH"
+       "18TH"
+       "19TH"
+       "20TH"
+       "2005"
+       "2006"
+       "2007"
+       "2008"
+       "SPEED"
+       "DISTANCE"
+       "TIME"
+       "ANGLE"
+       "BLUE"
+       "WHITE"
+       "RED"
+       "BLACK"
+       "ARKANSAS"
+       "OHIO"
+       "ALABAMA"
+       "INDIANA"
+       "HEIGHTS"
+       "OPEN SPACES"
+       "FLYING"
+       "CROWDS"
+       ;; q-idx 40 is dynamic
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "SPADES"
+       "HEARTS"
+       "DIAMONDS"
+       "CLUBS"
+       "NONAGON"
+       "HEXAGON"
+       "HEPTAGON"
+       "OCTAGON"
+       "PURPLE"
+       "ORANGE"
+       "YELLOW"
+       "WHITE"
+       "MICHELANGELO"
+       "DONATELLO"
+       "LEONARDO DA VINCI"
+       "AUGUSTE RODIN"
+       "OTTAWA"
+       "MONTREAL"
+       "TORONTO"
+       "VANCOUVER"
+       "STANLEY KUBRICK"
+       "MARTIN SCORSESE"
+       "QUENTIN TARANTINO"
+       "WOODY ALLEN"
+       ;; q-idx 47 is dynamic
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"
+       "UNUSED"))
+
+(define *mod-trivia-questions-used* (new 'global 'boxed-array symbol (length *mod-trivia-questions*)))
+
+(defun mod-trivia-clear-used ()
+  (let ((i 0)) (while (< i (length *mod-trivia-questions*)) (set! (-> *mod-trivia-questions-used* i) #f) (+! i 1)))
+  (none))
+
+(defun mod-trivia-question-valid? ((idx int))
+  (cond
+    ;; ((= idx 9999) (> (-> *game-info* total-deaths) 0))
+    ((= idx 40) (> (-> *MOD-stats-bank* rules-broken) 0))
+    ((= idx 47) (> (-> *game-info* money-total) 150.0))
+    (else #t)))
+
+(defun mod-trivia-pick-question ()
+  (let ((count (length *mod-trivia-questions*))
+        (all-used? #t)
+        (i 0))
+    (while (< i count)
+      (when (and (not (-> *mod-trivia-questions-used* i)) (mod-trivia-question-valid? i))
+        (set! all-used? #f))
+      (+! i 1))
+    (when all-used?
+      (mod-trivia-clear-used))
+    (let ((idx (mod-rand-int-range 0 count)))
+      (while (or (-> *mod-trivia-questions-used* idx) (not (mod-trivia-question-valid? idx)))
+        (set! idx (mod-rand-int-range 0 count)))
+      (set! (-> *mod-trivia-questions-used* idx) #t)
+      idx)))
+
+(defun mod-trivia-hiding-money-total? ()
+  (and (mod-rule-active? 'rule-trivia) (= (-> *MOD-quiz-bank* trivia-current-question) 47)))
+
+(defun mod-orb-weight-multiplier ()
+  (let ((orbs (max 0.0 (min 200.0 (current-orb-count))))) (- 1.0 (* 0.3 (/ orbs 100.0)))))
+
+(defun mod-refresh-movement-speeds! ((turbo? symbol) (mult float))
+  (let* ((walk-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-walk-speed)))
+         (double-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-double-jump-speed)))
+         (jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-jump-speed)))
+         (attack-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-attack-speed)))
+         (smack-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-smack-jump-speed)))
+         (forward-high-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-forward-high-jump-speed)))
+         (jump-attack-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-jump-attack-speed)))
+         (flip-jump-base (if turbo? 77777.0 (-> *MOD-orb-weight-bank* base-flip-jump-speed))))
+    (set! (-> *walk-mods* target-speed) (* walk-base mult))
+    (set! (-> *double-jump-mods* target-speed) (* double-jump-base mult))
+    (set! (-> *jump-mods* target-speed) (* jump-base mult))
+    (set! (-> *attack-mods* target-speed) (* attack-base mult))
+    (set! (-> *smack-jump-mods* target-speed) (* smack-jump-base mult))
+    (set! (-> *forward-high-jump-mods* target-speed) (* forward-high-jump-base mult))
+    (set! (-> *jump-attack-mods* target-speed) (* jump-attack-base mult))
+    (set! (-> *TARGET-bank* wheel-flip-dist) (* (-> *MOD-orb-weight-bank* base-wheel-flip-dist) mult))
+    (set! (-> *TARGET-bank* wheel-flip-height) (* (-> *MOD-orb-weight-bank* base-wheel-flip-height) mult))
+    (set! (-> *flip-jump-mods* target-speed) (* flip-jump-base mult)))
+  (none))
+
+(defun mod-apply-low-res! ()
+  (pc-set-game-resolution (max 60 (/ (-> *pc-settings* framebuffer-scissor-width) 10))
+                          (max 45 (/ (-> *pc-settings* framebuffer-scissor-height) 10)))
+  (none))
+
+(defun mod-low-res-should-apply? ()
+  (and (mod-rule-active? 'complication-interference) *target* (>= (-> *target* fact eco-level) 1.0)))
+
+(defun mod-orb-weight-apply! ()
+  (let ((orbs (current-orb-count)))
+    (when (!= orbs (-> *MOD-orb-weight-bank* last-applied-orbs))
+      (mod-refresh-movement-speeds! (mod-rule-active? 'complication-jak-be-nimble) (mod-orb-weight-multiplier))
+      (set! (-> *MOD-orb-weight-bank* last-applied-orbs) orbs)))
+  (none))
+
+(defun mod-orb-weight-reset! ()
+  (mod-refresh-movement-speeds! (mod-rule-active? 'complication-jak-be-nimble) 1.0)
+  (set! (-> *MOD-orb-weight-bank* last-applied-orbs) -1.0)
+  (none))
+
+;; Unhide every orb and restore its collision.
+(defun mod-refresh-money-actors ((wake? symbol))
+  (iterate-process-tree *active-pool*
+                        (lambda ((p process))
+                          (when (type-type? (-> p type) money)
+                            (logclear! (-> (the-as money p) draw status) (draw-status hidden))
+                            (restore-collide-with-as (-> (the-as money p) root)))
+                          #t)
+                        *null-kernel-context*)
+  (when wake?
+    (iterate-process-tree *active-pool*
+                          (lambda ((p process))
+                            (when (type-type? (-> p type) money)
+                              (logclear! (-> p mask) (process-mask actor-pause)))
+                            #t)
+                          *null-kernel-context*))
+  (none))
+
+(defmacro orb-hunt-spot (x y z)
+  `(begin
+    (+! spot-count 1)
+    (when pick?
+      (let ((score (mod-rng-hash-u32 (+ salt (the uint spot-count)))))
+        (when (or (= spot-count 1) (> score best-score))
+          (set! best-score score)
+          (set-vector! out (meters ,x) (meters ,y) (meters ,z) 1.0))))))
+
+;; Returns how many spots the level has. With pick? set, also picks one at random into out.
+(defun mod-orb-hunt-pick-spot ((level symbol) (out vector) (pick? symbol))
+  (let ((spot-count 0)
+        (best-score (the uint 0))
+        (salt (+ (* (-> *MOD-rng-bank* seed-display) (the uint 31)) (the uint (-> *MOD-stats-bank* rules-rolled)))))
+    (case level
+      (('training))
+      (('village1)
+       (orb-hunt-spot -54.4076 13.0358 27.4453)
+       (orb-hunt-spot 24.03 7.58 -138.86)
+       (orb-hunt-spot -90.87 18.83 144.82)
+       (orb-hunt-spot -78.59 2.19 5.47))
+      (('beach)
+       (orb-hunt-spot -134.95 16.32 -224.30)
+       (orb-hunt-spot -241.87 9.65 -409.33)
+       (orb-hunt-spot -318.62 8.13 -481.33)
+       (orb-hunt-spot -63.8303 21.9206 -387.3334))
+      (('jungle)
+       (orb-hunt-spot 282.23 23.04 -176.68)
+       (orb-hunt-spot 377.06 29.07 -352.79)
+       (orb-hunt-spot 435.27 26.37 -265.09)
+       (orb-hunt-spot 382.12 36.83 -220.95))
+      (('jungleb)
+       (orb-hunt-spot 362.29 -47.85 -240.90)
+       (orb-hunt-spot 253.76 -48.81 -291.21)
+       (orb-hunt-spot 414.96 -42.61 -255.48)
+       (orb-hunt-spot 362.86 -37.81 -340.99))
+      (('misty)
+       (orb-hunt-spot -19.61 29.51 847.39)
+       (orb-hunt-spot -168.06 27.13 908.13)
+       (orb-hunt-spot 42.53 2.76 1033.32)
+       (orb-hunt-spot -140.70 25.67 1111.49))
+      (('firecanyon))
+      (('village2)
+       (orb-hunt-spot 389.18 23.29 -1575.74)
+       (orb-hunt-spot 394.9941 5.7638 -1726.0563)
+       (orb-hunt-spot 230.68 4.61 -1643.31)
+       (orb-hunt-spot 219.21 16.08 -1494.65))
+      (('sunken))
+      (('sunkenb))
+      (('swamp))
+      (('rolling)
+       (orb-hunt-spot -239.34 25.15 -1454.60)
+       (orb-hunt-spot -370.18 20.31 -1755.46)
+       (orb-hunt-spot 15.95 25.66 -1626.83)
+       (orb-hunt-spot -80.17 29.93 -1522.58))
+      (('ogre))
+      (('village3)
+       (orb-hunt-spot 1113.68 46.90 -3523.32)
+       (orb-hunt-spot 1108.07 53.78 -3484.56)
+       (orb-hunt-spot 1025.44 41.27 -3508.61)
+       (orb-hunt-spot 1138.43 45.67 -3407.86))
+      (('snow)
+       (orb-hunt-spot 990.09 241.62 -3485.62)
+       (orb-hunt-spot 737.31 264.28 -3445.28)
+       (orb-hunt-spot 888.26 211.51 -3355.38)
+       (orb-hunt-spot 1016.1641 225.1692 -3306.5546))
+      (('maincave)
+       (orb-hunt-spot 1065.11 19.25 -3108.19)
+       (orb-hunt-spot 1027.23 23.68 -3124.52)
+       (orb-hunt-spot 1145.30 26.85 -3115.95)
+       (orb-hunt-spot 1019.30 45.01 -3100.94))
+      (('darkcave))
+      (('robocave)
+       (orb-hunt-spot 1303.10 7.79 -2861.31)
+       (orb-hunt-spot 1423.05 -22.74 -2743.10)
+       (orb-hunt-spot 1402.89 -22.75 -2802.53)
+       (orb-hunt-spot 1341.43 1.17 -2733.84))
+      (('lavatube))
+      (('citadel))
+      (('finalboss)))
+    spot-count))
+
+(defun mod-orb-hunt-spot-count ((level symbol))
+  (mod-orb-hunt-pick-spot level (the-as vector #f) #f))
+
+(defun mod-orb-hunt-spawn! ()
+  (let ((pos (new 'stack-no-clear 'vector)))
+    (when (> (mod-orb-hunt-pick-spot (the symbol (current-level-name)) pos #t) 0)
+      (let ((h (spawn-money pos 1.0 #t)))
+        (when (handle->process h)
+          (let ((orb (the-as money (handle->process h))))
+            (set-vector! (-> orb draw color-mult) 1.0 0.0 6.0 1.0)
+            (set! (-> (-> orb root) scale x) 1.5)
+            (set! (-> (-> orb root) scale y) 1.5)
+            (set! (-> (-> orb root) scale z) 1.5))
+          (set! (-> *MOD-orb-hunt-bank* orb-handle) h)
+          (set! (-> *MOD-orb-hunt-bank* spawned?) #t)
+          (set! (-> *MOD-orb-hunt-bank* level) (the symbol (current-level-name)))))))
+  (none))
+
+(defun mod-orb-hunt-clear! ()
+  (when (-> *MOD-orb-hunt-bank* spawned?)
+    (let ((orb (the-as eco-collectable (handle->process (-> *MOD-orb-hunt-bank* orb-handle)))))
+      (when (and orb (!= (-> orb state name) 'pickup) (!= (-> orb state name) 'die))
+        (if (nonzero? (-> orb part)) (kill-and-free-particles (-> orb part)))
+        (if (nonzero? (-> orb sound)) (stop! (-> orb sound)))
+        (deactivate orb))))
+  (set! (-> *MOD-orb-hunt-bank* orb-handle) (the-as handle #f))
+  (set! (-> *MOD-orb-hunt-bank* spawned?) #f)
+  (set! (-> *MOD-orb-hunt-bank* level) #f)
+  (none))
+
+(defun mod-orb-hunt-on-orb-pickup ((orb process))
+  (when (and (mod-rule-active? 'rule-orb-hunt)
+             (-> *MOD-orb-hunt-bank* spawned?)
+             (eq? (handle->process (-> *MOD-orb-hunt-bank* orb-handle)) orb))
+    ;; refund: this orb must not count toward the money, total, or per-level counts
+    (set! (-> *game-info* money) (max 0.0 (- (-> *game-info* money) 1.0)))
+    (set! (-> *game-info* money-total) (max 0.0 (- (-> *game-info* money-total) 1.0)))
+    (when (and *target* (-> *target* current-level))
+      (let ((lvl-idx (-> *level-task-data-remap* (+ (-> *target* current-level info index) -1))))
+        (when (> (-> *game-info* money-per-level lvl-idx) 0)
+          (-! (-> *game-info* money-per-level lvl-idx) 1))))
+    ;; forget the orb first
+    (set! (-> *MOD-orb-hunt-bank* orb-handle) (the-as handle #f))
+    (set! (-> *MOD-orb-hunt-bank* spawned?) #f)
+    (mod-rule-counter-add-progress 'rule-orb-hunt 1))
+  (none))
+
+(defun mod-orb-hunt-update ()
+  (when (and (mod-rule-active? 'rule-orb-hunt)
+             (or (not (-> *MOD-orb-hunt-bank* spawned?)) (not (handle->process (-> *MOD-orb-hunt-bank* orb-handle)))))
+    (set! (-> *MOD-orb-hunt-bank* spawned?) #f)
+    (mod-orb-hunt-spawn!))
+  (none))
+
+(define *mod-all-cell-tasks*
+  (new 'static
+       'boxed-array
+       :type
+       game-task
+       (game-task training-gimmie)
+       (game-task training-door)
+       (game-task training-climb)
+       (game-task training-buzzer)
+       (game-task village1-mayor-money)
+       (game-task village1-uncle-money)
+       (game-task village1-yakow)
+       (game-task village1-oracle-money1)
+       (game-task village1-oracle-money2)
+       (game-task village1-buzzer)
+       (game-task beach-ecorocks)
+       (game-task beach-flutflut)
+       (game-task beach-pelican)
+       (game-task beach-seagull)
+       (game-task beach-cannon)
+       (game-task beach-gimmie)
+       (game-task beach-sentinel)
+       (game-task beach-buzzer)
+       (game-task jungle-lurkerm)
+       (game-task jungle-tower)
+       (game-task jungle-eggtop)
+       (game-task jungle-plant)
+       (game-task jungle-fishgame)
+       (game-task jungle-canyon-end)
+       (game-task jungle-temple-door)
+       (game-task jungle-buzzer)
+       (game-task misty-muse)
+       (game-task misty-boat)
+       (game-task misty-cannon)
+       (game-task misty-warehouse)
+       (game-task misty-bike)
+       (game-task misty-bike-jump)
+       (game-task misty-eco-challenge)
+       (game-task misty-buzzer)
+       (game-task firecanyon-end)
+       (game-task firecanyon-buzzer)
+       (game-task village2-gambler-money)
+       (game-task village2-geologist-money)
+       (game-task village2-warrior-money)
+       (game-task village2-oracle-money1)
+       (game-task village2-oracle-money2)
+       (game-task village2-buzzer)
+       (game-task sunken-room)
+       (game-task sunken-pipe)
+       (game-task sunken-slide)
+       (game-task sunken-sharks)
+       (game-task sunken-platforms)
+       (game-task sunken-top-of-helix)
+       (game-task sunken-spinning-room)
+       (game-task sunken-buzzer)
+       (game-task swamp-flutflut)
+       (game-task swamp-billy)
+       (game-task swamp-battle)
+       (game-task swamp-tether-4)
+       (game-task swamp-tether-1)
+       (game-task swamp-tether-2)
+       (game-task swamp-tether-3)
+       (game-task swamp-buzzer)
+       (game-task rolling-moles)
+       (game-task rolling-robbers)
+       (game-task rolling-race)
+       (game-task rolling-lake)
+       (game-task rolling-plants)
+       (game-task rolling-ring-chase-1)
+       (game-task rolling-ring-chase-2)
+       (game-task rolling-buzzer)
+       (game-task ogre-boss)
+       (game-task ogre-end)
+       (game-task ogre-secret)
+       (game-task ogre-buzzer)
+       (game-task village3-miner-money1)
+       (game-task village3-miner-money2)
+       (game-task village3-miner-money3)
+       (game-task village3-miner-money4)
+       (game-task village3-oracle-money1)
+       (game-task village3-oracle-money2)
+       (game-task village3-extra1)
+       (game-task village3-buzzer)
+       (game-task snow-eggtop)
+       (game-task snow-ram)
+       (game-task snow-bumpers)
+       (game-task snow-cage)
+       (game-task snow-fort)
+       (game-task snow-ball)
+       (game-task snow-bunnies)
+       (game-task snow-buzzer)
+       (game-task cave-gnawers)
+       (game-task cave-dark-crystals)
+       (game-task cave-dark-climb)
+       (game-task cave-robot-climb)
+       (game-task cave-swing-poles)
+       (game-task cave-spider-tunnel)
+       (game-task cave-platforms)
+       (game-task cave-buzzer)
+       (game-task lavatube-end)
+       (game-task lavatube-buzzer)
+       (game-task citadel-sage-blue)
+       (game-task citadel-sage-red)
+       (game-task citadel-sage-yellow)
+       (game-task citadel-sage-green)
+       (game-task citadel-buzzer)))
+
+(define *mod-revert-cell-task-blacklist*
+  (new 'static
+       'boxed-array
+       :type
+       game-task
+       (game-task training-buzzer)
+       (game-task village1-buzzer)
+       (game-task village2-buzzer)
+       (game-task village3-buzzer)
+       (game-task beach-buzzer)
+       (game-task misty-buzzer)
+       (game-task jungle-buzzer)
+       ;;  (game-task jungle-lurkerm)
+       (game-task firecanyon-buzzer)
+       (game-task sunken-buzzer)
+       (game-task rolling-buzzer)
+       ;;  (game-task rolling-moles)
+       ;;  (game-task rolling-race)
+       (game-task swamp-buzzer)
+       (game-task ogre-buzzer)
+       (game-task snow-buzzer)
+       (game-task snow-cage)
+       (game-task cave-buzzer)
+       (game-task lavatube-buzzer)
+       (game-task citadel-buzzer)
+       (game-task jungle-fishgame)
+       (game-task jungle-plant)
+       (game-task beach-cannon)
+       (game-task beach-ecorocks)
+       (game-task beach-pelican)
+       (game-task beach-seagull)
+       (game-task misty-cannon)
+       ;;  (game-task misty-muse)
+       (game-task misty-bike)
+       (game-task rolling-robbers)
+       (game-task rolling-plants)
+       (game-task rolling-ring-chase-1)
+       (game-task rolling-ring-chase-2)
+       (game-task swamp-battle)
+       (game-task swamp-billy)
+       (game-task swamp-tether-4)
+       (game-task swamp-tether-1)
+       (game-task swamp-tether-2)
+       (game-task swamp-tether-3)
+       (game-task ogre-boss)
+       (game-task village3-extra1)
+       (game-task snow-ram)
+       (game-task snow-bumpers)
+       (game-task snow-ball)
+       (game-task cave-gnawers)
+       (game-task cave-dark-crystals)
+       (game-task citadel-sage-blue)
+       (game-task citadel-sage-red)
+       (game-task citadel-sage-yellow)
+       (game-task citadel-sage-green)
+       (game-task village1-oracle-money1)
+       (game-task village1-oracle-money2)
+       (game-task village2-oracle-money1)
+       (game-task village2-oracle-money2)
+       (game-task village3-oracle-money1)
+       (game-task village3-oracle-money2)))
+
+;; Bounds-checked array lookup; returns #f when idx is out of range.
+(defun mod-symbol-at ((ids (array symbol)) (idx int))
+  (if (and (>= idx 0) (< idx (-> ids length))) (-> ids idx) #f))
+
+(defun mod-symbol-index ((ids (array symbol)) (id symbol))
+  (let ((i 0)) (while (< i (-> ids length)) (when (= (-> ids i) id) (return i)) (+! i 1)) -1))
+
+;; Pack one byte per entry (index into ids, #xff = empty) into a uint. Save format: do not change.
+(defun mod-pack-symbols ((arr (array symbol)) (ids (array symbol)) (n int))
+  (let ((result (the uint 0))
+        (i 0))
+    (while (< i n)
+      (let* ((sym (-> arr i))
+             (idx (if sym (mod-symbol-index ids sym) -1))
+             (byte-val (if (>= idx 0) (the uint idx) (the uint #xff))))
+        (set! result (logior result (shl byte-val (* i 8)))))
+      (+! i 1))
+    (the int result)))
+
+;; Inverse of mod-pack-symbols for a single slot's byte.
+(defun mod-unpack-symbol ((bits uint) (slot int) (ids (array symbol)))
+  (mod-symbol-at ids (the int (logand (shr bits (* slot 8)) (the uint #xff)))))
+
+(defun mod-seconds->ms ((secs float))
+  (the int (+ 0.5 (* secs 1000.0))))
+
+(defun mod-rule-id-from-index ((idx int))
+  (mod-symbol-at *mod-rule-ids* idx))
+
+(defun mod-punishment-id-from-index ((idx int))
+  (mod-symbol-at *mod-punishment-ids* idx))
+
+(defun mod-enabled-condition-count ()
+  (let ((count 0))
+    (dotimes (i *mod-rule-id-count*)
+      (when (mod-condition-enabled? (mod-rule-id-from-index i))
+        (+! count 1)))
+    count))
+
+(defun mod-enabled-condition-fraction ()
+  (/ (the float (mod-enabled-condition-count)) (the float *mod-rule-id-count*)))
+
+(defun mod-punishment-toggle-enabled-count ()
+  (let ((count 0))
+    (dotimes (i *mod-punishment-id-count*)
+      (let ((id (mod-punishment-id-from-index i))) (when (punishment-toggle-enabled? id) (+! count 1))))
+    count))
+
+(defun mod-punishment-toggle-enabled-fraction ()
+  (/ (the float (mod-punishment-toggle-enabled-count)) (the float *mod-punishment-id-count*)))
+
+(define *mod-score-max-inc* 35780.0)
+
+(define *mod-score-time-scale* 5400.0)
+
+(define *mod-rule-follow-estimate* 40.0)
+
+;; Total seconds obtainable from every collectable at the current increment settings.
+(defun mod-collectable-inc-total ()
+  (+ (* 101.0 (cell-increment-value)) (* 2000.0 (orb-increment-value)) (* 112.0 (fly-increment-value))))
+
+;; Collectable total + countdown start time + estimated compliance bonus.
+(defun mod-inc-total ()
+  (+ (mod-collectable-inc-total)
+     (countdown-start-seconds-value)
+     (* *mod-rule-follow-estimate* (compliance-increment-value))))
+
+(defun mod-calc-run-score ()
+  (let* ((inc-total (mod-inc-total))
+         (inc-norm (/ inc-total *mod-score-max-inc*))
+         (final-time-seconds (/ (the float (-> *MOD-stats-bank* final-time)) (the float TICKS_PER_SECOND)))
+         (time-factor (/ *mod-score-time-scale* (+ *mod-score-time-scale* final-time-seconds)))
+         (raw-mult (fmax 0.01 (time-limit-multiplier)))
+         (max-score 100000.0)
+         (mult-weight 0.0185)
+         (time-weight 0.2)
+         (score-weight 0.8)
+         (conditions-weight 0.055)
+         (punishments-weight 0.012)
+         (target-slot-weight 0.075)
+         (condition-delay-weight 0.03)
+         (completion-baseline 69.0)
+         (completion-weight 0.14)
+         (completion (calculate-completion (the-as progress #f)))
+         (completion-factor (+ 1.0 (* completion-weight (- (/ completion completion-baseline) 1.0))))
+         (effective-mult (+ 1.0 (* (- raw-mult 1.0) mult-weight)))
+         (effective-conditions-mult (+ 1.0 (* (- 1.0 (mod-enabled-condition-fraction)) conditions-weight)))
+         (effective-punishments-mult (+ 1.0 (* (- 1.0 (mod-punishment-toggle-enabled-fraction)) punishments-weight)))
+         (target-slot-count (target-slot-count-value))
+         (target-slot-delta (/ (the float (- 1 target-slot-count)) (the float *mod-rule-slot-count*)))
+         (delay-delta (/ (- (new-condition-delay-seconds) 5.0) 30.0))
+         (effective-target-slots-mult (if (= target-slot-count 0) (+ 1.0 conditions-weight) (+ 1.0 (* target-slot-delta target-slot-weight))))
+         (effective-delay-mult (+ 1.0 (* delay-delta condition-delay-weight)))
+         (score 0.0))
+    (set! inc-norm (fmax 0.0 (fmin 1.0 inc-norm)))
+    (let ((base-score (* max-score (+ (* time-weight time-factor) (* score-weight (- 1.0 inc-norm))))))
+      (set! score
+            (* completion-factor
+               (/ (/ (/ (/ (/ base-score effective-mult) effective-conditions-mult) effective-punishments-mult)
+                     effective-target-slots-mult)
+                  effective-delay-mult))))
+    (format #t
+            "mod-score: inc-total ~f inc-norm ~f final-time-s ~f time-factor ~f completion ~f completion-factor ~f "
+            inc-total
+            inc-norm
+            final-time-seconds
+            time-factor
+            completion
+            completion-factor)
+    (format #t
+            "eff-mult ~f eff-cond-mult ~f eff-punish-mult ~f eff-slots-mult ~f eff-delay-mult ~f score ~f~%"
+            effective-mult
+            effective-conditions-mult
+            effective-punishments-mult
+            effective-target-slots-mult
+            effective-delay-mult
+            score)
+    score))
+
+(defun mod-game-beaten-resume-from-save ((value int))
+  (set! (-> *MOD-rule-context-bank* game-beaten?) (not (= value 0)))
+  (none))
+
+(defun mod-game-beaten-save-value ()
+  (if (-> *MOD-rule-context-bank* game-beaten?) 1 0))
+
+(defun mod-game-beaten-set! ((val symbol))
+  (set! (-> *MOD-rule-context-bank* game-beaten?) val)
+  (none))
+
+;; Called when the final light eco is picked up.
+(defun mod-finalize-run-stats! ()
+  (set! (-> *MOD-stats-bank* final-remaining-time) (-> *MOD-countdown-bank* remaining-time))
+  (set! (-> *MOD-stats-bank* final-time) (-> *MOD-countdown-bank* countup-timer))
+  (set! (-> *MOD-stats-bank* final-score) (the int (mod-calc-run-score)))
+  (none))
+
+(defun mod-difficulty-display-name ()
+  (case *complicated-difficulty-preset*
+    (('easy) "Simple")
+    (('medium) "Complicated")
+    (('esoteric) "Esoteric")
+    (('unfathomable) "Unfathomable")
+    (else "Custom")))
+
+(defun mod-discord-info-fill! ((info discord-info))
+  (set! (-> info difficulty) (mod-difficulty-display-name))
+  (set! (-> info countdown-active?) (-> *MOD-countdown-bank* active?))
+  (set! (-> info countdown-lost?) (-> *MOD-countdown-bank* lost?))
+  (set! (-> info game-beaten?) (-> *MOD-rule-context-bank* game-beaten?))
+  (set! (-> info time-remaining)
+        (if (-> *MOD-rule-context-bank* game-beaten?)
+          (-> *MOD-stats-bank* final-remaining-time)
+          (-> *MOD-countdown-bank* remaining-time)))
+  (set! (-> info completion) (calculate-completion (the-as progress #f)))
+  (set! (-> info rules-followed) (-> *MOD-stats-bank* rules-followed))
+  (set! (-> info rules-broken) (-> *MOD-stats-bank* rules-broken))
+  (none))
+
+(def-save-field-pair mod-final-time-save-value mod-final-time-resume-from-save (-> *MOD-stats-bank* final-time))
+
+(def-save-field-pair mod-final-remaining-time-save-value
+                     mod-final-remaining-time-resume-from-save
+                     (-> *MOD-stats-bank* final-remaining-time))
+
+(def-save-field-pair mod-final-score-save-value mod-final-score-resume-from-save (-> *MOD-stats-bank* final-score))
+
+(defun mod-pass-reset! ()
+  (set! (-> *MOD-pass-bank* passes) 0)
+  (set! (-> *MOD-pass-bank* credits) 0)
+  (none))
+
+(defun mod-pass-add-credit! ()
+  (when (< (-> *MOD-pass-bank* passes) (-> *MOD-tuning-bank* pass-max-carry))
+    (+! (-> *MOD-pass-bank* credits) 1)
+    (when (>= (-> *MOD-pass-bank* credits) (pass-credits-required-value))
+      (+! (-> *MOD-pass-bank* passes) 1)
+      (-! (-> *MOD-pass-bank* credits) (pass-credits-required-value))))
+  (none))
+
+(defun mod-pass-state-save-value ()
+  (the int (logior (the uint (-> *MOD-pass-bank* passes)) (shl (the uint (-> *MOD-pass-bank* credits)) 8))))
+
+(defun mod-pass-state-resume-from-save ((val int))
+  (let ((bits (the uint val)))
+    (set! (-> *MOD-pass-bank* passes) (min (-> *MOD-tuning-bank* pass-max-carry) (the int (logand bits (the uint #xff)))))
+    (set! (-> *MOD-pass-bank* credits) (the int (logand (shr bits 8) (the uint #xff)))))
+  (none))
+
+(defun mod-stats-reset! ()
+  (set! (-> *MOD-stats-bank* rules-rolled) 0)
+  (set! (-> *MOD-stats-bank* rules-broken) 0)
+  (set! (-> *MOD-stats-bank* rules-followed) 0)
+  (set! (-> *MOD-stats-bank* complications-endured) 0)
+  (set! (-> *MOD-stats-bank* conditions-skipped) 0)
+  (set! (-> *MOD-stats-bank* final-time) 0)
+  (set! (-> *MOD-stats-bank* final-remaining-time) 0)
+  (set! (-> *MOD-stats-bank* final-score) 0)
+  (set! (-> *MOD-rule-context-bank* game-beaten?) #f)
+  (mod-pass-reset!)
+  (none))
+
+(def-save-field-pair mod-stats-rules-rolled-save-value
+                     mod-stats-rules-rolled-resume-from-save
+                     (-> *MOD-stats-bank* rules-rolled))
+
+(def-save-field-pair mod-stats-rules-broken-save-value
+                     mod-stats-rules-broken-resume-from-save
+                     (-> *MOD-stats-bank* rules-broken))
+
+(def-save-field-pair mod-stats-rules-followed-save-value
+                     mod-stats-rules-followed-resume-from-save
+                     (-> *MOD-stats-bank* rules-followed))
+
+(def-save-field-pair mod-stats-complications-endured-save-value
+                     mod-stats-complications-endured-resume-from-save
+                     (-> *MOD-stats-bank* complications-endured))
+
+(def-save-field-pair mod-stats-conditions-skipped-save-value
+                     mod-stats-conditions-skipped-resume-from-save
+                     (-> *MOD-stats-bank* conditions-skipped))
+
+;; Seconds lost by the time loss punishment. Baseline scaled by how generous the increments are.
+(defun mod-countdown-punishment-seconds ()
+  (let* ((scaled (* (-> *MOD-tuning-bank* countdown-punishment-baseline-seconds)
+                    (/ (mod-collectable-inc-total) (-> *MOD-tuning-bank* countdown-punishment-baseline-inc-total))))
+         (rounded (* (the int (/ (+ scaled 2.5) 5.0)) 5)))
+    (max 5 rounded)))
+
+(defun mod-countdown-punishment-ticks ()
+  (the int (* (the float (mod-countdown-punishment-seconds)) (the float TICKS_PER_SECOND))))
+
+(defun mod-cell-blocked? ()
+  (the symbol
+       (or (mod-rule-active? 'complication-fuel-shortage)
+           (and (mod-target-on-flut?) (mod-rule-active? 'complication-wings-tied))
+           (and *target* (> (-> (the-as fact-info-target (-> *target* fact)) health) 1.0) (mod-rule-active? 'complication-critical)))))
+
+(defun mod-cell-price-task ()
+  (if (mod-rule-active? 'complication-half-price) (/ (-> *GAME-bank* money-task-inc) 2.0) (-> *GAME-bank* money-task-inc)))
+
+(defun mod-cell-price-oracle ()
+  (if (mod-rule-active? 'complication-half-price) (/ (-> *GAME-bank* money-oracle-inc) 2.0) (-> *GAME-bank* money-oracle-inc)))
+
+(defun mod-trade-hint-task ()
+  (if (mod-rule-active? 'complication-half-price) (text-id press-to-trade-money-cheap) (text-id press-to-trade-money)))
+
+(defun mod-trade-hint-oracle ()
+  (if (mod-rule-active? 'complication-half-price)
+    (text-id press-to-trade-money-oracle-cheap)
+    (text-id press-to-trade-money-oracle)))
+
+(defun mod-rule-name ((id symbol))
+  (cond
+    ((eq? id 'rule-grounded) "GROUNDED")
+    ((eq? id 'rule-management) "ANGER MANAGEMENT")
+    ((eq? id 'rule-die) "DIE")
+    ((eq? id 'rule-lurker-pressure) "BLOODLUST")
+    ((eq? id 'rule-hitlist) "HITLIST")
+    ((eq? id 'rule-double-kill) "DOUBLE KILL")
+    ((eq? id 'rule-sniper) "SNIPER")
+    ((eq? id 'rule-crate-break) "BULL AND CHINA")
+    ((eq? id 'rule-money-pressure) "CASH GRAB")
+    ((eq? id 'rule-fuel-pressure) "CELL PRESSURE")
+    ((eq? id 'rule-buzzer-pressure) "BUZZER BEATER")
+    ((eq? id 'rule-flop-this) "FLOP THIS")
+    ((eq? id 'complication-brittle-bones) "BRITTLE BONES")
+    ((eq? id 'complication-rotten-eggs) "ROTTEN EGGS")
+    ((eq? id 'complication-eco-allergy) "ECO ALLERGY")
+    ((eq? id 'rule-keep-it-low) "KEEP IT LOW")
+    ((eq? id 'complication-sizeable) "SIZEABLE CONTRIBUTIONS")
+    ((eq? id 'complication-cumbersome) "CUMBERSOME")
+    ((eq? id 'complication-ohko) "OHKO")
+    ((eq? id 'complication-critical) "CRITICAL CONDITION")
+    ((eq? id 'complication-glare) "GLARE")
+    ((eq? id 'complication-heating-balloons) "HEATING BALLOONS")
+    ((eq? id 'complication-disassociate) "DISASSOCIATE")
+    ((eq? id 'complication-bus-driver) "BUS DRIVER")
+    ((eq? id 'complication-wings-tied) "WINGS TIED")
+    ((eq? id 'complication-fuel-shortage) "FUEL SHORTAGE")
+    ((eq? id 'complication-hidden-treasure) "HIDDEN TREASURE")
+    ((eq? id 'complication-drought) "DROUGHT")
+    ((eq? id 'complication-jak-rabbit) "JAK RABBIT")
+    ((eq? id 'rule-survivor) "STEP ONE")
+    ((eq? id 'rule-vendetta) "VENDETTA")
+    ((eq? id 'rule-hands-on) "HANDS ON")
+    ((eq? id 'complication-eco-reserve) "ECO RESERVE")
+    ((eq? id 'complication-red-stop) "SEEING RED")
+    ((eq? id 'rule-one-frame) "SPIN TO WIN")
+    ((eq? id 'rule-distancing) "SOCIAL DISTANCING")
+    ((eq? id 'rule-red-light) "RED LIGHT")
+    ((eq? id 'complication-rgyb) "RGYB")
+    ((eq? id 'complication-butter-fingers) "BUTTER FINGERS")
+    ((eq? id 'rule-for-billy) "FOR BILLY")
+    ((eq? id 'rule-cold-feet) "COLD FEET")
+    ((eq? id 'complication-overclock) "OVERCLOCK")
+    ((eq? id 'rule-speed) "SPEED RACER")
+    ((eq? id 'rule-math-quiz) "QUICK MATHS")
+    ((eq? id 'rule-trivia) "DON\c12T KNOW JAK")
+    ((eq? id 'complication-bad-ping) "BAD PING")
+    ((eq? id 'rule-green-pilled) "GREEN-PILLED")
+    ((eq? id 'rule-button-pusher) "BUTTON PUSHER")
+    ((eq? id 'rule-loyal-customer) "LOYAL CUSTOMER")
+    ((eq? id 'complication-invisible-man) "INVISIBLE MAN")
+    ((eq? id 'rule-cooked) "COOKED")
+    ((eq? id 'complication-joyride) "JOYRIDE")
+    ((eq? id 'rule-sagging-sails) "SAGGING SAILS")
+    ((eq? id 'rule-side-to-side) "SIDE TO SIDE")
+    ((eq? id 'rule-landlubber) "LANDLUBBER")
+    ((eq? id 'complication-double-aphids) "INFESTATION")
+    ((eq? id 'complication-invert) "THIS ONE SUCKS")
+    ((eq? id 'complication-loose-pockets) "LOOSE POCKETS")
+    ((eq? id 'complication-twisted) "TWISTED")
+    ((eq? id 'complication-vibe-check) "VIBE CHECK")
+    ((eq? id 'complication-income-tax) "INCOME TAX")
+    ((eq? id 'rule-express-delivery) "EXPRESS DELIVERY")
+    ((eq? id 'rule-qte) "QUICK TIME EVENT")
+    ((eq? id 'rule-touch-grass) "TOUCH GRASS")
+    ((eq? id 'complication-mirror) "MIRRORED")
+    ((eq? id 'complication-no-double-jump) "ONE AND DONE")
+    ((eq? id 'rule-hang-time) "HANG TIME")
+    ((eq? id 'complication-unbreakable) "UNBREAKABLE")
+    ((eq? id 'complication-get-a-grip) "GET A GRIP")
+    ((eq? id 'complication-fast-reel) "FAST REEL")
+    ((eq? id 'complication-palate-change) "PALATE CHANGE")
+    ((eq? id 'complication-jak-be-nimble) "JAK BE NIMBLE")
+    ((eq? id 'rule-no-harm) "DO NO HARM")
+    ((eq? id 'complication-soul-bond) "SOUL BOND")
+    ((eq? id 'complication-shifty) "SHIFTY")
+    ((eq? id 'complication-interference) "INTERFERENCE")
+    ((eq? id 'complication-quicksand) "QUICKSAND")
+    ((eq? id 'complication-lights-out) "LIGHTS OUT")
+    ((eq? id 'rule-supercharged) "SUPERCHARGED")
+    ((eq? id 'complication-half-price) "LIMITED TIME OFFER")
+    ((eq? id 'rule-keep-rolling) "KEEP ROLLING")
+    ((eq? id 'complication-energy-boost) "ENERGY BOOST")
+    ((eq? id 'rule-uncharted) "UNCHARTED")
+    ((eq? id 'rule-bonecracker) "BONECRACKER")
+    ((eq? id 'rule-orb-hunt) "ORB HUNT")
+    ((eq? id 'rule-no-ledge) "LEDGE LESS")
+    (else "UNKNOWN")))
+
+(defun mod-apply-time-limit-multiplier ((base-time time-frame))
+  (let* ((raw-mult (time-limit-multiplier))
+         (tenths (the int (+ (* raw-mult 10.0) 0.5))))
+    (the time-frame (/ (* base-time (the time-frame tenths)) 10))))

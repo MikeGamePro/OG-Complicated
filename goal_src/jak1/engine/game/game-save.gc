@@ -25,7 +25,7 @@
 (define-extern mod-stats-reset! (function none))
 
 ;; mod: hooks for persisting the global countdown timer in the save file.
-;; implemented in mod-common-functions.gc
+;; implemented in mod-state.gc
 (define-extern global-countdown-save-value (function int))
 
 (define-extern global-countdown-resume-from-save (function int none))

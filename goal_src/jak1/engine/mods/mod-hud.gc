@@ -1,0 +1,465 @@
+;;-*-Lisp-*-
+(in-package goal)
+
+;; HUD drawing and formatting
+
+(defun mod-string-width ((str string) (flags font-flags) (scale float))
+  (let ((font-ctxt (new 'stack 'font-context *font-default-matrix* 0 0 0.0 (font-color white) flags)))
+    (* (get-string-length str font-ctxt) scale)))
+
+(defun mod-find-substr ((str string) (sub string) (start int))
+  (let* ((str-len (length str))
+         (sub-len (length sub))
+         (limit (- str-len sub-len))
+         (found -1))
+    (dotimes (i (+ limit 1))
+      (when (and (= found -1) (>= i start))
+        (let ((match #t))
+          (dotimes (j sub-len)
+            (when (!= (-> str data (+ i j)) (-> sub data j))
+              (set! match #f)))
+          (when match
+            (set! found i)))))
+    found))
+
+;; Copy characters [start, end) of src into dst and terminate it.
+(defun mod-copy-range! ((dst string) (src string) (start int) (end int))
+  (let ((j 0))
+    (dotimes (i (- end start))
+      (set! (-> dst data j) (-> src data (+ start i)))
+      (+! j 1))
+    (set! (-> dst data j) 0))
+  dst)
+
+(define *mod-hud-dry-run* #f)
+
+(defmacro mod-hud-flags ()
+  `(font-flags shadow kerning large))
+
+;; Draw a string with the menu text-scale multiplier applied.
+(defun mod-draw-string-xy-scaled ((str string) (buf dma-buffer) (x int) (y int) (color font-color) (flags font-flags) (scale float))
+  (unless *mod-hud-dry-run*
+    (draw-string-xy-scaled str buf x y color flags (* scale (text-scale-multiplier)))))
+
+;; Scales a row-spacing/indent pixel offset by the same multiplier as the HUD text.
+(defun mod-scale-px ((n int))
+  (the int (* (the float n) (text-scale-multiplier))))
+
+(defun mod-draw-qte-button ((arg0 dma-buffer) (x int) (y int))
+  (let ((button-text (case (-> *MOD-rule-context-bank* qte-target-button)
+                       ((0) (lookup-text! *common-text* (text-id pad-triangle) #f))
+                       ((1) (lookup-text! *common-text* (text-id pad-circle) #f))
+                       ((2) (lookup-text! *common-text* (text-id pad-x) #f))
+                       ((3) (lookup-text! *common-text* (text-id pad-square) #f))
+                       (else #f))))
+    (when button-text
+      (mod-draw-string-xy-scaled (the string button-text) arg0 x y (font-color green) (mod-hud-flags) 0.65))))
+
+(defun mod-rule-draw-line-highlighted! ((buf dma-buffer) (line string) (highlight string) (highlight-color font-color) (x int) (y int) (scale float))
+  (let ((idx (mod-find-substr line highlight 0))
+        (eff-scale (* scale (text-scale-multiplier)))
+        (flags (mod-hud-flags)))
+    (if (< idx 0)
+      (mod-draw-string-xy-scaled line buf x y (font-color white) flags scale)
+      (let ((cur-x x)
+            (highlight-end (+ idx (length highlight))))
+        (when (> idx 0)
+          (mod-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line 0 idx)
+          (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)
+          (+! cur-x (the int (mod-string-width (-> *MOD-rule-display-bank* highlight-line-buf) flags eff-scale))))
+        (mod-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line idx highlight-end)
+        (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y highlight-color flags scale)
+        (when (< highlight-end (length line))
+          (+! cur-x (the int (mod-string-width (-> *MOD-rule-display-bank* highlight-line-buf) flags eff-scale)))
+          (mod-copy-range! (-> *MOD-rule-display-bank* highlight-line-buf) line highlight-end (length line))
+          (mod-draw-string-xy-scaled (-> *MOD-rule-display-bank* highlight-line-buf) buf cur-x y (font-color white) flags scale)))))
+  (none))
+
+;; Index to wrap a line at.
+(defun mod-wrap-point ((str string) (max-len int))
+  (let ((len (length str)))
+    (if (<= len max-len)
+      len
+      (let ((break-idx -1))
+        (dotimes (i (+ max-len 1))
+          (if (= (-> str data i) 32) (set! break-idx i)))
+        (if (>= break-idx 0) break-idx max-len)))))
+
+(defun mod-rule-draw-desc-line! ((buf dma-buffer) (id symbol) (line string) (x int) (y int) (scale float))
+  (if (eq? id 'complication-twisted)
+    (mod-rule-draw-line-highlighted! buf line "RULE" (font-color orangeb) x y scale)
+    (mod-draw-string-xy-scaled line buf x y (font-color white) (mod-hud-flags) scale))
+  (none))
+
+(defun mod-tenths-str ((val float))
+  (let ((tenths (the int (* val 10.0)))) (string-format "~D.~D" (/ tenths 10) (mod tenths 10))))
+
+;; Draw text wrapped to at most two lines. Returns the next row y.
+(defun mod-rule-draw-wrapped! ((buf dma-buffer) (id symbol) (str string) (max-len int) (x int) (y int) (scale float) (row-step int))
+  (let ((break-idx (mod-wrap-point str max-len))
+        (dy (mod-scale-px row-step)))
+    (cond
+      ((>= break-idx (length str)) (mod-rule-draw-desc-line! buf id str x y scale) (+ y dy))
+      (else
+       (mod-copy-range! (-> *MOD-rule-display-bank* wrap-line-1) str 0 break-idx)
+       (mod-copy-range! (-> *MOD-rule-display-bank* wrap-line-2) str (+ break-idx 1) (length str))
+       (mod-rule-draw-desc-line! buf id (-> *MOD-rule-display-bank* wrap-line-1) x y scale)
+       (mod-rule-draw-desc-line! buf id (-> *MOD-rule-display-bank* wrap-line-2) x (+ y dy) scale)
+       (+ y dy dy)))))
+
+(defun mod-rule-draw-labeled-value! ((buf dma-buffer) (label string) (label-color font-color) (value string) (row int))
+  (mod-draw-string-xy-scaled label buf 10 row label-color (mod-hud-flags) 0.3)
+  (let ((value-y (- row (mod-scale-px 2))))
+    (mod-draw-string-xy-scaled value buf (mod-scale-px 66) value-y (font-color white) (mod-hud-flags) 0.4)
+    (+ value-y (mod-scale-px 8))))
+
+(defun mod-rule-desc-essential? ((id symbol))
+  (or (eq? id 'rule-qte) (eq? id 'complication-twisted)))
+
+(defun mod-rule-draw-slot ((buf dma-buffer) (slot int) (y int) (compact? symbol))
+  (let* ((id (mod-slot-ref active-slots slot))
+         (punishment (mod-slot-ref slot-punishments slot))
+         (goal (mod-slot-ref slot-goals slot))
+         (progress (mod-slot-ref slot-progress slot))
+         (show-progress? (> goal 1))
+         (time-left (max 0 (- (mod-slot-ref slot-end-times slot) (current-time))))
+         (row y)
+         (desc (mod-rule-description id)))
+    (mod-draw-string-xy-scaled (mod-rule-name id)
+                               buf
+                               10
+                               row
+                               (if (eq? (mod-rule-type id) 'rule) (font-color orangeb) (font-color triangleb))
+                               (mod-hud-flags)
+                               0.5)
+    (+! row (mod-scale-px 10))
+    (when (or (not compact?) (mod-rule-desc-essential? id))
+      (if (eq? id 'rule-qte)
+        (begin
+          (mod-draw-string-xy-scaled desc buf 10 row (font-color white) (mod-hud-flags) 0.35)
+          (mod-draw-qte-button buf (mod-scale-px 50) row)
+          (+! row (mod-scale-px 15)))
+        (set! row (mod-rule-draw-wrapped! buf id desc 25 10 row 0.35 9))))
+    (when punishment
+      (mod-draw-string-xy-scaled "PUNISHMENT: " buf 10 row (font-color redb) (mod-hud-flags) 0.3)
+      (set! row (mod-rule-draw-wrapped! buf #f (mod-punishment-name punishment) 16 (mod-scale-px 80) row 0.3 8)))
+    (when show-progress?
+      (mod-draw-string-xy-scaled "PROGRESS: " buf 10 row (font-color yellow) (mod-hud-flags) 0.3)
+      (let ((progress-text (if (eq? id 'rule-hang-time)
+                             (let* ((elapsed (min (seconds (mod-rule-counter-goal 'rule-hang-time))
+                                                  (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start))))
+                                    (tenths (the int (* (/ (the float elapsed) (the float (seconds 1))) 10))))
+                               (string-format "~D.~D/~D" (/ tenths 10) (mod tenths 10) goal))
+                             (string-format "~D/~D" progress goal))))
+        (mod-draw-string-xy-scaled progress-text
+                                   buf
+                                   (mod-scale-px 80)
+                                   (- row (mod-scale-px 2))
+                                   (font-color white)
+                                   (mod-hud-flags)
+                                   0.5))
+      (+! row (mod-scale-px 7)))
+    (let* ((timer-text (mod-format-time-frame time-left 1 'auto))
+           (timer-flags (mod-hud-flags)))
+      (mod-draw-string-xy-scaled timer-text buf 10 row (font-color white) timer-flags 0.5)
+      (when (> (-> *MOD-pass-bank* passes) 0)
+        (mod-draw-string-xy-scaled "L2+R2 TO PASS"
+                                   buf
+                                   (mod-scale-px 80)
+                                   (+ row (mod-scale-px 3))
+                                   (font-color gray)
+                                   timer-flags
+                                   0.3)))
+    (+! row (mod-scale-px 12))
+    (when (eq? id 'rule-distancing)
+      (set! row
+            (mod-rule-draw-labeled-value! buf
+                                          "DISTANCE: "
+                                          (font-color progress-percent)
+                                          (if (> *closest-buzzer-dist* (meters 40)) "-" (mod-tenths-str (/ *closest-buzzer-dist* (meters 1))))
+                                          row)))
+    (when (eq? id 'rule-sniper)
+      (set! row
+            (mod-rule-draw-labeled-value! buf
+                                          "LAST KILL: "
+                                          (font-color progress-percent)
+                                          (if (< *last-kill-dist* (meters 0)) "-" (mod-tenths-str (/ *last-kill-dist* (meters 1))))
+                                          row)))
+    (when (eq? id 'rule-math-quiz)
+      (let ((op-string (cond
+                         ((= (-> *MOD-quiz-bank* math-op) 0) "+")
+                         ((= (-> *MOD-quiz-bank* math-op) 1) "-")
+                         (else "*"))))
+        (format (clear *temp-string*)
+                "~D ~S ~D = ~1L~D"
+                (-> *MOD-quiz-bank* math-val1)
+                op-string
+                (-> *MOD-quiz-bank* math-val2)
+                (-> *MOD-quiz-bank* math-current-guess))
+        (mod-draw-string-xy-scaled *temp-string* buf 10 row (font-color white) (mod-hud-flags) 0.6)
+        (+! row (mod-scale-px 12))))
+    (when (eq? id 'rule-trivia)
+      (let* ((q-idx (-> *MOD-quiz-bank* trivia-current-question))
+             (choice-str (if (= (-> *MOD-quiz-bank* trivia-current-guess) -1)
+                           "USE D-PAD"
+                           (mod-get-trivia-choice-str q-idx (-> *MOD-quiz-bank* trivia-current-guess)))))
+        (format (clear *temp-string*) "~S" (-> *mod-trivia-questions* q-idx))
+        (set! row (mod-rule-draw-wrapped! buf #f *temp-string* 27 10 row 0.35 8))
+        (format (clear *temp-string*) " ~S" choice-str)
+        (mod-draw-string-xy-scaled *temp-string* buf (mod-scale-px 20) row (font-color progress-memcard) (mod-hud-flags) 0.47)
+        (+! row (mod-scale-px 12))))
+    (when (or (eq? id 'complication-bus-driver) (eq? id 'rule-speed))
+      (let ((value-y (- row (mod-scale-px 2))))
+        (set! row
+              (mod-rule-draw-labeled-value! buf
+                                            "SPEED: "
+                                            (font-color progress-percent)
+                                            (if *target* (mod-tenths-str (/ (-> *target* control ctrl-xz-vel) (meters 1))) "-")
+                                            row))
+        (if (mod-rule-active? 'complication-bus-driver)
+          (mod-draw-string-xy-scaled "/20.0" buf (mod-scale-px 96) value-y (font-color white) (mod-hud-flags) 0.4))))
+    (when (eq? id 'complication-get-a-grip)
+      (let* ((elapsed (- (current-time) (-> *MOD-rule-context-bank* get-a-grip-last-grab)))
+             (grip-left (max 0 (- (mod-apply-time-limit-multiplier (seconds 12)) elapsed))))
+        (set! row (mod-rule-draw-labeled-value! buf "DEATH: " (font-color red) (mod-format-time-frame grip-left 1 #f) row))))
+    row))
+
+(defun mod-rule-measure-slot ((buf dma-buffer) (slot int) (compact? symbol))
+  (set! *mod-hud-dry-run* #t)
+  (let ((end (mod-rule-draw-slot buf slot 0 compact?))) (set! *mod-hud-dry-run* #f) end))
+
+;; y of the first block
+(define *mod-hud-top* 40)
+
+;; blocks should end here
+(define *mod-hud-bottom* 185)
+
+;; extra space between blocks
+(define *mod-hud-slot-gap* 6)
+
+;; outcome / pending text
+(define *mod-hud-status-x* 10)
+
+;; first row of the right-hand column, under the countdown timer
+(define *mod-hud-right-y* 72)
+
+;; right edge of the applied-punishment line
+(define *mod-hud-right-edge* 497)
+
+;; Height each slot reserved last frame.
+(define *mod-hud-slot-heights* (new 'static 'boxed-array :type int32 :length 5 :allocated-length 5))
+
+(defun mod-rule-hud-band-count ()
+  (let ((count (mod-rule-target-slot-count)))
+    (dotimes (slot *mod-rule-slot-count*)
+      (when (mod-rule-slot-occupied? slot)
+        (set! count (max count (+ slot 1)))))
+    count))
+
+;; Minimum height of an empty slot.
+(defun mod-rule-hud-empty-height ()
+  (mod-scale-px 22))
+
+(defun mod-rule-hud-idle-height ((slot int))
+  (if (< slot (mod-rule-target-slot-count))
+    (max (mod-rule-hud-empty-height) (-> *mod-hud-slot-heights* slot))
+    (mod-rule-hud-empty-height)))
+
+(defun mod-rule-hud-compact? ((buf dma-buffer) (band-count int))
+  (let ((total *mod-hud-top*))
+    (dotimes (slot band-count)
+      (when (> slot 0)
+        (+! total (mod-scale-px *mod-hud-slot-gap*)))
+      ;; active slots are measured at full size... empty slots count what the draw loop reserves for them
+      (+! total
+          (max (mod-rule-hud-idle-height slot) (if (mod-slot-ref active-slots slot) (mod-rule-measure-slot buf slot #f) 0))))
+    (> total *mod-hud-bottom*)))
+
+(defun mod-rule-draw-separator ((buf dma-buffer) (y int))
+  (mod-draw-string-xy-scaled "--------------------" buf *mod-hud-status-x* y (font-color gray) (mod-hud-flags) 0.3)
+  (none))
+
+(defun mod-draw-punishment-result ((buf dma-buffer))
+  (when (> (-> *MOD-punishment-bank* result-count) 0)
+    (let* ((flags (mod-hud-flags))
+           (scale 0.35)
+           (text (mod-punishment-result-text))
+           (x (- *mod-hud-right-edge* (the int (mod-string-width text flags (* scale (text-scale-multiplier)))))))
+      (mod-draw-string-xy-scaled text
+                                 buf
+                                 x
+                                 *mod-hud-right-y*
+                                 (if (eq? (-> (-> *MOD-punishment-bank* result-ids) 0) 'punishment-revert-cell) (font-color red) (font-color gray))
+                                 flags
+                                 scale)))
+  (none))
+
+(defun mod-draw-timed-punishments ((buf dma-buffer))
+  (let ((row-count 0)
+        (top (+ *mod-hud-right-y* (if (> (-> *MOD-punishment-bank* result-count) 0) (mod-scale-px 10) 0))))
+    (dotimes (slot *mod-timed-punishment-slot-count*)
+      (let ((punishment (-> (-> *MOD-punishment-bank* timed-punishments) slot)))
+        (when punishment
+          (let ((time-left (max 0 (- (-> (-> *MOD-punishment-bank* timed-end-times) slot) (current-time))))
+                (row-y (+ top (* row-count (mod-scale-px 10)))))
+            (mod-draw-string-xy-scaled (mod-timed-punishment-name punishment) buf 395 row-y (font-color white) (mod-hud-flags) 0.3)
+            (mod-draw-string-xy-scaled (mod-format-time-frame time-left 1 'auto)
+                                       buf
+                                       (+ 395 (mod-scale-px 70))
+                                       (- row-y (mod-scale-px 2))
+                                       (font-color white)
+                                       (mod-hud-flags)
+                                       0.4)
+            (+! row-count 1))))))
+  (none))
+
+;; Last outcome, then the countdown to its next roll.
+(defun mod-rule-draw-empty-slot ((buf dma-buffer) (slot int) (y int))
+  (let* ((outcome (mod-slot-ref slot-outcomes slot))
+         (flags (mod-hud-flags))
+         (msg (cond
+                ((eq? outcome 'success) "GOOD JOB!")
+                ((eq? outcome 'failed) "RULE BROKEN!")
+                ((or (eq? outcome 'twisted-success) (eq? outcome 'twisted-failed)) "TWISTED RULE!")
+                ((eq? outcome 'skipped) "PASS!")
+                (else #f)))
+         (color (cond
+                  ((or (eq? outcome 'success) (eq? outcome 'twisted-success)) (font-color green))
+                  ((eq? outcome 'skipped) (font-color violet))
+                  (else (font-color red)))))
+    (when msg
+      (mod-draw-string-xy-scaled (the-as string msg) buf *mod-hud-status-x* y color flags 0.4)
+      (+! y (mod-scale-px 10)))
+    (when (and (eq? (mod-slot-ref pending-slots slot) 'mod-rule-pending-roll)
+               (> (mod-rule-target-slot-count) 0)
+               (-> *MOD-rule-context-bank* roll-possible?))
+      (let* ((left (max 0 (- (mod-slot-ref roll-ready-times slot) (current-time))))
+             (label "NEW CONDITION:")
+             (timer-x (+ *mod-hud-status-x* (the int (mod-string-width label flags (* 0.4 (text-scale-multiplier)))) 6)))
+        (mod-draw-string-xy-scaled label buf *mod-hud-status-x* y (font-color yellow) flags 0.4)
+        (mod-draw-string-xy-scaled (mod-format-time-frame left 1 'auto) buf timer-x (- y 1) (font-color white) flags 0.5))))
+  (none))
+
+;; Draw the whole HUD.
+(defun mod-run-hud-draw ()
+  (cond
+    ((-> *MOD-countdown-bank* active?)
+     (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf)) (bucket-id debug-no-zbuf))
+       (draw-string-xy-scaled (string-format "SEED: ~D" (-> *MOD-rng-bank* seed-display))
+                              global-buf
+                              4
+                              215
+                              (font-color flat-yellow)
+                              (mod-hud-flags)
+                              0.4)
+       ;; Draw main countdown timer
+       (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* remaining-time) 2 'auto)
+                                  global-buf
+                                  380
+                                  54
+                                  (font-color red)
+                                  (mod-hud-flags)
+                                  0.8)
+       ;; Draw countup timer
+       (when (show-countup-timer-enabled?)
+         (let ((show-hours? (> (the int (/ (-> *MOD-countdown-bank* countup-timer) (seconds 3600))) 0)))
+           (mod-draw-string-xy-scaled (mod-format-time-frame (-> *MOD-countdown-bank* countup-timer) 2 'auto)
+                                      global-buf
+                                      (if show-hours? 390 410)
+                                      44
+                                      (font-color white)
+                                      (mod-hud-flags)
+                                      0.5)))
+       (mod-draw-punishment-result global-buf)
+       (mod-draw-timed-punishments global-buf)
+       ;; Blocks stack in slot order
+       (let* ((band-count (mod-rule-hud-band-count))
+              (compact? (mod-rule-hud-compact? global-buf band-count))
+              (y *mod-hud-top*))
+         (dotimes (slot band-count)
+           (let ((height 0))
+             (if (mod-slot-ref active-slots slot)
+               (begin
+                 (set! height (- (mod-rule-draw-slot global-buf slot y compact?) y))
+                 (set! (-> *mod-hud-slot-heights* slot) height))
+               (begin
+                 (set! height (mod-rule-hud-idle-height slot))
+                 (mod-rule-draw-empty-slot global-buf slot y)))
+             (+! y height)
+             (when (and (< (+ slot 1) band-count) (mod-rule-slot-occupied? (+ slot 1)))
+               (mod-rule-draw-separator global-buf y))
+             (when (< (+ slot 1) band-count)
+               (+! y (mod-scale-px *mod-hud-slot-gap*))))))))
+    (else (none)))
+  (none))
+
+(defun mod-global-countdown-add-seconds ((seconds-to-add float))
+  (when (-> *MOD-countdown-bank* active?)
+    (when (mod-rule-active? 'complication-income-tax)
+      (set! seconds-to-add (* seconds-to-add 0.5)))
+    (set! (-> *MOD-countdown-bank* remaining-time)
+          (+ (-> *MOD-countdown-bank* remaining-time)
+             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001)) (the float TICKS_PER_SECOND))))))
+  (none))
+
+(defun draw-complicated-mod-title ()
+  (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf)) (bucket-id debug-no-zbuf))
+    (let ((title-row 30)
+          (title-x 10))
+      (draw-string-xy-scaled "A COMPLICATED MOD" global-buf title-x title-row (font-color green) (mod-hud-flags) 0.8)
+      (+! title-row (mod-scale-px 15))
+      (draw-string-xy-scaled "A COMPLICATED MOD WITH RULES."
+                             global-buf
+                             title-x
+                             title-row
+                             (font-color white)
+                             (mod-hud-flags)
+                             0.4)
+      (+! title-row (mod-scale-px 10))
+      (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (mod-hud-flags) 1.0)))
+  (none))
+
+;; Countdown loop: advance timers and draw the HUD every frame.
+(defbehavior mod-global-countdown-proc process ()
+  (loop
+    (when (and (-> *MOD-countdown-bank* active?) (not (-> *MOD-countdown-bank* lost?)))
+      ;; The countup timer always runs
+      (let ((up-elapsed (- (current-time) (-> *MOD-countdown-bank* countup-last-update-time))))
+        ;; Detect save/load time-warp
+        (when (or (< up-elapsed 0) (> up-elapsed (seconds 10)))
+          (set! up-elapsed 0))
+        (when (> up-elapsed 0)
+          (set! (-> *MOD-countdown-bank* countup-timer) (+ (-> *MOD-countdown-bank* countup-timer) up-elapsed)))
+        (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time)))
+      (cond
+        ((or (global-countdown-paused?)
+             (and *target*
+                  (or (and (mod-rule-active? 'complication-eco-reserve) (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
+                      (and (mod-rule-active? 'complication-red-stop) (= (-> *target* fact eco-type) (pickup-type eco-red))))
+                  (>= (-> *target* fact eco-level) 1.0)))
+         (set! (-> *MOD-countdown-bank* last-update-time) (current-time)))
+        (else
+         (let ((elapsed (- (current-time) (-> *MOD-countdown-bank* last-update-time))))
+           ;; Detect save/load time-warp
+           (when (or (< elapsed 0) (> elapsed (seconds 10)))
+             (set! elapsed 0))
+           (when (> elapsed 0)
+             (when (and *target*
+                        (mod-rule-active? 'complication-quicksand)
+                        (= (-> *target* control ground-pat material) (pat-material sand)))
+               (set! elapsed (* elapsed 2)))
+             (set! (-> *MOD-countdown-bank* remaining-time) (max 0 (- (-> *MOD-countdown-bank* remaining-time) elapsed))))
+           (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
+           ;; Beep on second during the final 10 seconds
+           (let ((whole-second (the int (/ (-> *MOD-countdown-bank* remaining-time) (seconds 1)))))
+             (if (> whole-second 9)
+               (set! (-> *MOD-countdown-bank* last-warn-second) -1)
+               (when (and (>= whole-second 0) (!= whole-second (-> *MOD-countdown-bank* last-warn-second)))
+                 (set! (-> *MOD-countdown-bank* last-warn-second) whole-second)
+                 (sound-play "slider2001"))))
+           (when (<= (-> *MOD-countdown-bank* remaining-time) 0)
+             (format #t "COUNTDOWN: lost triggered~%")
+             (mod-reset-run-and-restart))))))
+    (mod-run-hud-draw)
+    (suspend))
+  (none))

@@ -350,6 +350,12 @@
   "hud-classes-pc.o" ;; added
   "mod-settings.o" ;; added mod-base-change
   "mod-common-functions.o" ;; added
+  "mod-gameplay.o"
+  "mod-rules.o"
+  "mod-punishments.o"
+  "mod-rule-runtime.o"
+  "mod-hud.o"
+  "mod-state.o"
   "orb-placer.o" ;; added
   "mod-custom-code.o" ;; added
   "mod-debug.o" ;; added

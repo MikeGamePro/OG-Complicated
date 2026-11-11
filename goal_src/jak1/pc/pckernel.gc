@@ -10,7 +10,7 @@
 	See pckernel-common.gc for the bulk of the pckernel.
 |#
 
-;; mod: defined in mod-common-functions.gc
+;; mod: defined in mod-gameplay.gc
 (define-extern mod-discord-info-fill! (function discord-info none))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

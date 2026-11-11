@@ -2138,6 +2138,12 @@
 ;;  "mods/complicated-settings.gc"
  "mods/mod-settings.gc"
  "mods/mod-common-functions.gc"
+ "mods/mod-gameplay.gc"
+ "mods/mod-rules.gc"
+ "mods/mod-punishments.gc"
+ "mods/mod-rule-runtime.gc"
+ "mods/mod-hud.gc"
+ "mods/mod-state.gc"
  "mods/mod-custom-code.gc"
  "mods/mod-debug.gc"
 )
@@ -2150,4 +2156,3 @@
 (group-list "all-code"
   `(,@(reverse *all-gc*))
   )
-
