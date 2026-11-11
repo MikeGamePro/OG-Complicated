@@ -1,6 +1,8 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
+;;
+
 (defun mod-run-reset ()
   (kill-by-name 'global-countdown *active-pool*)
   (kill-by-name 'mod-rule-manager *active-pool*)

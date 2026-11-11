@@ -52,7 +52,6 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
 ;; Force specific rule: (mod-rule-activate-slot 0 'rule-grounded)
 ;; Check if a specific slot is active: (mod-rule-slot-active? 0)
 
-;; add new options here (getter)
 (define-extern show-countup-timer-enabled? (function symbol))
 
 (define-extern punishment-toggle-enabled? (function symbol symbol))
@@ -346,7 +345,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
           (task-closed? (game-task village3-oracle-money2) (task-status need-resolution))))
     (else #f)))
 
-;; Integer avalanche hash; scrambles a uint into a well-mixed one.
+;; Integer avalanche hash. Scrambles a uint into a well-mixed one.
 (defun mod-rng-hash-u32 ((x uint))
   (set! x (logxor x (shr x 16)))
   (set! x (* x (the uint #x7feb352d)))
@@ -409,7 +408,7 @@ if the result of rand-vu-int-range is 1, then DANCE! if it is not 1, then Don't 
   (let ((r (logand (mod-rng-content-next-u32) (the uint #x7fffffff))))
     (+ lo (* (- hi lo) (/ (the float r) 2147483648.0)))))
 
-;; Bounds-checked array lookup; returns #f when idx is out of range.
+;; Array lookup. Returns #f when idx is out of range.
 (defun mod-symbol-at ((ids (array symbol)) (idx int))
   (if (and (>= idx 0) (< idx (-> ids length))) (-> ids idx) #f))
 

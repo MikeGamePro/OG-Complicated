@@ -170,9 +170,3 @@
   (when (and crate (eq? event 'break))
     (mod-on-crate-break amount))
   (none))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; deprecated function defintions.
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-#| these are no longer recommended/supported however we include them anyways to not break anyones mods. |#

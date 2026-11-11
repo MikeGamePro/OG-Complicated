@@ -1,6 +1,8 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
+;;
+
 (defun mod-level-display-name ((level symbol))
   (case level
     (('training) "GEYSER ROCK")

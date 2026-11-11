@@ -1,6 +1,8 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
+;;
+
 (define *mod-trivia-questions*
   (new 'static
        'boxed-array

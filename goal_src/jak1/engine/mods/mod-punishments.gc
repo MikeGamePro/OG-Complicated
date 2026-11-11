@@ -1,6 +1,8 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
+;;
+
 (defun mod-punishment-result-duration ((punishment symbol))
   (if (eq? punishment 'punishment-revert-cell) (seconds 8) (seconds 5)))
 
