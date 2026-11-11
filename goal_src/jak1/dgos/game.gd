@@ -350,9 +350,10 @@
   "hud-classes-pc.o" ;; added
   "mod-settings.o" ;; added mod-base-change
   "mod-common-functions.o" ;; added
-  "mod-gameplay.o"
   "mod-rules.o"
+  "mod-gameplay.o"
   "mod-punishments.o"
+  "mod-rule-lifecycle.o"
   "mod-rule-runtime.o"
   "mod-hud.o"
   "mod-state.o"

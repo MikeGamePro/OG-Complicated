@@ -1,7 +1,31 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
-;; HUD drawing and formatting
+;; Format ticks as [H:]M:SS with 0-3 decimals.
+(defun mod-format-time-frame ((tf time-frame) (decimal-digits int) (hours-mode symbol))
+  (let* ((ticks (max 0 (the int tf)))
+         (total-seconds (the int (/ ticks (seconds 1))))
+         (hours (the int (/ total-seconds 3600)))
+         (minutes-full (the int (/ total-seconds 60)))
+         (minutes-part (the int (mod minutes-full 60)))
+         (seconds-part (the int (mod total-seconds 60)))
+         (show-hours? (or (eq? hours-mode 'always) (and (eq? hours-mode 'auto) (> hours 0))))
+         (minutes-out (if show-hours? minutes-part minutes-full))
+         (frac-tenths (the int (/ (* (mod ticks (seconds 1)) 10) (seconds 1))))
+         (frac-hundredths (the int (/ (* (mod ticks (seconds 1)) 100) (seconds 1))))
+         (frac-millis (the int (/ (* (mod ticks (seconds 1)) 1000) (seconds 1)))))
+    (cond
+      ((and show-hours? (= decimal-digits 3))
+       (string-format "~D:~2,'0D:~2,'0D.~3,'0D" hours minutes-out seconds-part frac-millis))
+      ((and show-hours? (= decimal-digits 2))
+       (string-format "~D:~2,'0D:~2,'0D.~2,'0D" hours minutes-out seconds-part frac-hundredths))
+      ((and show-hours? (= decimal-digits 1))
+       (string-format "~D:~2,'0D:~2,'0D.~1,'0D" hours minutes-out seconds-part frac-tenths))
+      (show-hours? (string-format "~D:~2,'0D:~2,'0D" hours minutes-out seconds-part))
+      ((= decimal-digits 3) (string-format "~D:~2,'0D.~3,'0D" minutes-out seconds-part frac-millis))
+      ((= decimal-digits 2) (string-format "~D:~2,'0D.~2,'0D" minutes-out seconds-part frac-hundredths))
+      ((= decimal-digits 1) (string-format "~D:~2,'0D.~1,'0D" minutes-out seconds-part frac-tenths))
+      (else (string-format "~D:~2,'0D" minutes-out seconds-part)))))
 
 (defun mod-string-width ((str string) (flags font-flags) (scale float))
   (let ((font-ctxt (new 'stack 'font-context *font-default-matrix* 0 0 0.0 (font-color white) flags)))
@@ -393,15 +417,6 @@
     (else (none)))
   (none))
 
-(defun mod-global-countdown-add-seconds ((seconds-to-add float))
-  (when (-> *MOD-countdown-bank* active?)
-    (when (mod-rule-active? 'complication-income-tax)
-      (set! seconds-to-add (* seconds-to-add 0.5)))
-    (set! (-> *MOD-countdown-bank* remaining-time)
-          (+ (-> *MOD-countdown-bank* remaining-time)
-             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001)) (the float TICKS_PER_SECOND))))))
-  (none))
-
 (defun draw-complicated-mod-title ()
   (with-dma-buffer-add-bucket ((global-buf (-> (current-frame) global-buf)) (bucket-id debug-no-zbuf))
     (let ((title-row 30)
@@ -417,49 +432,4 @@
                              0.4)
       (+! title-row (mod-scale-px 10))
       (draw-string-xy-scaled "" global-buf title-x title-row (font-color yellow) (mod-hud-flags) 1.0)))
-  (none))
-
-;; Countdown loop: advance timers and draw the HUD every frame.
-(defbehavior mod-global-countdown-proc process ()
-  (loop
-    (when (and (-> *MOD-countdown-bank* active?) (not (-> *MOD-countdown-bank* lost?)))
-      ;; The countup timer always runs
-      (let ((up-elapsed (- (current-time) (-> *MOD-countdown-bank* countup-last-update-time))))
-        ;; Detect save/load time-warp
-        (when (or (< up-elapsed 0) (> up-elapsed (seconds 10)))
-          (set! up-elapsed 0))
-        (when (> up-elapsed 0)
-          (set! (-> *MOD-countdown-bank* countup-timer) (+ (-> *MOD-countdown-bank* countup-timer) up-elapsed)))
-        (set! (-> *MOD-countdown-bank* countup-last-update-time) (current-time)))
-      (cond
-        ((or (global-countdown-paused?)
-             (and *target*
-                  (or (and (mod-rule-active? 'complication-eco-reserve) (= (-> *target* fact eco-type) (pickup-type eco-yellow)))
-                      (and (mod-rule-active? 'complication-red-stop) (= (-> *target* fact eco-type) (pickup-type eco-red))))
-                  (>= (-> *target* fact eco-level) 1.0)))
-         (set! (-> *MOD-countdown-bank* last-update-time) (current-time)))
-        (else
-         (let ((elapsed (- (current-time) (-> *MOD-countdown-bank* last-update-time))))
-           ;; Detect save/load time-warp
-           (when (or (< elapsed 0) (> elapsed (seconds 10)))
-             (set! elapsed 0))
-           (when (> elapsed 0)
-             (when (and *target*
-                        (mod-rule-active? 'complication-quicksand)
-                        (= (-> *target* control ground-pat material) (pat-material sand)))
-               (set! elapsed (* elapsed 2)))
-             (set! (-> *MOD-countdown-bank* remaining-time) (max 0 (- (-> *MOD-countdown-bank* remaining-time) elapsed))))
-           (set! (-> *MOD-countdown-bank* last-update-time) (current-time))
-           ;; Beep on second during the final 10 seconds
-           (let ((whole-second (the int (/ (-> *MOD-countdown-bank* remaining-time) (seconds 1)))))
-             (if (> whole-second 9)
-               (set! (-> *MOD-countdown-bank* last-warn-second) -1)
-               (when (and (>= whole-second 0) (!= whole-second (-> *MOD-countdown-bank* last-warn-second)))
-                 (set! (-> *MOD-countdown-bank* last-warn-second) whole-second)
-                 (sound-play "slider2001"))))
-           (when (<= (-> *MOD-countdown-bank* remaining-time) 0)
-             (format #t "COUNTDOWN: lost triggered~%")
-             (mod-reset-run-and-restart))))))
-    (mod-run-hud-draw)
-    (suspend))
   (none))

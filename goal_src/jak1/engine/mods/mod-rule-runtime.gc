@@ -1,8 +1,6 @@
 ;;-*-Lisp-*-
 (in-package goal)
 
-;; Rule selection and runtime behavior
-
 ;; Push a rolled id onto the 8-entry recent-roll history.
 (defun mod-rule-record-roll! ((id symbol))
   (when id
@@ -859,83 +857,6 @@
   (mod-rule-counter-add-progress 'rule-crate-break amount)
   (none))
 
-(defun mod-duration-amount ((ticks time-frame))
-  (if (and (>= ticks (seconds 60)) (= (mod ticks (seconds 60)) 0)) (/ ticks (seconds 60)) (/ ticks (seconds 1))))
-
-(defun mod-duration-unit ((ticks time-frame))
-  (if (and (>= ticks (seconds 60)) (= (mod ticks (seconds 60)) 0))
-    (if (= (/ ticks (seconds 60)) 1) "MINUTE" "MINUTES")
-    (if (= (/ ticks (seconds 1)) 1) "SECOND" "SECONDS")))
-
-;; Build text like "LABEL 2 MINUTES" from a label and a punishment's duration.
-(defun mod-timed-punishment-text ((label string) (punishment symbol))
-  (let ((d (mod-punishment-duration punishment)))
-    (string-format "~S ~D ~S" label (mod-duration-amount d) (mod-duration-unit d))))
-
-(defun mod-punishment-name ((punishment symbol))
-  (cond
-    ((eq? punishment 'punishment-money)
-     (string-format "LOSE ~D ORBS" (the int (-> *MOD-tuning-bank* money-punishment-loss))))
-    ((eq? punishment 'punishment-warp) "WARP TO GEYSER")
-    ((eq? punishment 'punishment-countdown) (string-format "LOSE ~D SECONDS" (mod-countdown-punishment-seconds)))
-    ((eq? punishment 'punishment-revert-cell) "REVERT A RANDOM CELL")
-    ((eq? punishment 'punishment-extra-rule) "+2 CONDITIONS")
-    ((eq? punishment 'punishment-blind) (mod-timed-punishment-text "BLIND FOR" punishment))
-    ((eq? punishment 'punishment-fall-damage) (mod-timed-punishment-text "MORE FALL DAMAGE FOR" punishment))
-    ((eq? punishment 'punishment-trip) (mod-timed-punishment-text "TRIP RANDOMLY FOR" punishment))
-    ((eq? punishment 'punishment-edge) (mod-timed-punishment-text "NO LEDGE GRABS FOR" punishment))
-    ((eq? punishment 'punishment-delay)
-     (let ((d (mod-punishment-duration punishment)))
-       (string-format "~D-MS INPUT DELAY FOR ~D ~S"
-                      (mod-seconds->ms (-> *MOD-tuning-bank* punishment-input-delay))
-                      (mod-duration-amount d)
-                      (mod-duration-unit d))))
-    ((eq? punishment 'punishment-crash) "CRASH THE GAME")
-    ((eq? punishment 'punishment-iframes) (mod-timed-punishment-text "NO I-FRAMES FOR" punishment))
-    ((eq? punishment 'punishment-camera) (mod-timed-punishment-text "INVERTED CAMERA FOR" punishment))
-    ((eq? punishment 'punishment-ohko) (mod-timed-punishment-text "ANY DAMAGE OR BONK KILLS FOR" punishment))
-    ((eq? punishment 'punishment-reset) "RESET THE RUN")
-    ((eq? punishment 'punishment-kick) (mod-timed-punishment-text "NO SPIN KICK FOR" punishment))
-    ((eq? punishment 'punishment-pause) (mod-timed-punishment-text "PAUSE RANDOMLY FOR" punishment))
-    (else "NONE")))
-
-(defun mod-punishment-result-text ()
-  (let ((punishment (-> (-> *MOD-punishment-bank* result-ids) 0))
-        (task (-> (-> *MOD-punishment-bank* result-tasks) 0)))
-    (cond
-      ((and (eq? punishment 'punishment-revert-cell) (!= task 0))
-       (string-format "REVERTED: ~S" (mod-revert-cell-name (the game-task task))))
-      ((eq? punishment 'punishment-money) (string-format "-~D ORBS" (the int (-> *MOD-tuning-bank* money-punishment-loss))))
-      ((eq? punishment 'punishment-warp) "BACK TO GEYSER!")
-      ((eq? punishment 'punishment-crash) "GOODBYE.")
-      ((eq? punishment 'punishment-countdown) (string-format "-~D SECONDS" (mod-countdown-punishment-seconds)))
-      ((eq? punishment 'punishment-blind) (mod-timed-punishment-text "BLIND" punishment))
-      ((eq? punishment 'punishment-fall-damage) (mod-timed-punishment-text "MORE FALL DAMAGE" punishment))
-      ((eq? punishment 'punishment-trip) (mod-timed-punishment-text "TRIP RANDOMLY" punishment))
-      ((eq? punishment 'punishment-edge) (mod-timed-punishment-text "NO LEDGE GRABS" punishment))
-      ((eq? punishment 'punishment-delay)
-       (let ((d (mod-punishment-duration punishment)))
-         (string-format "INPUT DELAY ~D ~S" (mod-duration-amount d) (mod-duration-unit d))))
-      ((eq? punishment 'punishment-iframes) (mod-timed-punishment-text "NO I-FRAMES" punishment))
-      ((eq? punishment 'punishment-camera) (mod-timed-punishment-text "INVERTED CAMERA" punishment))
-      ((eq? punishment 'punishment-ohko) (mod-timed-punishment-text "OHKO" punishment))
-      ((eq? punishment 'punishment-kick) (mod-timed-punishment-text "NO SPIN KICK" punishment))
-      ((eq? punishment 'punishment-pause) (mod-timed-punishment-text "PAUSE RANDOMLY" punishment))
-      (else (mod-punishment-name punishment)))))
-
-(defun mod-timed-punishment-name ((punishment symbol))
-  (cond
-    ((eq? punishment 'punishment-fall-damage) "FALL DAMAGE")
-    ((eq? punishment 'punishment-trip) "TRIP")
-    ((eq? punishment 'punishment-edge) "LEDGE GRAB")
-    ((eq? punishment 'punishment-delay) "INPUT DELAY")
-    ((eq? punishment 'punishment-iframes) "I-FRAMES")
-    ((eq? punishment 'punishment-camera) "CAMERA")
-    ((eq? punishment 'punishment-ohko) "OHKO")
-    ((eq? punishment 'punishment-kick) "SPIN KICK")
-    ((eq? punishment 'punishment-pause) "PAUSE")
-    (else (mod-punishment-name punishment))))
-
 (defun mod-apply-extra-rule-punishment ((failed-slot int))
   (when (and (>= failed-slot 0) (< failed-slot *mod-rule-slot-count*))
     (if (<= (+ (mod-rule-active-slot-count) 2) *mod-rule-slot-count*)
@@ -959,11 +880,6 @@
     (lambda ()
       (suspend)
       (start-speedrun (the-as speedrun-category #f))))
-  (none))
-
-(defun mod-set-punished-fall-damage! ()
-  (set! (-> *TARGET-bank* fall-far) (-> *MOD-tuning-bank* fall-damage-far))
-  (set! (-> *TARGET-bank* fall-far-inc) (-> *MOD-tuning-bank* fall-damage-far-inc))
   (none))
 
 (defun mod-rule-apply-punishment ((slot int) (punishment symbol))
@@ -1008,6 +924,15 @@
 
 (defun mod-rule-slot-in-grace-period? ((slot int))
   (and (>= slot 0) (< slot *mod-rule-slot-count*) (< (current-time) (mod-slot-ref slot-grace-periods slot))))
+
+(defun mod-global-countdown-add-seconds ((seconds-to-add float))
+  (when (-> *MOD-countdown-bank* active?)
+    (when (mod-rule-active? 'complication-income-tax)
+      (set! seconds-to-add (* seconds-to-add 0.5)))
+    (set! (-> *MOD-countdown-bank* remaining-time)
+          (+ (-> *MOD-countdown-bank* remaining-time)
+             (the int (* (+ seconds-to-add (if (< seconds-to-add 0.0) -0.001 0.001)) (the float TICKS_PER_SECOND))))))
+  (none))
 
 (defun mod-rule-resolve! ((slot int) (natural-outcome symbol) (ignore-grace? symbol))
   (when (and (>= slot 0) (< slot *mod-rule-slot-count*) (mod-slot-ref active-slots slot))
@@ -1184,6 +1109,22 @@
                         ((2) (logtest? pressed (pad-buttons x)))
                         (else (logtest? pressed (pad-buttons square))))))
             (mod-rule-resolve! slot (if hit? 'success 'failed) #f))))))
+  (none))
+
+(defun mod-rule-update-hang-time ()
+  (when (mod-rule-active? 'rule-hang-time)
+    (let ((slot (mod-rule-find-active-slot 'rule-hang-time)))
+      (when (>= slot 0)
+        (let ((goal-frames (* (mod-rule-counter-goal 'rule-hang-time) (seconds 1))))
+          (if (mod-target-airborne?)
+            (let* ((elapsed (- (current-time) (-> *MOD-rule-context-bank* hang-time-air-start)))
+                   (whole-seconds (min (mod-rule-counter-goal 'rule-hang-time) (the int (/ elapsed (seconds 1))))))
+              (set! (mod-slot-ref slot-progress slot) whole-seconds)
+              (when (>= elapsed goal-frames)
+                (mod-rule-resolve! slot 'success #f)))
+            (begin
+              (set! (-> *MOD-rule-context-bank* hang-time-air-start) (current-time))
+              (set! (mod-slot-ref slot-progress slot) 0)))))))
   (none))
 
 (defun mod-rule-update-red-light ()
