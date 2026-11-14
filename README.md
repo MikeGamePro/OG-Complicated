@@ -131,7 +131,7 @@
 | **DROUGHT** | ALL WATER, LAVA, AND DARK ECO ARE GONE. |
 | **OHKO** | JAK IS LIMITED TO ONE HEALTH. |
 | **CRITICAL CONDITION** | CELLS CAN ONLY BE COLLECTED AT ONE HEALTH. | You will also be unable to talk to NPCs.
-| **GLARE** | JAK FREEZES WHEN LURKERS SEE HIM. | When a lurker notices Jak, he freezes for exactly 3 seconds.
+| **GLARE** | JAK FREEZES WHEN LURKERS SEE HIM. | When a lurker notices Jak, he freezes for exactly 3 seconds. Flut Flut is immune to this.
 | **DISASSOCIATE** | KILLING A LURKER DISMOUNTS FLUT FLUT. |
 | **BUS DRIVER** | ZOOMER EXPLODES IF TOO SLOW. | If you're on the zoomer and your speed goes below 20 meters per second, you explode.
 | **FUEL SHORTAGE** | ALL POWER CELLS ARE GONE. | You will also be unable to talk to NPCs.
