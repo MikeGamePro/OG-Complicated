@@ -277,10 +277,16 @@
            (fuel-left (- (mod-max-fuel-current-level) (mod-collected-fuel-current-level)))
            (money-left (- (mod-max-money-current-level) (mod-collected-money-current-level)))
            (buzzer-left (- 7 (mod-collected-buzzer-current-level)))
-           (is-minigame (or (mod-target-fishing?) (mod-target-billy-game?)))
+           (is-fish (mod-target-fishing?))
+           (is-rats (mod-target-billy-game?))
+           (is-minigame (or is-fish is-rats))
            (is-klaww (and (not (task-closed? (game-task ogre-boss) (task-status need-resolution))) (string= checkpoint-name "ogre-start")))
            (deep-lavatube (or (string= checkpoint-name "lavatube-middle") (string= checkpoint-name "lavatube-after-ribbon")))
-           (racer-lavatube (or (and on-racer (string= checkpoint-name "lavatube-start")) deep-lavatube)))
+           (racer-lavatube (or (and on-racer (string= checkpoint-name "lavatube-start")) deep-lavatube))
+           (on-vehicle (or on-racer on-flut))
+           (racer-bound (or racer-lavatube on-vehicle (sole-zoomer-level? level-name)))
+           (sparse-lurkers (sparse-lurker-level? level-name))
+           (orbs (current-orb-count)))
       (if (mod-rule-twist-blocks? id)
         0
         (cond
@@ -330,30 +336,23 @@
           ((eq? id 'rule-loyal-customer)
            (if (and (mod-cell-purchase-level? level-name)
                     (not (mod-oracles-closed? level-name))
-                    (>= (+ (current-orb-count) money-left) (mod-cell-price-oracle))
-                    (<= (- (mod-cell-price-oracle) (current-orb-count)) 20))
+                    (>= (+ orbs money-left) (mod-cell-price-oracle))
+                    (<= (- (mod-cell-price-oracle) orbs) 20))
              119
              0))
           ;; Enemies
           ((or (eq? id 'complication-glare) (eq? id 'rule-lurker-pressure))
            (cond
-             ((sparse-lurker-level? level-name) 0)
-             ((eq? id 'complication-glare) 72)
-             (is-minigame 0)
+             ((or sparse-lurkers is-minigame) 0)
+             ((eq? id 'complication-glare) (if on-flut 0 72))
              (else 69)))
           ((eq? id 'rule-hitlist) (if (or (sparse-hitlist-level? level-name) is-minigame) 0 94))
           ((eq? id 'rule-double-kill)
-           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 72))
+           (if (or sparse-lurkers is-minigame is-klaww (eq? level-name 'finalboss) (eq? level-name 'sunkenb)) 0 72))
           ((eq? id 'rule-no-harm) ;; disabled
-           (if (or (sparse-lurker-level? level-name) is-minigame is-klaww (eq? level-name 'jungleb)) 0 74))
+           (if (or sparse-lurkers is-minigame is-klaww (eq? level-name 'jungleb)) 0 74))
           ((eq? id 'complication-soul-bond)
-           (if (or (sparse-lurker-level? level-name)
-                   is-minigame
-                   is-klaww
-                   (eq? level-name 'jungleb)
-                   (string= checkpoint-name "sunkenb-helix"))
-             0
-             60))
+           (if (or sparse-lurkers is-minigame is-klaww (eq? level-name 'jungleb) (string= checkpoint-name "sunkenb-helix")) 0 60))
           ((eq? id 'rule-sniper)
            (if (or (case level-name
                      (('swamp 'beach 'snow 'robocave 'darkcave) #t)
@@ -365,12 +364,11 @@
            (if (or (case level-name
                      (('training 'lavatube 'village3 'village2 'village1 'rolling 'ogre 'finalboss) #t)
                      (else #f))
-                   (mod-target-billy-game?))
+                   is-rats)
              0
              80))
           ((eq? id 'rule-uncharted) (if (mod-rule-uncharted-can-roll? level-name) 250 0))
-          ((eq? id 'rule-vendetta)
-           (if (or (sparse-lurker-level? level-name) (not (red-eco-level? level-name)) on-racer is-minigame) 0 190))
+          ((eq? id 'rule-vendetta) (if (or sparse-lurkers (not (red-eco-level? level-name)) on-racer is-minigame) 0 190))
           ((eq? id 'rule-bonecracker) (if (and (eq? level-name 'misty) (not (mod-all-bone-bridges-down?))) 422 0))
           ((eq? id 'rule-orb-hunt) (if (or is-minigame (<= (mod-orb-hunt-spot-count level-name) 0)) 0 35))
           ((eq? id 'complication-eco-reserve)
@@ -396,12 +394,11 @@
           ;; Movement
           ((eq? id 'complication-no-double-jump) (if on-racer 0 (if on-flut 105 52)))
           ((eq? id 'complication-jak-rabbit) (if on-racer 0 48))
-          ((eq? id 'complication-jak-be-nimble) (if (or on-racer on-flut) 0 46))
-          ((eq? id 'rule-keep-rolling)
-           (if (or is-minigame is-klaww racer-lavatube (sole-zoomer-level? level-name) on-racer on-flut) 0 68))
+          ((eq? id 'complication-jak-be-nimble) (if on-vehicle 0 46))
+          ((eq? id 'rule-keep-rolling) (if (or is-minigame is-klaww racer-bound) 0 68))
           ((eq? id 'complication-quicksand) (if (sand-level? level-name) 146 0))
           ((eq? id 'complication-invert) 36)
-          ((eq? id 'complication-cumbersome) (if (or is-minigame on-racer on-flut (< (current-orb-count) 20)) 0 64))
+          ((eq? id 'complication-cumbersome) (if (or is-minigame on-vehicle (< orbs 20)) 0 64))
           ((eq? id 'complication-shifty) (if (or is-klaww is-minigame) 0 40))
           ((or (eq? id 'rule-grounded) (eq? id 'rule-die))
            (cond
@@ -419,20 +416,17 @@
              (else 24)))
           ((eq? id 'complication-butter-fingers) ;; disabled
            (cond
-             ((or (sole-zoomer-level? level-name) on-racer on-flut racer-lavatube) 0)
+             (racer-bound 0)
              ((eq? level-name 'training) 27)
              (else 52)))
           ((or (eq? id 'rule-keep-it-low) (eq? id 'complication-sizeable))
-           (if (or racer-lavatube on-racer on-flut (sole-zoomer-level? level-name))
-             0
-             (if (eq? id 'rule-keep-it-low) (if (mod-timed-punishment-active? 'punishment-kick) 0 55) 60)))
-          ((eq? id 'rule-management) (if (or racer-lavatube on-racer on-flut (sole-zoomer-level? level-name)) 0 55))
+           (if racer-bound 0 (if (eq? id 'rule-keep-it-low) (if (mod-timed-punishment-active? 'punishment-kick) 0 55) 60)))
+          ((eq? id 'rule-management) (if racer-bound 0 55))
           ((eq? id 'complication-bad-ping) (if (mod-timed-punishment-active? 'punishment-delay) 0 36))
           ((eq? id 'complication-loose-pockets)
-           (if (or (< (current-orb-count) 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 52))
+           (if (or (< orbs 20) (eq? level-name 'finalboss) (eq? level-name 'citadel) (eq? level-name 'lavatube)) 0 52))
           ((eq? id 'rule-no-ledge)
-           (if (or on-racer
-                   on-flut
+           (if (or on-vehicle
                    (eq? level-name 'finalboss)
                    (sole-zoomer-level? level-name)
                    (mod-timed-punishment-active? 'punishment-edge))
@@ -484,14 +478,12 @@
                    (eq? level-name 'finalboss)
                    (eq? level-name 'lavatube)
                    (mod-timed-punishment-active? 'punishment-edge)
-                   on-racer
-                   on-flut)
+                   on-vehicle)
              0
              32))
           ((eq? id 'rule-green-pilled) (if (or (sparse-green-eco-level? level-name) is-minigame) 0 65))
           ((eq? id 'complication-joyride)
-           (if (or on-racer
-                   on-flut
+           (if (or on-vehicle
                    is-minigame
                    (eq? level-name 'finalboss)
                    (and (mod-rule-active? 'rule-button-pusher) (or (eq? level-name 'sunken) (eq? level-name 'sunkenb)))
@@ -500,9 +492,9 @@
              0
              54))
           ((or (eq? id 'complication-fast-reel) (eq? id 'complication-palate-change))
-           (if (and (mod-target-fishing?) (< (-> *MOD-rule-context-bank* fisher-missed) 15)) 1290 0))
+           (if (and is-fish (< (-> *MOD-rule-context-bank* fisher-missed) 15)) 1290 0))
           ((eq? id 'rule-sagging-sails)
-           (if (and (mod-target-fishing?)
+           (if (and is-fish
                     (< (-> *MOD-rule-context-bank* fisher-missed) 5)
                     (<= (-> *MOD-rule-context-bank* fisher-caught) 160)
                     (>= (-> *MOD-rule-context-bank* fisher-caught) 20))
@@ -512,7 +504,7 @@
            (if (and *target* (= (-> *target* control ground-pat material) (pat-material ice))) 0 (if (eq? level-name 'snow) 387 0)))
           ((eq? id 'rule-touch-grass)
            (if (or (and (eq? level-name 'jungleb) (task-closed? (game-task jungle-plant) (task-status need-resolution)))
-                   (and (not (or (mod-target-fishing?) (and *target* (= (-> *target* control ground-pat material) (pat-material grass)))))
+                   (and (not (or is-fish (and *target* (= (-> *target* control ground-pat material) (pat-material grass)))))
                         (grass-level? level-name)))
              87
              0))
@@ -536,7 +528,7 @@
              242
              0))
           ((eq? id 'complication-rgyb)
-           (if (or (mod-target-billy-game?)
+           (if (or is-rats
                    (eq? level-name 'jungleb)
                    (eq? level-name 'training)
                    (eq? level-name 'finalboss)
@@ -556,7 +548,7 @@
              ((or (eq? level-name 'finalboss) (eq? level-name 'village3)) 0)
              (is-klaww 16)
              (else 41)))
-          ((eq? id 'complication-interference) (if (or (mod-target-fishing?) (eq? level-name 'village3)) 0 38)) ;; disabled
+          ((eq? id 'complication-interference) (if (or is-fish (eq? level-name 'village3)) 0 38)) ;; disabled
           ((eq? id 'complication-heating-balloons)
            (if (or (string= checkpoint-name "firecanyon-start") (and (eq? level-name 'lavatube) on-racer)) 439 0))
           ((eq? id 'complication-bus-driver) (if (or (string= checkpoint-name "firecanyon-start") on-racer) 147 0))
@@ -566,7 +558,7 @@
              159
              0))
           ((eq? id 'complication-rotten-eggs) (if (or is-klaww (eq? level-name 'finalboss) deep-lavatube) 0 36))
-          ((eq? id 'complication-disassociate) (if (and on-flut (not (sparse-lurker-level? level-name))) 774 0))
+          ((eq? id 'complication-disassociate) (if (and on-flut (not sparse-lurkers)) 774 0))
           ((eq? id 'complication-wings-tied)
            (if (and on-flut (not (or (eq? level-name 'training) (eq? level-name 'finalboss)))) 366 0))
           ((eq? id 'complication-fuel-shortage)
@@ -1193,7 +1185,7 @@
   (none))
 
 (defun mod-rule-trigger-glare ()
-  (when (and *target* (mod-rule-active? 'complication-glare))
+  (when (and *target* (not (mod-target-on-flut?)) (mod-rule-active? 'complication-glare))
     (logior! (-> *target* mask) (process-mask sleep))
     (set! (-> *MOD-rule-context-bank* mean-look-clear-time) (+ (current-time) (seconds 3))))
   (none))
